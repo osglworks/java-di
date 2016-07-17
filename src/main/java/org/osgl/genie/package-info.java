@@ -9,6 +9,6 @@
  * * Support module/provider factory methods
  * * Support {@link javax.inject.Qualifier} annotations
  * * Support {@link javax.inject.Scope} annotations
- * * Support {@link act.di.DI.Loader} annotations
+ * * Support {@link org.osgl.genie.annotation.Loader} annotations
  */
 package org.osgl.genie;

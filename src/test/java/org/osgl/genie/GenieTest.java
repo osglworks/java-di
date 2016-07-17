@@ -6,7 +6,7 @@ import org.junit.Test;
 import org.osgl.genie.builder.ListBuilder;
 
 /**
- * Test Air Genie DI solution
+ * Test Genie DI solution
  */
 public class GenieTest extends TestBase {
 
@@ -57,6 +57,14 @@ public class GenieTest extends TestBase {
     }
 
     @Test
+    public void testInjectProvider() {
+        SimpleConstructorInjectionByProvider bean = test(SimpleConstructorInjectionByProvider.class);
+        assertNotNull(bean.foo());
+        SimpleMethodInjectionByProvider bean2 = test(SimpleMethodInjectionByProvider.class);
+        assertNotNull(bean2.foo());
+    }
+
+    @Test
     public void testBeanLoaderAnnotation() {
         FibonacciSeriesHolder bean = genie.get(FibonacciSeriesHolder.class);
         eq("1,1,2,3,5,8,13", bean.toString());
@@ -70,14 +78,29 @@ public class GenieTest extends TestBase {
 
     @Test
     public void testModuleWithBindings() {
-        Module module = new Module() {
-            @Override
-            protected void configure() {
-                bind(Person.class).to(Person.Man.class);
-                bind(Person.class).withAnnotation(Person.Female.class).to(Person.Woman.class);
-            }
-        };
-        genie = new Genie(module);
+        genie = new Genie(new ModuleWithBindings());
+        testModules();
+    }
+
+    @Test
+    public void testModuleWithFactoryMethods() {
+        genie = new Genie(new ModuleWithFactories());
+        testModules();
+    }
+
+    @Test
+    public void testModuleWithStaticFactoryMethods() {
+        genie = new Genie(ModuleWithStaticFactories.class);
+        testModules();
+    }
+
+    private <T> T test(Class<T> c) {
+        T o = genie.get(c);
+        eq(c.getSimpleName(), o.toString());
+        return o;
+    }
+
+    private void testModules() {
         Person person = genie.get(Person.class);
         no(person.gender().isFemale());
         Person.Family family = genie.get(Person.Family.class);
@@ -85,11 +108,5 @@ public class GenieTest extends TestBase {
         yes(family.mom.gender().isFemale());
         assertNull(family.son);
         assertNull(family.daughter);
-    }
-
-    private <T> T test(Class<T> c) {
-        T o = genie.get(c);
-        eq(c.getSimpleName(), o.toString());
-        return o;
     }
 }

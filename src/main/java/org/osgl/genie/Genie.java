@@ -114,6 +114,18 @@ public class Genie implements DependencyInjector {
             hc = $.hc(type, this.annotations);
         }
 
+        private Key(Key providerKey) {
+            if (!providerKey.isProvider()) {
+                throw new IllegalStateException("not a provider key");
+            }
+            this.type = ((ParameterizedType) providerKey.type).getActualTypeArguments()[0];
+            this.annotations.addAll(providerKey.annotations);
+            this.loaders.addAll(providerKey.loaders);
+            this.filters.addAll(providerKey.filters);
+            this.qualifiers.addAll(providerKey.qualifiers);
+            this.hc = $.hc(this.type, this.annotations);
+        }
+
         @Override
         public int hashCode() {
             return hc;
@@ -154,6 +166,14 @@ public class Genie implements DependencyInjector {
 
         Type type() {
             return type;
+        }
+
+        boolean isProvider() {
+            return Provider.class.isAssignableFrom(rawType());
+        }
+
+        Key providerKey() {
+            return new Key(this);
         }
 
         List<Annotation> annotations() {
@@ -270,9 +290,9 @@ public class Genie implements DependencyInjector {
             this.providers = providers;
         }
 
-        void applyTo(Object bean) {
+        Object applyTo(Object bean) {
             try {
-                method.invoke(bean, params(providers));
+                return method.invoke(bean, params(providers));
             } catch (Exception e) {
                 throw new InjectException(e, "Unable to invoke method[%s] on %s", method.getName(), bean.getClass());
             }
@@ -324,7 +344,25 @@ public class Genie implements DependencyInjector {
         if (module instanceof Module) {
             ((Module) module).applyTo(this);
         }
-        // TODO register @Provider factory methods
+        Class moduleClass = (module instanceof Class) ? (Class) module : module.getClass();
+        for (Method method : moduleClass.getMethods()) {
+            if (method.isAnnotationPresent(Provides.class)) {
+                registerFactoryMethod(module, method);
+            }
+        }
+    }
+
+    private void registerFactoryMethod(Object module, final Method factory) {
+        final Object instance = Modifier.isStatic(factory.getModifiers()) ? null : module;
+        Type retType = factory.getGenericReturnType();
+        final Key key = Key.of(retType, factory.getDeclaredAnnotations());
+        final MethodInjector methodInjector = methodInjector(factory, C.set(key));
+        registerProvider(key, new Provider () {
+            @Override
+            public Object get() {
+                return methodInjector.applyTo(instance);
+            }
+        });
     }
 
     private <T> T get(Key key) {
@@ -332,7 +370,7 @@ public class Genie implements DependencyInjector {
         return (T) provider.get();
     }
 
-    private Provider<?> findProvider(Key key, Set<Key> chain) {
+    private Provider<?> findProvider(final Key key, final Set<Key> chain) {
         // 0. try registry
         Provider<?> provider = registry.get(key);
         if (null != provider) {
@@ -344,6 +382,16 @@ public class Genie implements DependencyInjector {
             provider = getBuilder(key);
             if (null != provider) {
                 break;
+            }
+
+            // is it a direct Provider?
+            if (key.isProvider()) {
+                return new Provider<Provider<?>>() {
+                    @Override
+                    public Provider<?> get() {
+                        return findProvider(key.providerKey(), C.<Key>empty());
+                    }
+                };
             }
 
             // 2. build provider from constructor, field or method

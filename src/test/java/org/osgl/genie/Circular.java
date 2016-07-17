@@ -1,22 +1,42 @@
 package org.osgl.genie;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class Circular {
 
-    static class A {
-        @Inject
-        A(C c) {}
+    private static final AtomicInteger num = new AtomicInteger(0);
+
+    protected int n;
+
+    Circular() {
+        n = num.incrementAndGet();
     }
 
-    static class B {
-        @Inject
-        B(A a) {}
+    Circular(Circular circular) {
+        this.n = circular.n;
     }
 
-    static class C {
+    static class A extends Circular {
         @Inject
-        C(B b) {}
+        A(C c) {
+            super(c);
+        }
+    }
+
+    static class B extends Circular {
+        @Inject
+        B(A a) {
+            super(a);
+        }
+    }
+
+    static class C extends Circular {
+        @Inject
+        C(B b) {
+            super(b);
+        }
     }
 
     static class Self {
