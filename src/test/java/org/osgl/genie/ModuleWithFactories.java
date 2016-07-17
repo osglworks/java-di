@@ -5,14 +5,14 @@ import org.osgl.genie.annotation.Provides;
 class ModuleWithFactories {
 
     @Provides
-    public Person male() {
-        return new Person.Man();
+    public Person male(Person.Man man) {
+        return man;
     }
 
     @Provides
     @Person.Female
-    public Person female() {
-        return new Person.Woman();
+    public Person female(Person.Woman woman) {
+        return woman;
     }
 
 }
