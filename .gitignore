@@ -13,3 +13,5 @@ target
 classes
 *.iml
 .DS_Store
+**/*-delete
+**/*.delete

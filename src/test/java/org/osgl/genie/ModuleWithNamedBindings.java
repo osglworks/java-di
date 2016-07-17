@@ -4,11 +4,7 @@ import org.osgl.genie.annotation.Provides;
 
 import javax.inject.Named;
 
-class ModuleWithNamedBindings extends Module {
-
-    @Override
-    protected void configure() {
-    }
+class ModuleWithNamedBindings {
 
     @Provides
     @Named("male")
