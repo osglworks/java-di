@@ -41,7 +41,7 @@ Genie genie = new Genie();
 Bar bar = genie.get(Bar.class);
 ```
 
-At the first glance the code line doesn't change and it looks even more obscure to the programmer who hasn't used dependency injection before. However an important factor here is you don't even touch `Foo`, the dependency of `Bar` at all. Genie manage to instantiate the instance of `Foo` when it need it to construct the `Bar` instance. This abstraction leaves the space for application developer to centralize the configuration of dependency management and they doesn't need to get distracted from that when programming the business logic. It also makes it flexible to replace implementations if needed. See [Type binding](type_binding.md) for more details.
+At the first glance the LOC doesn't change and it looks even more obscure to the programmer who hasn't used dependency injection before. However an important factor here is you don't even touch `Foo`, the dependency of `Bar` at all. Genie manage to instantiate the instance of `Foo` when it need it to construct the `Bar` instance. This abstraction leaves the space for application developer to centralize the configuration of dependency management and they doesn't need to get distracted from that when programming the business logic. It also makes it flexible to replace implementations if needed. See [Type binding](type_binding.md) for more details.
 
 In the above `Bar` code we have implemented one of three kind of injections: Constructor injection. Genie also support the other two injection types:
 
