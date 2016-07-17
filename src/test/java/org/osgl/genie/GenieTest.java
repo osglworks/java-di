@@ -25,42 +25,42 @@ public class GenieTest extends TestBase {
 
     @Test
     public void testSimpleEmptyConstructor() {
-        test(SimpleEmptyConstructor.class);
+        testSimple(SimpleEmptyConstructor.class);
     }
 
     @Test
     public void testSimpleConstructorInjection() {
-        SimpleConstructorInjection bean = test(SimpleConstructorInjection.class);
+        SimpleConstructorInjection bean = testSimple(SimpleConstructorInjection.class);
         assertNotNull(bean.foo());
     }
 
     @Test
     public void testSimpleFieldInjection() {
-        SimpleFieldInjection bean = test(SimpleFieldInjection.class);
+        SimpleFieldInjection bean = testSimple(SimpleFieldInjection.class);
         assertNotNull(bean.foo());
     }
 
     @Test
     public void testSimpleMethodInjection() {
-        SimpleMethodInjection bean = test(SimpleMethodInjection.class);
+        SimpleMethodInjection bean = testSimple(SimpleMethodInjection.class);
         assertNotNull(bean.foo());
     }
 
     @Test(expected = InjectException.class)
     public void itShallCryIfCircularDependencyFound() {
-        test(Circular.A.class);
+        testSimple(Circular.A.class);
     }
 
     @Test(expected = InjectException.class)
     public void itShallCryIfSelfCircularDependencyFound() {
-        test(Circular.Self.class);
+        testSimple(Circular.Self.class);
     }
 
     @Test
     public void testInjectProvider() {
-        SimpleConstructorInjectionByProvider bean = test(SimpleConstructorInjectionByProvider.class);
+        SimpleConstructorInjectionByProvider bean = testSimple(SimpleConstructorInjectionByProvider.class);
         assertNotNull(bean.foo());
-        SimpleMethodInjectionByProvider bean2 = test(SimpleMethodInjectionByProvider.class);
+        SimpleMethodInjectionByProvider bean2 = testSimple(SimpleMethodInjectionByProvider.class);
         assertNotNull(bean2.foo());
     }
 
@@ -74,6 +74,12 @@ public class GenieTest extends TestBase {
     public void testBeanLoaderAndFilterAnnotation() {
         EvenFibonacciSeriesHolder bean = genie.get(EvenFibonacciSeriesHolder.class);
         eq("2,8,34", bean.toString());
+    }
+
+    private <T> T testSimple(Class<T> c) {
+        T o = genie.get(c);
+        eq(c.getSimpleName(), o.toString());
+        return o;
     }
 
     @Test
@@ -94,12 +100,6 @@ public class GenieTest extends TestBase {
         testModules();
     }
 
-    private <T> T test(Class<T> c) {
-        T o = genie.get(c);
-        eq(c.getSimpleName(), o.toString());
-        return o;
-    }
-
     private void testModules() {
         Person person = genie.get(Person.class);
         no(person.gender().isFemale());
@@ -108,5 +108,13 @@ public class GenieTest extends TestBase {
         yes(family.mom.gender().isFemale());
         assertNull(family.son);
         assertNull(family.daughter);
+    }
+
+    @Test
+    public void testNamedInjection() {
+        genie = new Genie(new ModuleWithNamedBindings());
+        TomAndJen tj = genie.get(TomAndJen.class);
+        no(tj.tom.gender().isFemale());
+        yes(tj.jen.gender().isFemale());
     }
 }
