@@ -5,7 +5,6 @@ import org.osgl.Osgl;
 import org.osgl.genie.BeanFilter;
 import org.osgl.genie.BeanLoader;
 import org.osgl.genie.Genie;
-import org.osgl.genie.InjectException;
 import org.osgl.genie.annotation.Filter;
 import org.osgl.genie.annotation.Loader;
 import org.osgl.util.C;
@@ -87,7 +86,7 @@ public class BeanLoadHelper {
 
     public List load() {
         if (loaders.isEmpty()) {
-            throw new InjectException("Load not found");
+            return C.list();
         }
         List<LoaderInfo> loaderFilters = loaders.head(-1);
         C.List<FilterInfo> appendedFilters = filters.append(loaderFilters);
@@ -105,7 +104,7 @@ public class BeanLoadHelper {
         if (annotations.isEmpty()) {
             return;
         }
-        Genie genie = Genie.get();
+        Genie genie = Genie.current();
         for (Annotation anno : annotations) {
             Class<? extends Annotation> annoClass = anno.annotationType();
             Loader loaderTag = annoClass.getAnnotation(Loader.class);

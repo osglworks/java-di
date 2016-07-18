@@ -37,7 +37,7 @@ class Bar {
 And now Genie way to get your `Bar` instance:
 
 ```java
-Genie genie = new Genie();
+Genie genie = Genie.create();
 Bar bar = genie.get(Bar.class);
 ```
 

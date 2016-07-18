@@ -46,7 +46,7 @@ class ScopedProvider<T> implements Provider<T> {
         } else {
             throw new IllegalArgumentException("Unable to identify target class from type: " + targetType);
         }
-        Genie genie = Genie.get();
+        Genie genie = Genie.current();
         ScopeCache cache = null;
         if (targetClass.isAnnotationPresent(Singleton.class)) {
             cache = genie.get(ScopeCache.SingletonScope.class);

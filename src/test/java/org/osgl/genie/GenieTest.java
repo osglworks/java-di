@@ -1,9 +1,8 @@
 package org.osgl.genie;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.osgl.genie.builder.ListBuilder;
 
 /**
  * Test Genie DI solution
@@ -12,15 +11,14 @@ public class GenieTest extends TestBase {
 
     private Genie genie;
 
-    @Before
-    public void setup() {
-        genie = new Genie();
-        Builder.Factory.Manager.found(ListBuilder.Factory.class);
+    @BeforeClass
+    public static void bootstrap() {
+        Builder.Factory.Manager.registerBuiltInBuilders();
     }
 
-    @After
-    public void teardown() {
-        Builder.Factory.Manager.destroy();
+    @Before
+    public void setup() {
+        genie = Genie.create();
     }
 
     @Test

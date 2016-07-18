@@ -1,6 +1,7 @@
 package org.osgl.genie;
 
 import org.osgl.$;
+import org.osgl.genie.builder.*;
 import org.osgl.util.C;
 
 import javax.inject.Provider;
@@ -84,21 +85,6 @@ public abstract class Builder<T> implements Provider<T> {
          * Manage builder factories
          */
         class Manager {
-            private static Map<Class, WeightedFactory> registry = C.newMap();
-
-            public static void found(Class<? extends Factory> factoryClass) {
-                Factory factory = $.newInstance(factoryClass);
-                register(factory);
-            }
-
-            public static void destroy() {
-                registry.clear();
-            }
-
-            public static <T> Factory<T> get(Class<T> clazz) {
-                return $.cast(registry.get(clazz));
-            }
-
             /**
              * Multiple factory might be able to target to the same class. E.g.
              *
@@ -115,12 +101,32 @@ public abstract class Builder<T> implements Provider<T> {
              */
             private static final ThreadLocal<Integer> AFFINITY = new ThreadLocal<Integer>();
 
-            private static synchronized void register(Factory<?> factory) {
+            private static Map<Class, WeightedFactory> registry = C.newMap();
+
+            public static void registerBuiltInBuilders() {
+                register(new ArrayListBuilder.Factory());
+                register(new CListBuilder.Factory());
+                register(new HashSetBuilder.Factory());
+                register(new LinkedListBuilder.Factory());
+                register(new ListBuilder.Factory());
+                register(new SetBuilder.Factory());
+                register(new LinkedHashSetBuilder.Factory());
+                register(new TreeSetBuilder.Factory());
+            }
+
+            public static void destroy() {
+                registry.clear();
+            }
+
+            public static <T> Factory<T> get(Class<T> clazz) {
+                return $.cast(registry.get(clazz));
+            }
+
+            public static synchronized void register(Factory<?> factory) {
                 AFFINITY.set(0);
                 Class<?> target = factory.targetClass();
                 register(target, factory);
             }
-
 
             /**
              * Register for all super types and interfaces

@@ -38,7 +38,7 @@ public class Genie implements DependencyInjector {
             this.provider = new Provider<T>() {
                 @Override
                 public T get() {
-                    return Genie.get().get(impl);
+                    return Genie.current().get(impl);
                 }
             };
             return this;
@@ -304,7 +304,7 @@ public class Genie implements DependencyInjector {
     private static final ThreadLocal<Genie> current = new ThreadLocal<Genie>();
 
 
-    public Genie(Object ... modules) {
+    Genie(Object ... modules) {
         if (modules.length > 0) {
             for (Object module : modules) {
                 registerModule(module);
@@ -324,7 +324,13 @@ public class Genie implements DependencyInjector {
         return get(key);
     }
 
-    public static Genie get() {
+    /**
+     * Returns the Genie instance of current thread.
+     *
+     * **Note** this method shall only be called by Genie extensions
+     * @return the current Genie instance
+     */
+    public static Genie current() {
         return current.get();
     }
 
@@ -396,6 +402,7 @@ public class Genie implements DependencyInjector {
 
             // 2. build provider from constructor, field or method
             if (key.notConstructable()) {
+                getBuilder(key);
                 throw new InjectException("Cannot instantiate %s", key);
             }
             provider = buildProvider(key, chain);
@@ -547,6 +554,31 @@ public class Genie implements DependencyInjector {
             pa[i] = findProvider(paramKey, chain(chain, paramKey));
         }
         return pa;
+    }
+
+    /**
+     * Bootstrap the system and returns a Genie instance with
+     * modules specified.
+     *
+     * The difference between this method and {@link #create(Object...)}
+     * is `bootstrap` will do some class level initialization, e.g. register
+     * built-in {@link Builder} instances etc.
+     *
+     * @param modules the modules that contains binding configuration or {@literal@}Provides methods
+     * @return an new Genie instance
+     */
+    public static Genie bootstrap(Object ... modules) {
+        Builder.Factory.Manager.registerBuiltInBuilders();
+        return create(modules);
+    }
+
+    /**
+     * Create a Genie instance with modules specified
+     * @param modules modules that provides binding or {@literal@}Provides methods
+     * @return an new Genie instance with modules
+     */
+    public static Genie create(Object ... modules) {
+        return new Genie(modules);
     }
 
     private static Object[] params(Provider<?>[] paramProviders) {

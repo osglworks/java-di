@@ -69,13 +69,9 @@ public class BuilderFactoryManagerTest extends TestBase {
 
     @Before
     public void setup() {
-        Builder.Factory.Manager.found(ColBuilder.Factory.class);
-        Builder.Factory.Manager.found(ListBuilder.Factory.class);
-    }
-
-    @After
-    public void teardown() {
         Builder.Factory.Manager.destroy();
+        Builder.Factory.Manager.register(new ColBuilder.Factory());
+        Builder.Factory.Manager.register(new ListBuilder.Factory());
     }
 
     @Test

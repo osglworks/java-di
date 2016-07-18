@@ -19,7 +19,7 @@ public class TreeSetBuilder extends CollectionBuilder<TreeSet> {
         return new TreeSet();
     }
 
-    public class Factory implements Builder.Factory<TreeSet> {
+    public static class Factory implements Builder.Factory<TreeSet> {
         @Override
         public Builder<TreeSet> createBuilder(Class<TreeSet> targetClass, Set<Annotation> annotations, List<Type> typeParameters) {
             return new TreeSetBuilder(targetClass, annotations, typeParameters);

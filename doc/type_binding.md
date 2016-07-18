@@ -37,7 +37,7 @@ public class TomAndJen {
 You call the following code:
 
 ```java
-Genie genie = new Genie();
+Genie genie = Genie.create();
 TomAndJen tj = genie.get(TomAndJen.class);
 ```
 
@@ -56,7 +56,7 @@ This is because the type `Person` is an interface and Genie doesn't know how to 
 Now comes to the point, we need to tell Genie to bind type `Person` to a concrete implementation type, e.g. `Man`. Here is how we get it done:
 
 ```java
-Genie genie = new Genie(new org.osgl.genie.Module() {
+Genie genie = Genie.create(new org.osgl.genie.Module() {
 	@Override
 	protected void configure() {
 		bind(Perosn.class).to(Man.class);
@@ -91,7 +91,7 @@ public class TomAndJen {
 And we also need to tell Genie to treat it different when `Female` annotation is presented:
 
 ```java
-Genie genie = new Genie(new org.osgl.genie.Module() {
+Genie genie = Genie.create(new org.osgl.genie.Module() {
 	@Override
 	protected void configure() {
 		bind(Perosn.class).to(Man.class);
@@ -106,7 +106,7 @@ Now the bean `tj` returned from Genie has `tom` instantiated as `Man` and `jen` 
 So above shows how to configure type bindings by extending the `org.osgl.genie.Module` class and use binder API in the `configure` method. Genie also provide another approach to define the type bindings, which use `org.osgl.genie.Provides` annotation on a factory method. And this approach behavior exactly the same as using the binder API:
 
 ```java
-Genie genie = new Genie(new Object() {
+Genie genie = Genie.create(new Object() {
 	@Provides
 	public Person man() {
 		return new Man();
@@ -133,7 +133,7 @@ public Person man() {
 The code above again hard code the `Man` instantiation. Which is good for this simple case, but if the class `Man` got it's own dependency injection, then it won't work. So the correct way is:
 
 ```java
-Genie genie = new Genie(new Object() {
+Genie genie = Genie.create(new Object() {
 	@Provides
 	public Person man(Man man) {
 		return man;
@@ -182,7 +182,7 @@ class NamedBindings {
 	}
 }
 
-Genie genie = new Genie(new NamedBindings());
+Genie genie = Genie.create(new NamedBindings());
 TomAndJen tj = genie.get(TomAndJen.class);
 ```
 

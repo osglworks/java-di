@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A builder that relies on a {@link act.di.BeanLoader} to initialize a single
+ * A builder that relies on a {@link org.osgl.genie.BeanLoader} to initialize a single
  * object instance
  */
 public class BeanBuilder<T> extends Builder<T> {
