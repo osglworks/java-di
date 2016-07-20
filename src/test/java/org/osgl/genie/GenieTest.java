@@ -1,8 +1,8 @@
 package org.osgl.genie;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
+import org.osgl.genie.ScopedObjects.*;
 import org.osgl.genie.loader.TypedBeanLoader;
 
 /**
@@ -122,5 +122,58 @@ public class GenieTest extends TestBase {
         });
         ErrorDispatcher errorDispatcher = genie.get(ErrorDispatcher.class);
         eq(NotFoundHandler.class.getSimpleName(), errorDispatcher.handle(404));
+    }
+
+    @Test
+    public void testSingletonScope() {
+        genie = Genie.create(ScopedFactory.class);
+
+        // Test Annotation on Type
+        SingletonObject obj = genie.get(SingletonObject.class);
+        SingletonObject obj2 = genie.get(SingletonObject.class);
+        same(obj, obj2);
+
+        // Test Annotation on Factory method
+        SingletonProduct product = genie.get(SingletonProduct.class);
+        SingletonProduct product2 = genie.get(SingletonProduct.class);
+        same(product, product2);
+
+        // Test Annotation in Binder
+        SingletonBoundObject bound = genie.get(SingletonBoundObject.class);
+        SingletonBoundObject bound2 = genie.get(SingletonBoundObject.class);
+        same(bound, bound2);
+    }
+
+    @Test
+    public void testSessionScope() {
+        genie = Genie.create(ScopedFactory.class);
+
+
+        // Session 1:
+        // Test annotation on Type
+        Context s1 = new Context();
+        Context.set(s1);
+        SessionObject bean = genie.get(SessionObject.class);
+        SessionObject bean2 = genie.get(SessionObject.class);
+        same(bean, bean2);
+        // Test annotation on Factory method
+        SessionProduct product = genie.get(SessionProduct.class);
+        SessionProduct product2 = genie.get(SessionProduct.class);
+        same(product, product2);
+
+        // Session 2:
+        // Test annotation on type
+        Context s2 = new Context();
+        Context.set(s2);
+        SessionObject bean3 = genie.get(SessionObject.class);
+        SessionObject bean4 = genie.get(SessionObject.class);
+        same(bean3, bean4);
+        no(bean == bean3);
+        // Test annotation on Factory method
+        SessionProduct product3 = genie.get(SessionProduct.class);
+        SessionProduct product4 = genie.get(SessionProduct.class);
+        same(product3, product4);
+        no(product == product3);
+
     }
 }

@@ -1,12 +1,8 @@
 package org.osgl.genie;
 
 import org.osgl.$;
-import org.osgl.Osgl;
 import org.osgl.Osgl.Var;
-import org.osgl.genie.annotation.Filter;
-import org.osgl.genie.annotation.Loader;
-import org.osgl.genie.annotation.MapKey;
-import org.osgl.genie.annotation.Provides;
+import org.osgl.genie.annotation.*;
 import org.osgl.genie.provider.*;
 import org.osgl.genie.util.AnnotationUtil;
 import org.osgl.logging.LogManager;
@@ -15,9 +11,7 @@ import org.osgl.util.C;
 import org.osgl.util.E;
 import org.osgl.util.S;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.inject.Qualifier;
+import javax.inject.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
@@ -36,6 +30,7 @@ public final class Genie implements DependencyInjector {
         private Provider<? extends T> provider;
         private List<Annotation> annotations = C.newList();
         private Genie genie;
+        private Class<? extends Annotation> scope;
         Binder(Class<T> type) {
             this.type = type;
         }
@@ -55,6 +50,14 @@ public final class Genie implements DependencyInjector {
             return this;
         }
 
+        public Binder<T> in(Class<? extends Annotation> scope) {
+            if (!scope.isAnnotationPresent(Scope.class)) {
+                throw new InjectException("Annotation class passed to \"in\" method must have @Scope annotation presented");
+            }
+            this.scope = scope;
+            return this;
+        }
+
         public Binder<T> withAnnotation(Class<? extends Annotation> annotation) {
             annotations.add(AnnotationUtil.createAnnotation(annotation));
             return this;
@@ -69,11 +72,16 @@ public final class Genie implements DependencyInjector {
                 return;
             }
             this.genie = genie;
-            genie.registerProvider(key(), provider);
+            Key key = key();
+            genie.registerProvider(key, genie.decorate(key, provider));
         }
 
         Key key() {
-            return new Key(type, annotations.toArray(new Annotation[annotations.size()]));
+            Key key = new Key(type, annotations.toArray(new Annotation[annotations.size()]));
+            if (scope != null) {
+                key.scope.set(scope);
+            }
+            return key;
         }
     }
 
@@ -105,6 +113,7 @@ public final class Genie implements DependencyInjector {
         private final Set<Annotation> loaders = C.newSet();
         private final Set<Annotation> filters = C.newSet();
         private final Var<MapKey> mapKey = $.var();
+        private final Var<Class<? extends Annotation>> scope = $.var();
 
         private List<Type> typeParams;
 
@@ -118,8 +127,9 @@ public final class Genie implements DependencyInjector {
          */
         Key(Type type, Annotation[] annotations) {
             this.type = type;
-            this.resolve(annotations);
-            hc = $.hc(type, this.annotations);
+            this.resolveType();
+            this.resolveAnnotations(annotations);
+            this.hc = $.hc(type, this.annotations);
         }
 
         private Key(Key providerKey) {
@@ -224,12 +234,22 @@ public final class Genie implements DependencyInjector {
             return filters;
         }
 
+        Class<? extends Annotation> scope() {
+            return scope.get();
+        }
+
         boolean notConstructable() {
             Class<?> c = rawType();
             return c.isInterface() || c.isArray() || Modifier.isAbstract(c.getModifiers());
         }
 
-        private void resolve(Annotation[] aa) {
+        private void resolveType() {
+            for (Annotation annotation : rawType().getAnnotations()) {
+                resolveScope(annotation);
+            }
+        }
+
+        private void resolveAnnotations(Annotation[] aa) {
             if (null == aa || aa.length == 0) {
                 return;
             }
@@ -243,7 +263,7 @@ public final class Genie implements DependencyInjector {
             // parameter
             for (Annotation anno: aa) {
                 Class cls = anno.annotationType();
-                if (cls == Inject.class) {
+                if (Inject.class == cls || Provides.class == cls) {
                     continue;
                 }
                 if (cls == MapKey.class) {
@@ -271,6 +291,8 @@ public final class Genie implements DependencyInjector {
                     } else {
                         logger.warn("Filter annotation[%s] ignored as target type is neither Collection nor Map", cls.getSimpleName());
                     }
+                } else if (cls.isAnnotationPresent(Scope.class)) {
+                    resolveScope(anno);
                 }
             }
             if (isMap && hasLoader() && null == mapKey) {
@@ -285,6 +307,16 @@ public final class Genie implements DependencyInjector {
             }
 
             Collections.sort(annotations, ANNO_CMP);
+        }
+
+        private void resolveScope(Annotation annotation) {
+            Class<? extends Annotation> annoClass = annotation.annotationType();
+            if (annoClass.isAnnotationPresent(Scope.class)) {
+                if (null != scope.get()) {
+                    throw new InjectException("Multiple Scope annotation found: %s", this);
+                }
+                scope.set(annoClass);
+            }
         }
 
         static Key of(Class<?> clazz) {
@@ -319,6 +351,7 @@ public final class Genie implements DependencyInjector {
         public int compareTo(WeightedProvider<T> o) {
             return this.affinity - o.affinity;
         }
+
 
         static <T> WeightedProvider<T> decorate(Provider<T> provider) {
             return provider instanceof WeightedProvider ? (WeightedProvider<T>) provider : new WeightedProvider<T>(provider);
@@ -391,10 +424,6 @@ public final class Genie implements DependencyInjector {
         bindProviderToClass(type, provider);
     }
 
-    <T> Provider<T> getProvider(Class<T> type) {
-        return (Provider<T>)registry.get(type);
-    }
-
     private void bindProviderToClass(Class<?> target, Provider<?> provider) {
         addIntoRegistry(target, provider);
         AFFINITY.set(AFFINITY.get() + 1);
@@ -444,10 +473,13 @@ public final class Genie implements DependencyInjector {
     private void registerModule(Object module) {
         if (module instanceof Module) {
             ((Module) module).applyTo(this);
+        } else if (module instanceof Class && Module.class.isAssignableFrom((Class) module)) {
+            $.newInstance((Class<Module>) module).applyTo(this);
         }
         Class moduleClass = (module instanceof Class) ? (Class) module : module.getClass();
-        for (Method method : moduleClass.getMethods()) {
+        for (Method method : moduleClass.getDeclaredMethods()) {
             if (method.isAnnotationPresent(Provides.class)) {
+                method.setAccessible(true);
                 registerFactoryMethod(module, method);
             }
         }
@@ -456,14 +488,14 @@ public final class Genie implements DependencyInjector {
     private void registerFactoryMethod(Object module, final Method factory) {
         final Object instance = Modifier.isStatic(factory.getModifiers()) ? null : module;
         Type retType = factory.getGenericReturnType();
-        final Key key = Key.of(retType, factory.getDeclaredAnnotations());
+        final Key key = Key.of(retType, factory.getAnnotations());
         final MethodInjector methodInjector = methodInjector(factory, C.set(key));
-        registerProvider(key, new Provider () {
+        registerProvider(key, decorate(key, new Provider () {
             @Override
             public Object get() {
                 return methodInjector.applyTo(instance);
             }
-        });
+        }));
     }
 
     private <T> T get(Key key) {

@@ -5,6 +5,7 @@ import org.osgl.genie.annotation.SessionScoped;
 
 import javax.inject.Provider;
 import javax.inject.Singleton;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
@@ -39,15 +40,19 @@ class ScopedProvider<T> implements Provider<T> {
             return realProvider;
         }
         Class<T> targetClass = key.rawType();
-        ScopeCache cache = null;
-        if (targetClass.isAnnotationPresent(Singleton.class)) {
-            cache = genie.get(ScopeCache.SingletonScope.class);
-        } else if (targetClass.isAnnotationPresent(RequestScoped.class)) {
-            cache = genie.get(ScopeCache.RequestScope.class);
-        } else if (targetClass.isAnnotationPresent(SessionScoped.class)) {
-            cache = genie.get(ScopeCache.SessionScope.class);
-        }
+        ScopeCache cache = resolve(key.scope(), genie);
 
         return null == cache ? realProvider : new ScopedProvider<T>(targetClass, cache, realProvider);
+    }
+
+    static ScopeCache resolve(Class<? extends Annotation> annoClass, Genie genie) {
+        if (Singleton.class == annoClass) {
+            return genie.get(ScopeCache.SingletonScope.class);
+        } else if (RequestScoped.class == annoClass) {
+            return genie.get(ScopeCache.RequestScope.class);
+        } else if (SessionScoped.class == annoClass) {
+            return genie.get(ScopeCache.SessionScope.class);
+        }
+        return null;
     }
 }
