@@ -2,7 +2,7 @@ package org.osgl.genie;
 
 import org.osgl.genie.annotation.Provides;
 
-class ModuleWithStaticFactories {
+abstract class ModuleWithStaticFactories {
 
     @Provides
     public static Person male(Person.Man man) {

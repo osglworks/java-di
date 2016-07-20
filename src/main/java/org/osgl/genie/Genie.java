@@ -471,22 +471,30 @@ public final class Genie implements DependencyInjector {
     }
 
     private void registerModule(Object module) {
-        if (module instanceof Module) {
+        boolean isClass = module instanceof Class;
+        Class moduleClass = isClass ? (Class) module : module.getClass();
+        if (Module.class.isAssignableFrom(moduleClass)) {
+            if (isClass) {
+                module = $.newInstance(moduleClass);
+                isClass = false;
+            }
             ((Module) module).applyTo(this);
-        } else if (module instanceof Class && Module.class.isAssignableFrom((Class) module)) {
-            $.newInstance((Class<Module>) module).applyTo(this);
         }
-        Class moduleClass = (module instanceof Class) ? (Class) module : module.getClass();
+
         for (Method method : moduleClass.getDeclaredMethods()) {
             if (method.isAnnotationPresent(Provides.class)) {
                 method.setAccessible(true);
-                registerFactoryMethod(module, method);
+                boolean isStatic = Modifier.isStatic(method.getModifiers());
+                if (isClass && !isStatic) {
+                    module = $.newInstance(moduleClass);
+                    isClass = false;
+                }
+                registerFactoryMethod(isStatic ? null : module, method);
             }
         }
     }
 
-    private void registerFactoryMethod(Object module, final Method factory) {
-        final Object instance = Modifier.isStatic(factory.getModifiers()) ? null : module;
+    private void registerFactoryMethod(final Object instance, final Method factory) {
         Type retType = factory.getGenericReturnType();
         final Key key = Key.of(retType, factory.getAnnotations());
         final MethodInjector methodInjector = methodInjector(factory, C.set(key));

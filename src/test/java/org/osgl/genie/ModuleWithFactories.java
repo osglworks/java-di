@@ -11,7 +11,7 @@ class ModuleWithFactories {
 
     @Provides
     @Person.Female
-    public Person female(Person.Woman woman) {
+    public static Person female(Person.Woman woman) {
         return woman;
     }
 

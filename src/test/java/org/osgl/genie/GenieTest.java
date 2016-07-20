@@ -84,7 +84,7 @@ public class GenieTest extends TestBase {
 
     @Test
     public void testModuleWithFactoryMethods() {
-        genie = new Genie(new ModuleWithFactories());
+        genie = new Genie(ModuleWithFactories.class);
         testModules();
     }
 
