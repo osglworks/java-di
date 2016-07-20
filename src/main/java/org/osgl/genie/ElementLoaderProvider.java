@@ -3,6 +3,7 @@ package org.osgl.genie;
 import org.osgl.$;
 import org.osgl.genie.annotation.Filter;
 import org.osgl.genie.annotation.Loader;
+import org.osgl.genie.annotation.MapKey;
 import org.osgl.util.C;
 import org.osgl.util.E;
 
@@ -14,11 +15,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+
 /**
  * A provider decorate that add element loading function decorator
  * to underline provider
  */
-class ElementLoaderProvider<T extends Collection> implements Provider<T> {
+abstract class ElementLoaderProvider<T> implements Provider<T> {
 
     private static class FilterInfo extends $.Predicate {
         ElementFilter filter;
@@ -61,6 +63,36 @@ class ElementLoaderProvider<T extends Collection> implements Provider<T> {
         }
     }
 
+    private static class CollectionLoaderProvider<T extends Collection> extends ElementLoaderProvider<T> {
+        CollectionLoaderProvider(Genie.Key key, Provider<T> provider, Genie genie) {
+            super(key, provider, genie);
+        }
+
+        @Override
+        protected void populate(T bean, Object element) {
+            bean.add(element);
+        }
+    }
+
+    private static class MapLoaderProvider<T extends Map> extends ElementLoaderProvider<T> {
+
+        String hint;
+        KeyExtractor keyExtractor;
+
+        MapLoaderProvider(Genie.Key key, Provider<T> provider, Genie genie) {
+            super(key, provider, genie);
+            MapKey mapKey = key.mapKey();
+            this.keyExtractor = genie.get(mapKey.extractor());
+            this.hint = mapKey.value();
+        }
+
+        @Override
+        protected void populate(T bean, Object element) {
+            bean.put(keyExtractor.keyOf(hint, element), element);
+        }
+    }
+
+
     private Provider<T> realProvider;
     private LoaderInfo loader;
     private Set<FilterInfo> filters;
@@ -74,16 +106,18 @@ class ElementLoaderProvider<T extends Collection> implements Provider<T> {
     }
 
     @Override
-    public T get() {
-        T col = realProvider.get();
+    public final T get() {
+        T bean = realProvider.get();
         $.Predicate predicate = $.F.and(filters.toArray(new FilterInfo[filters.size()]));
         for (Object element : loader.load()) {
             if (predicate.test(element)) {
-                col.add(element);
+                populate(bean, element);
             }
         }
-        return col;
+        return bean;
     }
+
+    protected abstract void populate(T bean, Object element);
 
     static <T> Provider<T> decorate(Genie.Key key, Provider<T> provider, Genie genie) {
         if (!key.hasLoader()) {
@@ -94,7 +128,11 @@ class ElementLoaderProvider<T extends Collection> implements Provider<T> {
             return $.cast(provider);
         }
 
-        return new ElementLoaderProvider(key, provider, genie);
+        if (key.isMap()) {
+            return new MapLoaderProvider(key, provider, genie);
+        }
+
+        return new CollectionLoaderProvider(key, provider, genie);
     }
 
     private static C.List<LoaderInfo> loaders(Genie genie, Genie.Key key) {
@@ -127,3 +165,4 @@ class ElementLoaderProvider<T extends Collection> implements Provider<T> {
         return standards.contains(m.getName());
     }
 }
+

@@ -3,6 +3,7 @@ package org.osgl.genie;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.osgl.genie.loader.TypedBeanLoader;
 
 /**
  * Test Genie DI solution
@@ -109,5 +110,17 @@ public class GenieTest extends TestBase {
         TomAndJen tj = genie.get(TomAndJen.class);
         no(tj.tom.gender().isFemale());
         yes(tj.jen.gender().isFemale());
+    }
+
+    @Test
+    public void testMapInjection() {
+        genie = new Genie(new Module() {
+            @Override
+            protected void configure() {
+                bind(TypedBeanLoader.class).to(SimpleTypeBeanLoader.class);
+            }
+        });
+        ErrorDispatcher errorDispatcher = genie.get(ErrorDispatcher.class);
+        eq(NotFoundHandler.class.getSimpleName(), errorDispatcher.handle(404));
     }
 }

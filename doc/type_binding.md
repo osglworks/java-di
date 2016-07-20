@@ -41,7 +41,7 @@ Genie genie = Genie.create();
 TomAndJen tj = genie.get(TomAndJen.class);
 ```
 
-You will find Genie give you an error happily:
+Genie will raise an exception in this case
 
 ```txt
 org.osgl.genie.InjectException: Cannot instantiate interface Person

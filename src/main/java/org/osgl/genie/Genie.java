@@ -1,8 +1,11 @@
 package org.osgl.genie;
 
 import org.osgl.$;
+import org.osgl.Osgl;
+import org.osgl.Osgl.Var;
 import org.osgl.genie.annotation.Filter;
 import org.osgl.genie.annotation.Loader;
+import org.osgl.genie.annotation.MapKey;
 import org.osgl.genie.annotation.Provides;
 import org.osgl.genie.provider.*;
 import org.osgl.genie.util.AnnotationUtil;
@@ -101,6 +104,8 @@ public final class Genie implements DependencyInjector {
         private final C.List<Annotation> annotations = C.newList();
         private final Set<Annotation> loaders = C.newSet();
         private final Set<Annotation> filters = C.newSet();
+        private final Var<MapKey> mapKey = $.var();
+
         private List<Type> typeParams;
 
         /**
@@ -174,6 +179,14 @@ public final class Genie implements DependencyInjector {
             return type;
         }
 
+        boolean isMap() {
+            return Map.class.isAssignableFrom(rawType());
+        }
+
+        MapKey mapKey() {
+            return mapKey.get();
+        }
+
         boolean isProvider() {
             return Provider.class.isAssignableFrom(rawType());
         }
@@ -221,7 +234,9 @@ public final class Genie implements DependencyInjector {
                 return;
             }
             Class<?> rawType = rawType();
-            boolean isCollectionOrMap = Collection.class.isAssignableFrom(rawType) || Map.class.isAssignableFrom(rawType);
+            boolean isMap = Map.class.isAssignableFrom(rawType);
+            boolean isContainer = Collection.class.isAssignableFrom(rawType) || isMap;
+            MapKey mapKey = null;
             // Note only qualifiers and bean loaders annotation are considered
             // effective annotation. Scope annotations is not effective here
             // because they are tagged on target type, not the field or method
@@ -231,8 +246,17 @@ public final class Genie implements DependencyInjector {
                 if (cls == Inject.class) {
                     continue;
                 }
-                if (cls.isAnnotationPresent(Loader.class)) {
-                    if (isCollectionOrMap) {
+                if (cls == MapKey.class) {
+                    if (null != mapKey) {
+                        throw new InjectException("MapKey annotation already presented");
+                    }
+                    if (!isMap) {
+                        logger.warn("MapKey annotation ignored on target that is not of Map type");
+                    } else {
+                        mapKey = $.cast(anno);
+                    }
+                } if (cls.isAnnotationPresent(Loader.class)) {
+                    if (isContainer) {
                         annotations.add(anno);
                         loaders.add(anno);
                     } else {
@@ -241,7 +265,7 @@ public final class Genie implements DependencyInjector {
                 } else if (cls.isAnnotationPresent(Qualifier.class)) {
                     annotations.add(anno);
                 } else if (cls.isAnnotationPresent(Filter.class)) {
-                    if (isCollectionOrMap) {
+                    if (isContainer) {
                         annotations.add(anno);
                         filters.add(anno);
                     } else {
@@ -249,6 +273,17 @@ public final class Genie implements DependencyInjector {
                     }
                 }
             }
+            if (isMap && hasLoader() && null == mapKey) {
+                throw new InjectException("No MapKey annotation found on Map type target with ElementLoader annotation presented");
+            }
+            if (null != mapKey) {
+                if (hasLoader()) {
+                    this.mapKey.set(mapKey);
+                } else {
+                    logger.warn("MapKey annotation ignored on target without ElementLoader annotation presented");
+                }
+            }
+
             Collections.sort(annotations, ANNO_CMP);
         }
 
@@ -354,6 +389,10 @@ public final class Genie implements DependencyInjector {
     public <T> void registerProvider(Class<T> type, Provider<? extends T> provider) {
         AFFINITY.set(0);
         bindProviderToClass(type, provider);
+    }
+
+    <T> Provider<T> getProvider(Class<T> type) {
+        return (Provider<T>)registry.get(type);
     }
 
     private void bindProviderToClass(Class<?> target, Provider<?> provider) {
