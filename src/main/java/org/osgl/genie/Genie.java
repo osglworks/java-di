@@ -4,7 +4,10 @@ import org.osgl.$;
 import org.osgl.genie.annotation.Filter;
 import org.osgl.genie.annotation.Loader;
 import org.osgl.genie.annotation.Provides;
+import org.osgl.genie.provider.*;
 import org.osgl.genie.util.AnnotationUtil;
+import org.osgl.logging.LogManager;
+import org.osgl.logging.Logger;
 import org.osgl.util.C;
 import org.osgl.util.E;
 import org.osgl.util.S;
@@ -14,22 +17,22 @@ import javax.inject.Provider;
 import javax.inject.Qualifier;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
  * Genie is responsible for providing instance as required
  */
-public class Genie implements DependencyInjector {
+public final class Genie implements DependencyInjector {
+
+    static final Logger logger = LogManager.get(Genie.class);
 
     public static class Binder<T> {
         private Class<T> type;
         private Provider<? extends T> provider;
         private List<Annotation> annotations = C.newList();
+        private Genie genie;
         Binder(Class<T> type) {
             this.type = type;
         }
@@ -38,7 +41,7 @@ public class Genie implements DependencyInjector {
             this.provider = new Provider<T>() {
                 @Override
                 public T get() {
-                    return Genie.current().get(impl);
+                    return genie.get(impl);
                 }
             };
             return this;
@@ -62,6 +65,7 @@ public class Genie implements DependencyInjector {
             if (!bound()) {
                 return;
             }
+            this.genie = genie;
             genie.registerProvider(key(), provider);
         }
 
@@ -70,7 +74,7 @@ public class Genie implements DependencyInjector {
         }
     }
 
-    private static class Key {
+    static class Key {
 
         /**
          * Used to sort annotation list so we can make equality compare between
@@ -97,7 +101,6 @@ public class Genie implements DependencyInjector {
         private final C.List<Annotation> annotations = C.newList();
         private final Set<Annotation> loaders = C.newSet();
         private final Set<Annotation> filters = C.newSet();
-        private final Set<Annotation> qualifiers = C.newSet();
         private List<Type> typeParams;
 
         /**
@@ -122,7 +125,6 @@ public class Genie implements DependencyInjector {
             this.annotations.addAll(providerKey.annotations);
             this.loaders.addAll(providerKey.loaders);
             this.filters.addAll(providerKey.filters);
-            this.qualifiers.addAll(providerKey.qualifiers);
             this.hc = $.hc(this.type, this.annotations);
         }
 
@@ -162,6 +164,10 @@ public class Genie implements DependencyInjector {
             } else {
                 throw E.unexpected("type not recognized: %s", type);
             }
+        }
+
+        Key rawTypeKey() {
+            return Key.of(rawType());
         }
 
         Type type() {
@@ -205,44 +211,42 @@ public class Genie implements DependencyInjector {
             return filters;
         }
 
-        Set<Annotation> loadersAndFilters() {
-            Set<Annotation> set = C.newSet(loaders);
-            set.addAll(filters);
-            return set;
-        }
-
         boolean notConstructable() {
             Class<?> c = rawType();
             return c.isInterface() || c.isArray() || Modifier.isAbstract(c.getModifiers());
-        }
-
-        boolean hasQualifier() {
-            return !qualifiers.isEmpty();
-        }
-
-        Set<Annotation> qualifiers() {
-            return qualifiers;
         }
 
         private void resolve(Annotation[] aa) {
             if (null == aa || aa.length == 0) {
                 return;
             }
-            // Note only qualifiers and bean loader annotation are considered
+            Class<?> rawType = rawType();
+            boolean isCollectionOrMap = Collection.class.isAssignableFrom(rawType) || Map.class.isAssignableFrom(rawType);
+            // Note only qualifiers and bean loaders annotation are considered
             // effective annotation. Scope annotations is not effective here
             // because they are tagged on target type, not the field or method
             // parameter
             for (Annotation anno: aa) {
                 Class cls = anno.annotationType();
+                if (cls == Inject.class) {
+                    continue;
+                }
                 if (cls.isAnnotationPresent(Loader.class)) {
-                    annotations.add(anno);
-                    loaders.add(anno);
+                    if (isCollectionOrMap) {
+                        annotations.add(anno);
+                        loaders.add(anno);
+                    } else {
+                        logger.warn("Loader annotation[%s] ignored as target type is neither Collection nor Map", cls.getSimpleName());
+                    }
                 } else if (cls.isAnnotationPresent(Qualifier.class)) {
                     annotations.add(anno);
-                    qualifiers.add(anno);
                 } else if (cls.isAnnotationPresent(Filter.class)) {
-                    annotations.add(anno);
-                    filters.add(anno);
+                    if (isCollectionOrMap) {
+                        annotations.add(anno);
+                        filters.add(anno);
+                    } else {
+                        logger.warn("Filter annotation[%s] ignored as target type is neither Collection nor Map", cls.getSimpleName());
+                    }
                 }
             }
             Collections.sort(annotations, ANNO_CMP);
@@ -260,6 +264,30 @@ public class Genie implements DependencyInjector {
             return new Key(type, paramAnnotations);
         }
 
+    }
+
+    private static class WeightedProvider<T> implements Provider<T>, Comparable<WeightedProvider<T>> {
+        private Provider<T> realProvider;
+        private int affinity;
+
+        WeightedProvider(Provider<T> provider) {
+            realProvider = provider;
+            affinity = AFFINITY.get();
+        }
+
+        @Override
+        public T get() {
+            return realProvider.get();
+        }
+
+        @Override
+        public int compareTo(WeightedProvider<T> o) {
+            return this.affinity - o.affinity;
+        }
+
+        static <T> WeightedProvider<T> decorate(Provider<T> provider) {
+            return provider instanceof WeightedProvider ? (WeightedProvider<T>) provider : new WeightedProvider<T>(provider);
+        }
     }
 
     private static class FieldInjector {
@@ -301,10 +329,10 @@ public class Genie implements DependencyInjector {
 
     private ConcurrentMap<Key, Provider<?>> registry = new ConcurrentHashMap<Key, Provider<?>>();
 
-    private static final ThreadLocal<Genie> current = new ThreadLocal<Genie>();
-
+    private static final ThreadLocal<Integer> AFFINITY = new ThreadLocal<Integer>();
 
     Genie(Object ... modules) {
+        registerBuiltInProviders();
         if (modules.length > 0) {
             for (Object module : modules) {
                 registerModule(module);
@@ -319,24 +347,52 @@ public class Genie implements DependencyInjector {
      * @return the bean
      */
     public <T> T get(Class<T> type) {
-        current.set(this);
         Key key = Key.of(type);
         return get(key);
     }
 
-    /**
-     * Returns the Genie instance of current thread.
-     *
-     * **Note** this method shall only be called by Genie extensions
-     * @return the current Genie instance
-     */
-    public static Genie current() {
-        return current.get();
+    public <T> void registerProvider(Class<T> type, Provider<? extends T> provider) {
+        AFFINITY.set(0);
+        bindProviderToClass(type, provider);
     }
 
-    public <T> void registerProvider(Class<T> type, Provider<? extends T> provider) {
+    private void bindProviderToClass(Class<?> target, Provider<?> provider) {
+        addIntoRegistry(target, provider);
+        AFFINITY.set(AFFINITY.get() + 1);
+        Class dad = target.getSuperclass();
+        if (null != dad && Object.class != dad) {
+            bindProviderToClass(dad, provider);
+        }
+        Class[] roles = target.getInterfaces();
+        if (null == roles) {
+            return;
+        }
+        for (Class role: roles) {
+            bindProviderToClass(role, provider);
+        }
+    }
+
+    private void addIntoRegistry(Class<?> type, Provider<?> val) {
+        WeightedProvider current = WeightedProvider.decorate(val);
         Key key = Key.of(type);
-        registerProvider(key, provider);
+        WeightedProvider<?> old = (WeightedProvider<?>) registry.get(key);
+        if (null == old || old.compareTo(current) > 0) {
+            registry.put(key, current);
+        }
+        if (null != old && old.affinity == 0 && current.affinity == 0) {
+            throw new InjectException("Provider has already registered by key: %s", key);
+        }
+    }
+
+    private void registerBuiltInProviders() {
+        registerProvider(Collection.class, OsglListProvider.INSTANCE);
+        registerProvider(Deque.class, DequeProvider.INSTANCE);
+        registerProvider(C.List.class, OsglListProvider.INSTANCE);
+        registerProvider(C.Set.class, OsglSetProvider.INSTANCE);
+        registerProvider(C.Map.class, OsglMapProvider.INSTANCE);
+        registerProvider(ConcurrentMap.class, ConcurrentMapProvider.INSTANCE);
+        registerProvider(SortedMap.class, SortedMapProvider.INSTANCE);
+        registerProvider(SortedSet.class, SortedSetProvider.INSTANCE);
     }
 
     private void registerProvider(Key key, Provider<?> provider) {
@@ -383,45 +439,37 @@ public class Genie implements DependencyInjector {
             return provider;
         }
 
-        while (true) {
-            // 1. try get builder
-            provider = getBuilder(key);
-            if (null != provider) {
-                break;
-            }
+        // does it want to inject a Provider?
+        if (key.isProvider()) {
+            provider = new Provider<Provider<?>>() {
+                @Override
+                public Provider<?> get() {
+                    return findProvider(key.providerKey(), C.<Key>empty());
+                }
+            };
+            registry.putIfAbsent(key, provider);
+            return provider;
+        }
 
-            // is it a direct Provider?
-            if (key.isProvider()) {
-                return new Provider<Provider<?>>() {
-                    @Override
-                    public Provider<?> get() {
-                        return findProvider(key.providerKey(), C.<Key>empty());
-                    }
-                };
-            }
 
-            // 2. build provider from constructor, field or method
-            if (key.notConstructable()) {
-                getBuilder(key);
+        // build provider from constructor, field or method
+        if (key.notConstructable()) {
+            // does key's bare class have provider?
+            provider = registry.get(key.rawTypeKey());
+            if (null == provider) {
                 throw new InjectException("Cannot instantiate %s", key);
             }
+        } else {
             provider = buildProvider(key, chain);
-            break;
         }
-        registry.putIfAbsent(key, ScopedProvider.scoping(key.type, provider));
+
+        provider = decorate(key, provider);
+        registry.putIfAbsent(key, provider);
         return provider;
     }
 
-    private Builder getBuilder(Key key) {
-        if (!key.hasLoader()) {
-            return null;
-        }
-        Class clazz = key.rawType();
-        Builder.Factory factory = Builder.Factory.Manager.get(clazz);
-        if (null == factory) {
-            return null;
-        }
-        return factory.createBuilder(clazz, key.loadersAndFilters(), key.typeParams());
+    private Provider<?> decorate(Key key, Provider provider) {
+        return ScopedProvider.decorate(key, ElementLoaderProvider.decorate(key, provider, this), this);
     }
 
     private Provider buildProvider(Key key, Set<Key> chain) {
@@ -554,22 +602,6 @@ public class Genie implements DependencyInjector {
             pa[i] = findProvider(paramKey, chain(chain, paramKey));
         }
         return pa;
-    }
-
-    /**
-     * Bootstrap the system and returns a Genie instance with
-     * modules specified.
-     *
-     * The difference between this method and {@link #create(Object...)}
-     * is `bootstrap` will do some class level initialization, e.g. register
-     * built-in {@link Builder} instances etc.
-     *
-     * @param modules the modules that contains binding configuration or {@literal@}Provides methods
-     * @return an new Genie instance
-     */
-    public static Genie bootstrap(Object ... modules) {
-        Builder.Factory.Manager.registerBuiltInBuilders();
-        return create(modules);
     }
 
     /**

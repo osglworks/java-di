@@ -34,19 +34,11 @@ class ScopedProvider<T> implements Provider<T> {
         return bean;
     }
 
-    public static <T> Provider<T> scoping(Type targetType, Provider<T> realProvider) {
+    static <T> Provider<T> decorate(Genie.Key key, Provider<T> realProvider, Genie genie) {
         if (realProvider instanceof ScopedProvider) {
             return realProvider;
         }
-        Class<T> targetClass;
-        if (targetType instanceof Class) {
-            targetClass = (Class<T>) targetType;
-        } else if (targetType instanceof ParameterizedType) {
-            targetClass = (Class<T>) ((ParameterizedType) targetType).getRawType();
-        } else {
-            throw new IllegalArgumentException("Unable to identify target class from type: " + targetType);
-        }
-        Genie genie = Genie.current();
+        Class<T> targetClass = key.rawType();
         ScopeCache cache = null;
         if (targetClass.isAnnotationPresent(Singleton.class)) {
             cache = genie.get(ScopeCache.SingletonScope.class);

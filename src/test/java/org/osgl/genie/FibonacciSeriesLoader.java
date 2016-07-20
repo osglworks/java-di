@@ -2,22 +2,17 @@ package org.osgl.genie;
 
 import org.osgl.$;
 import org.osgl.Osgl;
-import org.osgl.genie.loader.BeanLoaderBase;
+import org.osgl.genie.loader.ElementLoaderBase;
 import org.osgl.util.C;
 import org.osgl.util.N;
 
 import java.util.List;
 import java.util.Map;
 
-class FibonacciSeriesLoader extends BeanLoaderBase<Integer> {
+class FibonacciSeriesLoader extends ElementLoaderBase<Integer> {
 
     @Override
-    public Integer loadOne(Object hint, Map<String, Object> options) {
-        return 1;
-    }
-
-    @Override
-    public List<Integer> loadMultiple(Object hint, Map<String, Object> options) {
+    public List<Integer> load(Map<String, Object> options) {
         int max = toInt(options.get("max"));
         int n1 = 1, n2 = 1, f;
         List<Integer> list = C.newList();
@@ -42,7 +37,7 @@ class FibonacciSeriesLoader extends BeanLoaderBase<Integer> {
     }
 
     @Override
-    public Osgl.Function<Integer, Boolean> filter(Object hint, Map<String, Object>  options) {
+    public Osgl.Function<Integer, Boolean> filter(Map<String, Object>  options) {
         final int max = toInt(options.get("max"));
         return new $.Predicate<Integer>() {
             @Override

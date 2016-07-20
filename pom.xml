@@ -14,8 +14,10 @@
   ~ License for the specific language governing permissions and limitations
   ~ under the License.
   -->
-<!-- history 
-0.1-SNAPSHOT 
+<!-- history
+0.2.0-SNAPSHOT
+- Refactory code and simplified Loader/Filter API
+0.1.0-SNAPSHOT
 - base verion when history log started
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -26,7 +28,7 @@
   <groupId>org.osgl</groupId>
   <artifactId>genie</artifactId>
   <packaging>jar</packaging>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.2.0-SNAPSHOT</version>
 
   <name>OSGL Genie</name>
   <description>A JSR330 style dependency injection solution</description>
@@ -109,6 +111,12 @@
       <groupId>org.osgl</groupId>
       <artifactId>osgl-tool</artifactId>
       <version>0.9.0-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.osgl</groupId>
+      <artifactId>osgl-logging</artifactId>
+      <version>0.6.0-SNAPSHOT</version>
     </dependency>
 
     <!--<dependency>-->

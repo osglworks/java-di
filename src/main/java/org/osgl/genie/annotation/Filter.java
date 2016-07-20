@@ -1,11 +1,11 @@
 package org.osgl.genie.annotation;
 
-import org.osgl.genie.BeanFilter;
+import org.osgl.genie.ElementFilter;
 
 import java.lang.annotation.*;
 
 /**
- * Used to tag an annotation with {@link BeanFilter bean filter}
+ * Used to tag an annotation with {@link ElementFilter bean filter}
  * specification.
  */
 @Documented
@@ -13,9 +13,9 @@ import java.lang.annotation.*;
 @Target(ElementType.ANNOTATION_TYPE)
 public @interface Filter {
     /**
-     * Specify the {@link BeanFilter} implementation used to
-     * filter bean(s) loaded by {@link org.osgl.genie.BeanLoader bean loaders}
-     * @return the `BeanFilter` class
+     * Specify the {@link ElementFilter} implementation used to
+     * filter bean(s) loaded by {@link org.osgl.genie.ElementLoader bean loaders}
+     * @return the `ElementFilter` class
      */
-    Class<? extends BeanFilter> value();
+    Class<? extends ElementFilter> value();
 }

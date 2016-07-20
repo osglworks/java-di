@@ -164,7 +164,7 @@ public class TomAndJen {
 }
 ```
 
-And immediately we stucked when we writing our binding in the `configure` method. There is no way to tell Genie how to resolve the `@Named("male")` and `@Named("female")` annotation. Now the `@Provider` factory method is the rescure:
+And immediately we stuck when we writing our binding in the `configure` method. There is no way to tell Genie how to resolve the `@Named("male")` and `@Named("female")` annotation. Now the `@Provider` factory method is the rescure:
 
 ```java
 class NamedBindings {
@@ -186,5 +186,5 @@ Genie genie = Genie.create(new NamedBindings());
 TomAndJen tj = genie.get(TomAndJen.class);
 ```
 
-Now you understand how to use module to configure Genie for type bindings, let's keep moving on with [container injection and customized bean loading](beanloader.md).
+Next topic: [how to inject container](container.md).
 

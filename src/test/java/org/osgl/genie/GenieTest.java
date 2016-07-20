@@ -11,11 +11,6 @@ public class GenieTest extends TestBase {
 
     private Genie genie;
 
-    @BeforeClass
-    public static void bootstrap() {
-        Builder.Factory.Manager.registerBuiltInBuilders();
-    }
-
     @Before
     public void setup() {
         genie = Genie.create();
@@ -63,13 +58,13 @@ public class GenieTest extends TestBase {
     }
 
     @Test
-    public void testBeanLoaderAnnotation() {
+    public void testLoaderAnnotation() {
         FibonacciSeriesHolder bean = genie.get(FibonacciSeriesHolder.class);
         eq("1,1,2,3,5,8,13", bean.toString());
     }
 
     @Test
-    public void testBeanLoaderAndFilterAnnotation() {
+    public void testLoaderAndFilterAnnotation() {
         EvenFibonacciSeriesHolder bean = genie.get(EvenFibonacciSeriesHolder.class);
         eq("2,8,34", bean.toString());
     }

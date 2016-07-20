@@ -26,7 +26,7 @@ Genie is a JSR330 Dependency Injection solution inspired by [Feather](https://gi
 
 * [Getting started](doc/getting_start.md)
 * [Type binding](doc/type_binding.md)
-* [Container and bean loader](beanloader.md)
+* [Inject container](container.md)
 * [Scoped injection](scope.md)
 * [IoC container integration](integration.md)
 

@@ -1,11 +1,11 @@
 package org.osgl.genie.annotation;
 
-import org.osgl.genie.BeanLoader;
+import org.osgl.genie.ElementLoader;
 
 import java.lang.annotation.*;
 
 /**
- * Used to tag an annotation with {@link BeanLoader bean loader}
+ * Used to tag an annotation with {@link ElementLoader bean loader}
  * specification.
  */
 @Documented
@@ -13,9 +13,9 @@ import java.lang.annotation.*;
 @Target(ElementType.ANNOTATION_TYPE)
 public @interface Loader {
     /**
-     * Specify the {@link BeanLoader} implementation used to
+     * Specify the {@link ElementLoader} implementation used to
      * load bean(s)
-     * @return the `BeanLoader` implementation
+     * @return the `ElementLoader` implementation
      */
-    Class<? extends BeanLoader> value();
+    Class<? extends ElementLoader> value();
 }
