@@ -20,9 +20,9 @@ Foo foo = new Foo();
 Bar bar = new Bar(foo);
 ```
 
-The problem with above code is you hard code the dependency management into your application and it makes it hard to refactor the code when you want to replace the current `Foo` implementation with another `SuperFoo` implementation. And if your `Foo` is very complicated object and is expensive to construct but you want to unit test `Bar` then you also introduce unnecessary complexity into unit test.
+The problem with above code is you hard code the dependency management into your application and it makes it hard to refactor the code when you want to replace the current `Foo` implementation with another `SuperFoo` implementation. And if your `Foo` is a very complicated object and is expensive to construct but you want to unit test `Bar` then you also introduce unnecessary complexity into unit test.
 
-Now here is how Genie and all other DI solutions handle the case. First add `javax.inject.Inject` annotation to your `Bar` class:
+Now here is how Genie and other JSR330 DI solutions handle the case. First add `javax.inject.Inject` annotation to your `Bar` class:
 
 ```java
 class Bar {
@@ -37,11 +37,11 @@ class Bar {
 And now Genie way to get your `Bar` instance:
 
 ```java
-Genie genie = Genie.create();
+Genie genie = Genie.create(); 
 Bar bar = genie.get(Bar.class);
 ```
 
-At the first glance the LOC doesn't change and it looks even more obscure to the programmer who hasn't used dependency injection before. However an important factor here is you don't even touch `Foo`, the dependency of `Bar` at all. Genie manage to instantiate the instance of `Foo` when it need it to construct the `Bar` instance. This abstraction leaves the space for application developer to centralize the configuration of dependency management and they doesn't need to get distracted from that when programming the business logic. It also makes it flexible to replace implementations if needed. See [Type binding](type_binding.md) for more details.
+An important thing is the application developer doesn't need to touch `Foo`, the dependency of `Bar`. Genie manage to instantiate the instance of `Foo` when it need it to construct the `Bar` instance. This abstraction leaves the space for application developer to centralize the configuration of dependency management and they doesn't need to get distracted from that when programming the business logic. It also makes it flexible to replace implementations if needed. See [Type binding](type_binding.md) for more details.
 
 In the above `Bar` code we have implemented one of three kind of injections: Constructor injection. Genie also support the other two injection types:
 

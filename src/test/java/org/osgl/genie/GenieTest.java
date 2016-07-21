@@ -106,7 +106,7 @@ public class GenieTest extends TestBase {
 
     @Test
     public void testNamedInjection() {
-        genie = new Genie(new ModuleWithNamedBindings());
+        //genie = new Genie(new ModuleWithNamedBindings());
         TomAndJen tj = genie.get(TomAndJen.class);
         no(tj.tom.gender().isFemale());
         yes(tj.jen.gender().isFemale());

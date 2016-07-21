@@ -11,10 +11,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Implementation of `AnnotatedBeanLoader` shall load beans whose class has
+ * Implementation of `AnnotatedElementLoader` shall load beans whose class has
  * been annotated by a certain annotation class
  */
-public abstract class AnnotatedBeanLoader extends ElementLoaderBase<Object> {
+public abstract class AnnotatedElementLoader extends ElementLoaderBase<Object> {
 
 
     /**
