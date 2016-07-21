@@ -170,8 +170,8 @@ public abstract class ErrorHandler {
 
 Genie provides three built-in Element loader and their corresponding annotation
 
-| ---- | ---- | ----- |
 | Loader | Annotation | Purpose |
+| ---- | ---- | ----- |
 | `AnnotatedElementLoader` | `AnnotatedWith` | Load element whose class has been annotated with specified annotation class |
 | `TypedElementLoader` | `TypeOf` | Load element whose class is sub type or implementation of the specified class |
 
