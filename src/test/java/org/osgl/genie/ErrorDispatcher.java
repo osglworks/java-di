@@ -11,7 +11,7 @@ import java.util.Map;
  */
 class ErrorDispatcher {
     @Inject
-    @TypeOf(ErrorHandler.class)
+    @TypeOf
     @MapKey("errorCode")
     Map<Integer, ErrorHandler> registry;
 

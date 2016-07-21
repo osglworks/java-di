@@ -1,6 +1,5 @@
 package org.osgl.genie.annotation;
 
-import org.osgl.genie.ElementLoader;
 import org.osgl.genie.KeyExtractor;
 
 import java.lang.annotation.*;
@@ -17,6 +16,7 @@ public @interface MapKey {
     /**
      * Specify the `hint` to be passed into {@link KeyExtractor#keyOf(String, Object)}
      * function call
+     *
      * @return the `hint` used to extract the key. Default value is ""
      */
     String value() default "";

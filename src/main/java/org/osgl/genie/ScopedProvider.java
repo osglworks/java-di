@@ -6,8 +6,6 @@ import org.osgl.genie.annotation.SessionScoped;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 
 /**
  * Decorate on a {@link javax.inject.Provider} with scope cache
@@ -35,12 +33,12 @@ class ScopedProvider<T> implements Provider<T> {
         return bean;
     }
 
-    static <T> Provider<T> decorate(Genie.Key key, Provider<T> realProvider, Genie genie) {
+    static <T> Provider<T> decorate(BeanSpec spec, Provider<T> realProvider, Genie genie) {
         if (realProvider instanceof ScopedProvider) {
             return realProvider;
         }
-        Class<T> targetClass = key.rawType();
-        ScopeCache cache = resolve(key.scope(), genie);
+        Class<T> targetClass = spec.rawType();
+        ScopeCache cache = resolve(spec.scope(), genie);
 
         return null == cache ? realProvider : new ScopedProvider<T>(targetClass, cache, realProvider);
     }

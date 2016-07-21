@@ -15,9 +15,11 @@ public interface ElementFilter<E> {
     /**
      * Create a filter function with the hint and options specified. This could
      * be used to produce composite Bean loader based on other bean loaders
-     * @param options the optional parameters specified to refine the filtering logic
+     *
+     * @param options   the optional parameters specified to refine the filtering logic
+     * @param container the bean spec of the container into which the element will be loaded
      * @return a filter to check if a certain bean instance matches this bean loader specification
      */
-    $.Function<E, Boolean> filter(Map<String, Object> options);
+    $.Function<E, Boolean> filter(Map<String, Object> options, BeanSpec container);
 
 }

@@ -30,11 +30,11 @@ public abstract class Module {
     private void validate() {
         Map<Object, Binder> map = C.newMap();
         for (Binder<?> binder : binders) {
-            Object key = binder.key();
-            if (map.containsKey(key)) {
-                throw E.invalidConfiguration("Duplicate binder key found: ", key);
+            Object spec = binder.beanSpec();
+            if (map.containsKey(spec)) {
+                throw E.invalidConfiguration("Duplicate bean spec found: ", spec);
             }
-            map.put(key, binder);
+            map.put(spec, binder);
         }
     }
 

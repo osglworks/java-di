@@ -5,7 +5,6 @@ import org.osgl.genie.annotation.Filter;
 import org.osgl.genie.annotation.Loader;
 import org.osgl.genie.annotation.MapKey;
 import org.osgl.util.C;
-import org.osgl.util.E;
 
 import javax.inject.Provider;
 import java.lang.annotation.Annotation;
@@ -23,21 +22,24 @@ import java.util.Set;
 abstract class ElementLoaderProvider<T> implements Provider<T> {
 
     private static class FilterInfo extends $.Predicate {
-        ElementFilter filter;
-        Map<String, Object> options = C.newMap();
-        $.Function<Object, Boolean> predicate;
+        final ElementFilter filter;
+        final Map<String, Object> options = C.newMap();
+        final $.Function<Object, Boolean> predicate;
+        final BeanSpec containerSpec;
 
-        FilterInfo(ElementFilter filter, Annotation anno, Class<? extends Annotation> annoClass) {
+        FilterInfo(ElementFilter filter, Annotation anno, Class<? extends Annotation> annoClass, BeanSpec container) {
             this.filter = filter;
             Method[] ma = annoClass.getMethods();
-            for (Method m: ma) {
+            for (Method m : ma) {
                 if (isStandardAnnotationMethod(m)) {
                     continue;
                 }
                 options.put(m.getName(), $.invokeVirtual(anno, m));
             }
-            predicate = filter.filter(options);
+            predicate = filter.filter(options, container);
+            this.containerSpec = container;
         }
+
         public boolean test(Object bean) {
             return predicate.apply(bean);
         }
@@ -45,8 +47,8 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
 
     private static class LoaderInfo extends FilterInfo implements Comparable<LoaderInfo> {
 
-        LoaderInfo(ElementLoader loader, Annotation anno, Class<? extends Annotation> annoClass) {
-            super(loader, anno, annoClass);
+        LoaderInfo(ElementLoader loader, Annotation anno, Class<? extends Annotation> annoClass, BeanSpec container) {
+            super(loader, anno, annoClass, container);
         }
 
         ElementLoader loader() {
@@ -58,14 +60,14 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
             return loader().priority() - o.loader().priority();
         }
 
-        Iterable load() {
-            return loader().load(options);
+        Iterable load(Genie genie) {
+            return loader().load(options, containerSpec, genie);
         }
     }
 
     private static class CollectionLoaderProvider<T extends Collection> extends ElementLoaderProvider<T> {
-        CollectionLoaderProvider(Genie.Key key, Provider<T> provider, Genie genie) {
-            super(key, provider, genie);
+        CollectionLoaderProvider(BeanSpec spec, Provider<T> provider, Genie genie) {
+            super(spec, provider, genie);
         }
 
         @Override
@@ -79,9 +81,9 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
         String hint;
         KeyExtractor keyExtractor;
 
-        MapLoaderProvider(Genie.Key key, Provider<T> provider, Genie genie) {
-            super(key, provider, genie);
-            MapKey mapKey = key.mapKey();
+        MapLoaderProvider(BeanSpec spec, Provider<T> provider, Genie genie) {
+            super(spec, provider, genie);
+            MapKey mapKey = spec.mapKey();
             this.keyExtractor = genie.get(mapKey.extractor());
             this.hint = mapKey.value();
         }
@@ -93,23 +95,25 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
     }
 
 
-    private Provider<T> realProvider;
-    private LoaderInfo loader;
-    private Set<FilterInfo> filters;
+    private final Provider<T> realProvider;
+    private final LoaderInfo loader;
+    private final Set<FilterInfo> filters;
+    private final Genie genie;
 
-    private ElementLoaderProvider(Genie.Key key, Provider<T> provider, Genie genie) {
+    private ElementLoaderProvider(BeanSpec spec, Provider<T> provider, Genie genie) {
         this.realProvider = provider;
-        C.List<LoaderInfo> loaders = loaders(genie, key).sorted();
+        C.List<LoaderInfo> loaders = loaders(genie, spec).sorted();
         this.loader = loaders.first();
         List<? extends FilterInfo> tail = loaders.head(-1);
-        this.filters = C.set(filters(genie, key).append(tail));
+        this.filters = C.set(filters(genie, spec).append(tail));
+        this.genie = genie;
     }
 
     @Override
     public final T get() {
         T bean = realProvider.get();
         $.Predicate predicate = $.F.and(filters.toArray(new FilterInfo[filters.size()]));
-        for (Object element : loader.load()) {
+        for (Object element : loader.load(genie)) {
             if (predicate.test(element)) {
                 populate(bean, element);
             }
@@ -119,8 +123,8 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
 
     protected abstract void populate(T bean, Object element);
 
-    static <T> Provider<T> decorate(Genie.Key key, Provider<T> provider, Genie genie) {
-        if (!key.hasLoader()) {
+    static <T> Provider<T> decorate(BeanSpec spec, Provider<T> provider, Genie genie) {
+        if (!spec.hasLoader()) {
             return provider;
         }
 
@@ -128,33 +132,33 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
             return $.cast(provider);
         }
 
-        if (key.isMap()) {
-            return new MapLoaderProvider(key, provider, genie);
+        if (spec.isMap()) {
+            return new MapLoaderProvider(spec, provider, genie);
         }
 
-        return new CollectionLoaderProvider(key, provider, genie);
+        return new CollectionLoaderProvider(spec, provider, genie);
     }
 
-    private static C.List<LoaderInfo> loaders(Genie genie, Genie.Key key) {
+    private static C.List<LoaderInfo> loaders(Genie genie, BeanSpec spec) {
         C.List<LoaderInfo> list = C.newList();
-        Set<Annotation> loaders = key.loaders();
+        Set<Annotation> loaders = spec.loaders();
         for (Annotation anno : loaders) {
             Class<? extends Annotation> annoClass = anno.annotationType();
             Loader loaderTag = annoClass.getAnnotation(Loader.class);
             ElementLoader loader = genie.get(loaderTag.value());
-            list.add(new LoaderInfo(loader, anno, annoClass));
+            list.add(new LoaderInfo(loader, anno, annoClass, spec));
         }
         return list;
     }
 
-    private static C.List<FilterInfo> filters(Genie genie, Genie.Key key) {
+    private static C.List<FilterInfo> filters(Genie genie, BeanSpec spec) {
         C.List<FilterInfo> list = C.newList();
-        Set<Annotation> annotations = key.filters();
+        Set<Annotation> annotations = spec.filters();
         for (Annotation anno : annotations) {
             Class<? extends Annotation> annoClass = anno.annotationType();
             Filter filterTag = annoClass.getAnnotation(Filter.class);
             ElementFilter loader = genie.get(filterTag.value());
-            list.add(new FilterInfo(loader, anno, annoClass));
+            list.add(new FilterInfo(loader, anno, annoClass, spec));
         }
         return list;
     }

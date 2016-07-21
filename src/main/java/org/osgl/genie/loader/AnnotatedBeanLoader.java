@@ -2,6 +2,8 @@ package org.osgl.genie.loader;
 
 import org.osgl.$;
 import org.osgl.Osgl;
+import org.osgl.genie.BeanSpec;
+import org.osgl.genie.Genie;
 import org.osgl.util.E;
 
 import java.lang.annotation.Annotation;
@@ -17,16 +19,18 @@ public abstract class AnnotatedBeanLoader extends ElementLoaderBase<Object> {
 
     /**
      * This method will load instances of all public and non-abstract classes that
-     * has been annotated by annotation class specified as `hint`
+     * has been annotated by annotation class specified as `value` in `options`
      *
-     * @param options optional parameters specified to refine the loading process
+     * @param options   optional parameters specified to refine the loading process
+     * @param container the bean spec about the container into which the bean to be loaded
+     * @param genie     the dependency injector
      * @return the list of bean instances
      */
     @Override
-    public Iterable<Object> load(Map<String, Object> options) {
+    public Iterable<Object> load(Map<String, Object> options, BeanSpec container, Genie genie) {
         Object hint = options.get("value");
         E.illegalArgumentIf(Annotation.class.isAssignableFrom((Class) hint));
-        return load(annoClassFromHint(hint));
+        return load(annoClassFromHint(hint), genie);
     }
 
     /**
@@ -34,17 +38,20 @@ public abstract class AnnotatedBeanLoader extends ElementLoaderBase<Object> {
      * specified. The class of all beans returned must have `public` access
      *
      * @param annoClass the annotation class
+     * @param genie     dependency injector used to load element instances
      * @return a list of beans as described above
      */
-    protected abstract List<Object> load(Class<? extends Annotation> annoClass);
+    protected abstract List<Object> load(Class<? extends Annotation> annoClass, Genie genie);
 
     /**
      * Returns a predicate check if an object has annotation as specified as `hint`
-     * @param options not used
+     *
+     * @param options   not used
+     * @param container the bean spec of the container into which the element will be loaded
      * @return a predicate function as described above
      */
     @Override
-    public Osgl.Function filter(Map<String, Object> options) {
+    public Osgl.Function filter(Map<String, Object> options, BeanSpec container) {
         Object hint = options.get("value");
         E.illegalArgumentIf(Annotation.class.isAssignableFrom((Class) hint));
         final Class<? extends Annotation> annoClass = annoClassFromHint(hint);

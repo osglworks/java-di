@@ -1,8 +1,9 @@
 package org.osgl.genie.loader;
 
 import org.osgl.Osgl;
+import org.osgl.genie.BeanSpec;
+import org.osgl.genie.Genie;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -13,11 +14,12 @@ public abstract class ConfigurationLoader extends ElementLoaderBase<Object> {
 
     /**
      * Load bean from configuration specified by `hint`
+     *
      * @param options not used
      * @return the configuration value
      */
     @Override
-    public abstract Iterable<Object> load(Map<String, Object> options);
+    public abstract Iterable<Object> load(Map<String, Object> options, BeanSpec container, Genie genie);
 
     @Override
     public int priority() {
@@ -28,7 +30,7 @@ public abstract class ConfigurationLoader extends ElementLoaderBase<Object> {
      * `ConfigurationLoader` shall **NOT** be used in conjunction with other
      * {@link org.osgl.genie.ElementLoader element loaders}. Thus it suppose this method
      * will never get called.
-     *
+     * <p>
      * In case this method is called, it will throw out {@link UnsupportedOperationException}
      *
      * @param options not used
@@ -36,7 +38,7 @@ public abstract class ConfigurationLoader extends ElementLoaderBase<Object> {
      * @throws UnsupportedOperationException
      */
     @Override
-    public final Osgl.Function<Object, Boolean> filter(Map<String, Object> options) {
+    public final Osgl.Function<Object, Boolean> filter(Map<String, Object> options, BeanSpec container) {
         throw new UnsupportedOperationException();
     }
 }

@@ -15,6 +15,7 @@ public @interface Filter {
     /**
      * Specify the {@link ElementFilter} implementation used to
      * filter bean(s) loaded by {@link org.osgl.genie.ElementLoader bean loaders}
+     *
      * @return the `ElementFilter` class
      */
     Class<? extends ElementFilter> value();

@@ -12,7 +12,7 @@ import java.util.Map;
 class FibonacciSeriesLoader extends ElementLoaderBase<Integer> {
 
     @Override
-    public List<Integer> load(Map<String, Object> options) {
+    public List<Integer> load(Map<String, Object> options, BeanSpec container, Genie genie) {
         int max = toInt(options.get("max"));
         int n1 = 1, n2 = 1, f;
         List<Integer> list = C.newList();
@@ -37,7 +37,7 @@ class FibonacciSeriesLoader extends ElementLoaderBase<Integer> {
     }
 
     @Override
-    public Osgl.Function<Integer, Boolean> filter(Map<String, Object>  options) {
+    public Osgl.Function<Integer, Boolean> filter(Map<String, Object> options, BeanSpec container) {
         final int max = toInt(options.get("max"));
         return new $.Predicate<Integer>() {
             @Override

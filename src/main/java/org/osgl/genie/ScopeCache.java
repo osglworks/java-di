@@ -6,8 +6,9 @@ package org.osgl.genie;
 public interface ScopeCache {
     /**
      * Get a bean from the cache defined in the scope
+     *
      * @param clazz the key to retrieve the bean
-     * @param <T> generic type of the bean
+     * @param <T>   generic type of the bean
      * @return the bean instance
      */
     <T> T get(Class<T> clazz);
@@ -15,9 +16,10 @@ public interface ScopeCache {
     /**
      * Put a bean instance into the cache associated with the class key
      * specified
+     *
      * @param clazz the key to store the bean instance
-     * @param bean the bean instance to be stored
-     * @param <T> generic type of the bean
+     * @param bean  the bean instance to be stored
+     * @param <T>   generic type of the bean
      */
     <T> void put(Class<T> clazz, T bean);
 

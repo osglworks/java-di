@@ -3,7 +3,7 @@ package org.osgl.genie;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgl.genie.ScopedObjects.*;
-import org.osgl.genie.loader.TypedBeanLoader;
+import org.osgl.genie.loader.TypedElementLoader;
 
 /**
  * Test Genie DI solution
@@ -117,7 +117,7 @@ public class GenieTest extends TestBase {
         genie = new Genie(new Module() {
             @Override
             protected void configure() {
-                bind(TypedBeanLoader.class).to(SimpleTypeBeanLoader.class);
+                bind(TypedElementLoader.class).to(SimpleTypeElementLoader.class);
             }
         });
         ErrorDispatcher errorDispatcher = genie.get(ErrorDispatcher.class);

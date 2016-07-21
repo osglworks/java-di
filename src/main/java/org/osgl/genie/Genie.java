@@ -1,17 +1,17 @@
 package org.osgl.genie;
 
 import org.osgl.$;
-import org.osgl.Osgl.Var;
-import org.osgl.genie.annotation.*;
+import org.osgl.genie.annotation.Provides;
 import org.osgl.genie.provider.*;
 import org.osgl.genie.util.AnnotationUtil;
 import org.osgl.logging.LogManager;
 import org.osgl.logging.Logger;
 import org.osgl.util.C;
-import org.osgl.util.E;
 import org.osgl.util.S;
 
-import javax.inject.*;
+import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Scope;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
@@ -31,6 +31,7 @@ public final class Genie implements DependencyInjector {
         private List<Annotation> annotations = C.newList();
         private Genie genie;
         private Class<? extends Annotation> scope;
+
         Binder(Class<T> type) {
             this.type = type;
         }
@@ -72,265 +73,17 @@ public final class Genie implements DependencyInjector {
                 return;
             }
             this.genie = genie;
-            Key key = key();
-            genie.registerProvider(key, genie.decorate(key, provider));
+            BeanSpec spec = beanSpec();
+            genie.registerProvider(spec, genie.decorate(spec, provider));
         }
 
-        Key key() {
-            Key key = new Key(type, annotations.toArray(new Annotation[annotations.size()]));
+        BeanSpec beanSpec() {
+            BeanSpec spec = new BeanSpec(type, annotations.toArray(new Annotation[annotations.size()]));
             if (scope != null) {
-                key.scope.set(scope);
+                spec.scope(scope);
             }
-            return key;
+            return spec;
         }
-    }
-
-    static class Key {
-
-        /**
-         * Used to sort annotation list so we can make equality compare between
-         * `Key` generated from {@link Provides provider} factory method
-         * and the `Key` generated from field or method parameters.
-         *
-         * The logic simply relies on annotation's class. As it is clear that the
-         * same annotation type cannot be tagged multiple times
-         */
-        private static Comparator<Annotation> ANNO_CMP = new Comparator<Annotation>() {
-            @Override
-            public int compare(Annotation o1, Annotation o2) {
-                Class c1 = o1.getClass();
-                Class c2 = o2.getClass();
-                if (c1 != c2) {
-                    return c1.getName().compareTo(c2.getName());
-                }
-                return 0;
-            }
-        };
-
-        private final int hc;
-        private final Type type;
-        private final C.List<Annotation> annotations = C.newList();
-        private final Set<Annotation> loaders = C.newSet();
-        private final Set<Annotation> filters = C.newSet();
-        private final Var<MapKey> mapKey = $.var();
-        private final Var<Class<? extends Annotation>> scope = $.var();
-
-        private List<Type> typeParams;
-
-        /**
-         * Construct the `Key` with bean type and field or parameter
-         * annotations
-         * @param type the type of the bean to be instantiated
-         * @param annotations the annotation tagged on field or parameter,
-         *                    or `null` if this is a direct API injection
-         *                    request
-         */
-        Key(Type type, Annotation[] annotations) {
-            this.type = type;
-            this.resolveType();
-            this.resolveAnnotations(annotations);
-            this.hc = $.hc(type, this.annotations);
-        }
-
-        private Key(Key providerKey) {
-            if (!providerKey.isProvider()) {
-                throw new IllegalStateException("not a provider key");
-            }
-            this.type = ((ParameterizedType) providerKey.type).getActualTypeArguments()[0];
-            this.annotations.addAll(providerKey.annotations);
-            this.loaders.addAll(providerKey.loaders);
-            this.filters.addAll(providerKey.filters);
-            this.hc = $.hc(this.type, this.annotations);
-        }
-
-        @Override
-        public int hashCode() {
-            return hc;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) {
-                return true;
-            }
-            if (obj instanceof Key) {
-                Key that = (Key) obj;
-                return that.hc == hc
-                        && $.eq(type, that.type)
-                        && $.eq2(annotations, that.annotations);
-            }
-            return false;
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder sb = S.builder(type());
-            if (!annotations().isEmpty()) {
-                sb.append("@[").append(S.join(", ", annotations())).append("]");
-            }
-            return sb.toString();
-        }
-
-        Class rawType() {
-            if (type instanceof Class) {
-                return (Class) type;
-            } else if (type instanceof ParameterizedType) {
-                return (Class) ((ParameterizedType) type).getRawType();
-            } else {
-                throw E.unexpected("type not recognized: %s", type);
-            }
-        }
-
-        Key rawTypeKey() {
-            return Key.of(rawType());
-        }
-
-        Type type() {
-            return type;
-        }
-
-        boolean isMap() {
-            return Map.class.isAssignableFrom(rawType());
-        }
-
-        MapKey mapKey() {
-            return mapKey.get();
-        }
-
-        boolean isProvider() {
-            return Provider.class.isAssignableFrom(rawType());
-        }
-
-        Key providerKey() {
-            return new Key(this);
-        }
-
-        List<Annotation> annotations() {
-            return annotations;
-        }
-
-        List<Type> typeParams() {
-            if (null == typeParams) {
-                if (type instanceof ParameterizedType) {
-                    ParameterizedType ptype = $.cast(type);
-                    Type[] ta = ptype.getActualTypeArguments();
-                    typeParams = C.listOf(ta);
-                } else {
-                    typeParams = C.list();
-                }
-            }
-            return typeParams;
-        }
-
-        boolean hasLoader() {
-            return !loaders.isEmpty();
-        }
-
-        Set<Annotation> loaders() {
-            return loaders;
-        }
-
-        Set<Annotation> filters() {
-            return filters;
-        }
-
-        Class<? extends Annotation> scope() {
-            return scope.get();
-        }
-
-        boolean notConstructable() {
-            Class<?> c = rawType();
-            return c.isInterface() || c.isArray() || Modifier.isAbstract(c.getModifiers());
-        }
-
-        private void resolveType() {
-            for (Annotation annotation : rawType().getAnnotations()) {
-                resolveScope(annotation);
-            }
-        }
-
-        private void resolveAnnotations(Annotation[] aa) {
-            if (null == aa || aa.length == 0) {
-                return;
-            }
-            Class<?> rawType = rawType();
-            boolean isMap = Map.class.isAssignableFrom(rawType);
-            boolean isContainer = Collection.class.isAssignableFrom(rawType) || isMap;
-            MapKey mapKey = null;
-            // Note only qualifiers and bean loaders annotation are considered
-            // effective annotation. Scope annotations is not effective here
-            // because they are tagged on target type, not the field or method
-            // parameter
-            for (Annotation anno: aa) {
-                Class cls = anno.annotationType();
-                if (Inject.class == cls || Provides.class == cls) {
-                    continue;
-                }
-                if (cls == MapKey.class) {
-                    if (null != mapKey) {
-                        throw new InjectException("MapKey annotation already presented");
-                    }
-                    if (!isMap) {
-                        logger.warn("MapKey annotation ignored on target that is not of Map type");
-                    } else {
-                        mapKey = $.cast(anno);
-                    }
-                } if (cls.isAnnotationPresent(Loader.class)) {
-                    if (isContainer) {
-                        annotations.add(anno);
-                        loaders.add(anno);
-                    } else {
-                        logger.warn("Loader annotation[%s] ignored as target type is neither Collection nor Map", cls.getSimpleName());
-                    }
-                } else if (cls.isAnnotationPresent(Qualifier.class)) {
-                    annotations.add(anno);
-                } else if (cls.isAnnotationPresent(Filter.class)) {
-                    if (isContainer) {
-                        annotations.add(anno);
-                        filters.add(anno);
-                    } else {
-                        logger.warn("Filter annotation[%s] ignored as target type is neither Collection nor Map", cls.getSimpleName());
-                    }
-                } else if (cls.isAnnotationPresent(Scope.class)) {
-                    resolveScope(anno);
-                }
-            }
-            if (isMap && hasLoader() && null == mapKey) {
-                throw new InjectException("No MapKey annotation found on Map type target with ElementLoader annotation presented");
-            }
-            if (null != mapKey) {
-                if (hasLoader()) {
-                    this.mapKey.set(mapKey);
-                } else {
-                    logger.warn("MapKey annotation ignored on target without ElementLoader annotation presented");
-                }
-            }
-
-            Collections.sort(annotations, ANNO_CMP);
-        }
-
-        private void resolveScope(Annotation annotation) {
-            Class<? extends Annotation> annoClass = annotation.annotationType();
-            if (annoClass.isAnnotationPresent(Scope.class)) {
-                if (null != scope.get()) {
-                    throw new InjectException("Multiple Scope annotation found: %s", this);
-                }
-                scope.set(annoClass);
-            }
-        }
-
-        static Key of(Class<?> clazz) {
-            return new Key(clazz, null);
-        }
-
-        static Key of(Field field) {
-            return new Key(field.getGenericType(), field.getDeclaredAnnotations());
-        }
-
-        static Key of(Type type, Annotation[] paramAnnotations) {
-            return new Key(type, paramAnnotations);
-        }
-
     }
 
     private static class WeightedProvider<T> implements Provider<T>, Comparable<WeightedProvider<T>> {
@@ -395,11 +148,11 @@ public final class Genie implements DependencyInjector {
         }
     }
 
-    private ConcurrentMap<Key, Provider<?>> registry = new ConcurrentHashMap<Key, Provider<?>>();
+    private ConcurrentMap<BeanSpec, Provider<?>> registry = new ConcurrentHashMap<BeanSpec, Provider<?>>();
 
     private static final ThreadLocal<Integer> AFFINITY = new ThreadLocal<Integer>();
 
-    Genie(Object ... modules) {
+    Genie(Object... modules) {
         registerBuiltInProviders();
         if (modules.length > 0) {
             for (Object module : modules) {
@@ -410,13 +163,14 @@ public final class Genie implements DependencyInjector {
 
     /**
      * Returns a bean of given type
+     *
      * @param type the class of the bean
-     * @param <T> generic type of the bean
+     * @param <T>  generic type of the bean
      * @return the bean
      */
     public <T> T get(Class<T> type) {
-        Key key = Key.of(type);
-        return get(key);
+        BeanSpec spec = BeanSpec.of(type);
+        return get(spec);
     }
 
     public <T> void registerProvider(Class<T> type, Provider<? extends T> provider) {
@@ -435,20 +189,20 @@ public final class Genie implements DependencyInjector {
         if (null == roles) {
             return;
         }
-        for (Class role: roles) {
+        for (Class role : roles) {
             bindProviderToClass(role, provider);
         }
     }
 
     private void addIntoRegistry(Class<?> type, Provider<?> val) {
         WeightedProvider current = WeightedProvider.decorate(val);
-        Key key = Key.of(type);
-        WeightedProvider<?> old = (WeightedProvider<?>) registry.get(key);
+        BeanSpec spec = BeanSpec.of(type);
+        WeightedProvider<?> old = (WeightedProvider<?>) registry.get(spec);
         if (null == old || old.compareTo(current) > 0) {
-            registry.put(key, current);
+            registry.put(spec, current);
         }
         if (null != old && old.affinity == 0 && current.affinity == 0) {
-            throw new InjectException("Provider has already registered by key: %s", key);
+            throw new InjectException("Provider has already registered for spec: %s", spec);
         }
     }
 
@@ -463,10 +217,10 @@ public final class Genie implements DependencyInjector {
         registerProvider(SortedSet.class, SortedSetProvider.INSTANCE);
     }
 
-    private void registerProvider(Key key, Provider<?> provider) {
-        Provider previous = registry.putIfAbsent(key, provider);
+    private void registerProvider(BeanSpec spec, Provider<?> provider) {
+        Provider previous = registry.putIfAbsent(spec, provider);
         if (null != previous) {
-            throw new InjectException("Provider has already registered by key: %s", key);
+            throw new InjectException("Provider has already registered for spec: %s", spec);
         }
     }
 
@@ -496,9 +250,9 @@ public final class Genie implements DependencyInjector {
 
     private void registerFactoryMethod(final Object instance, final Method factory) {
         Type retType = factory.getGenericReturnType();
-        final Key key = Key.of(retType, factory.getAnnotations());
-        final MethodInjector methodInjector = methodInjector(factory, C.set(key));
-        registerProvider(key, decorate(key, new Provider () {
+        final BeanSpec spec = BeanSpec.of(retType, factory.getAnnotations());
+        final MethodInjector methodInjector = methodInjector(factory, C.set(spec));
+        registerProvider(spec, decorate(spec, new Provider() {
             @Override
             public Object get() {
                 return methodInjector.applyTo(instance);
@@ -506,58 +260,58 @@ public final class Genie implements DependencyInjector {
         }));
     }
 
-    private <T> T get(Key key) {
-        Provider<?> provider = findProvider(key, C.set(key));
+    private <T> T get(BeanSpec spec) {
+        Provider<?> provider = findProvider(spec, C.set(spec));
         return (T) provider.get();
     }
 
-    private Provider<?> findProvider(final Key key, final Set<Key> chain) {
+    private Provider<?> findProvider(final BeanSpec spec, final Set<BeanSpec> chain) {
         // 0. try registry
-        Provider<?> provider = registry.get(key);
+        Provider<?> provider = registry.get(spec);
         if (null != provider) {
             return provider;
         }
 
         // does it want to inject a Provider?
-        if (key.isProvider()) {
+        if (spec.isProvider()) {
             provider = new Provider<Provider<?>>() {
                 @Override
                 public Provider<?> get() {
-                    return findProvider(key.providerKey(), C.<Key>empty());
+                    return findProvider(spec.providerSpec(), C.<BeanSpec>empty());
                 }
             };
-            registry.putIfAbsent(key, provider);
+            registry.putIfAbsent(spec, provider);
             return provider;
         }
 
 
         // build provider from constructor, field or method
-        if (key.notConstructable()) {
-            // does key's bare class have provider?
-            provider = registry.get(key.rawTypeKey());
+        if (spec.notConstructable()) {
+            // does spec's bare class have provider?
+            provider = registry.get(spec.rawTypeSpec());
             if (null == provider) {
-                throw new InjectException("Cannot instantiate %s", key);
+                throw new InjectException("Cannot instantiate %s", spec);
             }
         } else {
-            provider = buildProvider(key, chain);
+            provider = buildProvider(spec, chain);
         }
 
-        provider = decorate(key, provider);
-        registry.putIfAbsent(key, provider);
+        provider = decorate(spec, provider);
+        registry.putIfAbsent(spec, provider);
         return provider;
     }
 
-    private Provider<?> decorate(Key key, Provider provider) {
-        return ScopedProvider.decorate(key, ElementLoaderProvider.decorate(key, provider, this), this);
+    private Provider<?> decorate(BeanSpec spec, Provider provider) {
+        return ScopedProvider.decorate(spec, ElementLoaderProvider.decorate(spec, provider, this), this);
     }
 
-    private Provider buildProvider(Key key, Set<Key> chain) {
-        Class target = key.rawType();
+    private Provider buildProvider(BeanSpec spec, Set<BeanSpec> chain) {
+        Class target = spec.rawType();
         Constructor constructor = constructor(target);
-        return null != constructor ? buildConstructor(constructor, key, chain) : buildFMInjector(target, key, chain);
+        return null != constructor ? buildConstructor(constructor, spec, chain) : buildFMInjector(target, spec, chain);
     }
 
-    private Provider buildConstructor(final Constructor constructor, final Key key, final Set<Key> chain) {
+    private Provider buildConstructor(final Constructor constructor, final BeanSpec spec, final Set<BeanSpec> chain) {
         Type[] ta = constructor.getGenericParameterTypes();
         Annotation[][] aaa = constructor.getParameterAnnotations();
         final Provider[] pp = paramProviders(ta, aaa, chain);
@@ -567,13 +321,13 @@ public final class Genie implements DependencyInjector {
                 try {
                     return constructor.newInstance(params(pp));
                 } catch (Exception e) {
-                    throw new InjectException(e, "cannot instantiate %s", key);
+                    throw new InjectException(e, "cannot instantiate %s", spec);
                 }
             }
         };
     }
 
-    private Provider buildFMInjector(final Class target, final Key key, Set<Key> chain) {
+    private Provider buildFMInjector(final Class target, final BeanSpec spec, Set<BeanSpec> chain) {
         final List<FieldInjector> fieldInjectors = fieldInjectors(target, chain);
         final List<MethodInjector> methodInjectors = methodInjectors(target, chain);
         return new Provider() {
@@ -582,7 +336,7 @@ public final class Genie implements DependencyInjector {
                 try {
                     Constructor constructor = target.getDeclaredConstructor();
                     if (null == constructor) {
-                        throw new InjectException("cannot instantiate %s: %s", key, "no default constructor found");
+                        throw new InjectException("cannot instantiate %s: %s", spec, "no default constructor found");
                     }
                     constructor.setAccessible(true);
                     Object bean = constructor.newInstance();
@@ -596,7 +350,7 @@ public final class Genie implements DependencyInjector {
                 } catch (InjectException e) {
                     throw e;
                 } catch (Exception e) {
-                    throw new InjectException(e, "cannot instantiate %s", key);
+                    throw new InjectException(e, "cannot instantiate %s", spec);
                 }
             }
         };
@@ -604,7 +358,7 @@ public final class Genie implements DependencyInjector {
 
     private Constructor constructor(Class target) {
         Constructor[] ca = target.getDeclaredConstructors();
-        for (Constructor c: ca) {
+        for (Constructor c : ca) {
             if (c.isAnnotationPresent(Inject.class)) {
                 c.setAccessible(true);
                 return c;
@@ -613,7 +367,7 @@ public final class Genie implements DependencyInjector {
         return null;
     }
 
-    private List<FieldInjector> fieldInjectors(Class type, Set<Key> chain) {
+    private List<FieldInjector> fieldInjectors(Class type, Set<BeanSpec> chain) {
         Class<?> current = type;
         List<FieldInjector> fieldInjectors = C.newList();
         while (null != current && !current.equals(Object.class)) {
@@ -628,16 +382,16 @@ public final class Genie implements DependencyInjector {
         return fieldInjectors;
     }
 
-    private FieldInjector fieldInjector(Field field, Set<Key> chain) {
+    private FieldInjector fieldInjector(Field field, Set<BeanSpec> chain) {
         Annotation[] annotations = field.getDeclaredAnnotations();
-        Key fieldKey = Key.of(field.getGenericType(), annotations);
-        if (chain.contains(fieldKey)) {
-            foundCircularDependency(chain, fieldKey);
+        BeanSpec fieldSpec = BeanSpec.of(field.getGenericType(), annotations);
+        if (chain.contains(fieldSpec)) {
+            foundCircularDependency(chain, fieldSpec);
         }
-        return new FieldInjector(field, findProvider(fieldKey, chain(chain, fieldKey)));
+        return new FieldInjector(field, findProvider(fieldSpec, chain(chain, fieldSpec)));
     }
 
-    private List<MethodInjector> methodInjectors(Class type, Set<Key> chain) {
+    private List<MethodInjector> methodInjectors(Class type, Set<BeanSpec> chain) {
         Class<?> current = type;
         List<MethodInjector> methodInjectors = C.newList();
         while (null != current && !current.equals(Object.class)) {
@@ -652,43 +406,44 @@ public final class Genie implements DependencyInjector {
         return methodInjectors;
     }
 
-    private MethodInjector methodInjector(Method method, Set<Key> chain) {
+    private MethodInjector methodInjector(Method method, Set<BeanSpec> chain) {
         Type[] paramTypes = method.getGenericParameterTypes();
         int len = paramTypes.length;
         Provider[] paramProviders = new Provider[len];
         Annotation[][] aaa = method.getParameterAnnotations();
         for (int i = 0; i < len; ++i) {
             Type paramType = paramTypes[i];
-            Key paramKey = Key.of(paramType, aaa[i]);
-            if (chain.contains(paramKey)) {
-                foundCircularDependency(chain, paramKey);
+            BeanSpec paramSpec = BeanSpec.of(paramType, aaa[i]);
+            if (chain.contains(paramSpec)) {
+                foundCircularDependency(chain, paramSpec);
             }
-            paramProviders[i] = findProvider(paramKey, chain(chain, paramKey));
+            paramProviders[i] = findProvider(paramSpec, chain(chain, paramSpec));
         }
         return new MethodInjector(method, paramProviders);
     }
 
-    private Provider[] paramProviders(Type[] paramTypes, Annotation[][] aaa, Set<Key> chain) {
+    private Provider[] paramProviders(Type[] paramTypes, Annotation[][] aaa, Set<BeanSpec> chain) {
         final int len = paramTypes.length;
         Provider[] pa = new Provider[len];
         for (int i = 0; i < len; ++i) {
             Type type = paramTypes[i];
             Annotation[] annotations = aaa[i];
-            Key paramKey = Key.of(type, annotations);
-            if (chain.contains(paramKey)) {
-                foundCircularDependency(chain, paramKey);
+            BeanSpec paramSpec = BeanSpec.of(type, annotations);
+            if (chain.contains(paramSpec)) {
+                foundCircularDependency(chain, paramSpec);
             }
-            pa[i] = findProvider(paramKey, chain(chain, paramKey));
+            pa[i] = findProvider(paramSpec, chain(chain, paramSpec));
         }
         return pa;
     }
 
     /**
      * Create a Genie instance with modules specified
+     *
      * @param modules modules that provides binding or {@literal@}Provides methods
      * @return an new Genie instance with modules
      */
-    public static Genie create(Object ... modules) {
+    public static Genie create(Object... modules) {
         return new Genie(modules);
     }
 
@@ -701,23 +456,23 @@ public final class Genie implements DependencyInjector {
         return params;
     }
 
-    private static Set<Key> chain(Set<Key> chain, Key newKey) {
-        Set<Key> newChain = C.newSet(chain);
-        newChain.add(newKey);
+    private static Set<BeanSpec> chain(Set<BeanSpec> chain, BeanSpec nextSpec) {
+        Set<BeanSpec> newChain = C.newSet(chain);
+        newChain.add(nextSpec);
         return newChain;
     }
 
-    private static StringBuilder debugChain(Set<Key> chain, Key last) {
+    private static StringBuilder debugChain(Set<BeanSpec> chain, BeanSpec last) {
         StringBuilder sb = S.builder();
-        for (Key key : chain) {
-            sb.append(key).append(" -> ");
+        for (BeanSpec spec : chain) {
+            sb.append(spec).append(" -> ");
         }
         sb.append(last);
         return sb;
     }
 
-    private static void foundCircularDependency(Set<Key> chain, Key lastKey) {
-        throw InjectException.circularDependency(debugChain(chain, lastKey));
+    private static void foundCircularDependency(Set<BeanSpec> chain, BeanSpec last) {
+        throw InjectException.circularDependency(debugChain(chain, last));
     }
 
 }

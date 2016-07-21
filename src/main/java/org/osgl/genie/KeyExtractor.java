@@ -6,7 +6,7 @@ import org.osgl.$;
  * `KeyExtractor` can be used to extract or derive "key" from
  * a value data. The result "key" can be used to index the value
  * in a {@link java.util.Map} data structure.
- *
+ * <p>
  * A general contract implementation must obey is
  * different value must generate different key
  *
@@ -16,6 +16,7 @@ import org.osgl.$;
 public interface KeyExtractor<K, V> {
     /**
      * Get the key of data
+     *
      * @param hint optional, a string value provides hint to extract key
      * @param data the value data
      * @return the key of the data

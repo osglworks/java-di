@@ -9,6 +9,7 @@ public abstract class ElementLoaderBase<T> implements ElementLoader<T> {
 
     /**
      * The default loader priority is set to `5`
+     *
      * @return the default priority value: `5`
      */
     @Override
