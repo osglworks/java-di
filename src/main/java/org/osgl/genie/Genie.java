@@ -335,7 +335,7 @@ public final class Genie {
     private Provider buildProvider(BeanSpec spec, Set<BeanSpec> chain) {
         Class target = spec.rawType();
         Constructor constructor = constructor(target);
-        return null != constructor ? buildConstructor(constructor, spec, chain) : buildFMInjector(target, spec, chain);
+        return null != constructor ? buildConstructor(constructor, spec, chain) : buildFieldMethodInjector(target, spec, chain);
     }
 
     private Provider buildConstructor(final Constructor constructor, final BeanSpec spec, final Set<BeanSpec> chain) {
@@ -354,7 +354,7 @@ public final class Genie {
         };
     }
 
-    private Provider buildFMInjector(final Class target, final BeanSpec spec, Set<BeanSpec> chain) {
+    private Provider buildFieldMethodInjector(final Class target, final BeanSpec spec, Set<BeanSpec> chain) {
         final List<FieldInjector> fieldInjectors = fieldInjectors(target, chain);
         final List<MethodInjector> methodInjectors = methodInjectors(target, chain);
         return new Provider() {
