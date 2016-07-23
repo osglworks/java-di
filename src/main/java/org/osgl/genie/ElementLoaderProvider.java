@@ -2,7 +2,7 @@ package org.osgl.genie;
 
 import org.osgl.$;
 import org.osgl.genie.annotation.Filter;
-import org.osgl.genie.annotation.Loader;
+import org.osgl.genie.annotation.LoadCollection;
 import org.osgl.genie.annotation.MapKey;
 import org.osgl.util.C;
 
@@ -29,13 +29,7 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
 
         FilterInfo(ElementFilter filter, Annotation anno, Class<? extends Annotation> annoClass, BeanSpec container) {
             this.filter = filter;
-            Method[] ma = annoClass.getMethods();
-            for (Method m : ma) {
-                if (isStandardAnnotationMethod(m)) {
-                    continue;
-                }
-                options.put(m.getName(), $.invokeVirtual(anno, m));
-            }
+            evaluate(anno, options);
             predicate = filter.filter(options, container);
             this.containerSpec = container;
         }
@@ -124,7 +118,7 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
     protected abstract void populate(T bean, Object element);
 
     static <T> Provider<T> decorate(BeanSpec spec, Provider<T> provider, Genie genie) {
-        if (!spec.hasLoader()) {
+        if (!spec.hasElementLoader()) {
             return provider;
         }
 
@@ -144,7 +138,7 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
         Set<Annotation> loaders = spec.loaders();
         for (Annotation anno : loaders) {
             Class<? extends Annotation> annoClass = anno.annotationType();
-            Loader loaderTag = annoClass.getAnnotation(Loader.class);
+            LoadCollection loaderTag = annoClass.getAnnotation(LoadCollection.class);
             ElementLoader loader = genie.get(loaderTag.value());
             list.add(new LoaderInfo(loader, anno, annoClass, spec));
         }
@@ -167,6 +161,17 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
 
     private static boolean isStandardAnnotationMethod(Method m) {
         return standards.contains(m.getName());
+    }
+
+    static void evaluate(Annotation anno, Map<String, Object> values) {
+        Class<? extends Annotation> annoClass = anno.annotationType();
+        Method[] ma = annoClass.getMethods();
+        for (Method m : ma) {
+            if (isStandardAnnotationMethod(m)) {
+                continue;
+            }
+            values.put(m.getName(), $.invokeVirtual(anno, m));
+        }
     }
 }
 

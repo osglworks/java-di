@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.PARAMETER})
-@Loader(TypedElementLoader.class)
+@LoadCollection(TypedElementLoader.class)
 public @interface AnnotatedWith {
     /**
      * Specify the annotation class

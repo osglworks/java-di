@@ -59,13 +59,13 @@ public class GenieTest extends TestBase {
     }
 
     @Test
-    public void testLoaderAnnotation() {
+    public void testElementLoaderAnnotation() {
         FibonacciSeriesHolder bean = genie.get(FibonacciSeriesHolder.class);
         eq("1,1,2,3,5,8,13", bean.toString());
     }
 
     @Test
-    public void testLoaderAndFilterAnnotation() {
+    public void testElementLoaderAndFilterAnnotation() {
         EvenFibonacciSeriesHolder bean = genie.get(EvenFibonacciSeriesHolder.class);
         eq("2,8,34", bean.toString());
     }
@@ -125,6 +125,17 @@ public class GenieTest extends TestBase {
     }
 
     @Test
+    public void testValueLoaderAnnotation() {
+        RandomListHolder holder = genie.get(RandomListHolder.class);
+        eq(holder.list().size(), 10);
+    }
+
+    @Test(expected = InjectException.class)
+    public void itShallReportErrorIfValueLoaderUsedAlongWithOtherQualifiers() {
+        genie.get(ValueLoaderAndQualifiers.class);
+    }
+
+    @Test
     public void testSingletonScope() {
         genie = Genie.create(ScopedFactory.class);
 
@@ -147,7 +158,6 @@ public class GenieTest extends TestBase {
     @Test
     public void testSessionScope() {
         genie = Genie.create(ScopedFactory.class);
-
 
         // Session 1:
         // Test annotation on Type

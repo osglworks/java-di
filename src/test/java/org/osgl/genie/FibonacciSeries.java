@@ -1,6 +1,6 @@
 package org.osgl.genie;
 
-import org.osgl.genie.annotation.Loader;
+import org.osgl.genie.annotation.LoadCollection;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -8,7 +8,7 @@ import java.lang.annotation.RetentionPolicy;
 
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Loader(FibonacciSeriesLoader.class)
+@LoadCollection(FibonacciSeriesLoader.class)
 public @interface FibonacciSeries {
     /**
      * The max value in the series

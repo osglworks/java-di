@@ -124,6 +124,55 @@ FibonacciDemo demo = genie.get(FibonacciDemo.class);
 demo.print(System.out);
 ```
 
+## Filtering
+
+Genie support filtering when loading container elements. Take the `FibonacciDemo` above as an example, suppose you need only the even number in the Fibonacci series. You need to define a `ElementFilter` class and a `Filter` annotation:
+
+The `ElementFilter` logic
+
+```java
+class EvenNumberFilter implements ElementFilter<Integer> {
+    @Override
+    public Osgl.Function<Integer, Boolean> filter(Map<String, Object> options, BeanSpec container) {
+        return N.F.IS_EVEN;
+    }
+}
+```
+
+The `Filter` annotation that specify the `ElementFilter` implementation:
+
+```java
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Filter(EvenNumberFilter.class)
+public @interface EvenNumber {
+}
+```
+
+Now update your `FibonacciDemo` app by adding the `EvenNumber` annotation:
+
+```java
+/**
+ * Print out a Fibonacci number series injected
+ */
+public class FibonacciDemo {
+    @Inject
+    @FibonacciSeries(max = 1000)
+    @EvenNumber
+    private List<Integer> series;
+    
+    public void print(PrintStream ps) {
+        for (int n: series) {
+            ps.println(n);
+        }
+    }
+}
+```
+
+Genie will ensure the data loaded in the series even Fibonacci numbers. 
+
+You can have many `ElementFilter`s and only element pass all filters will be loaded. Actually every `ElementLoader` implementation is also `ElementFilter`, thus you can have multiple `ElementLoader`s and only the first one will be served as loader and the rest will be treated as filter.  
+
 ## Inject Map type bean
 
 Things is a little bit different if we need to populate a `Map` type bean. In addition to `ElementLoader` and `Loader` annotation, we need another annotation `MapKey` to specify how to get the `key` from the element so we can `put` the element along with it's `key` into the map. 

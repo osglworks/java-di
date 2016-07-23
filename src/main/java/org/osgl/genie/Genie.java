@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * Genie is responsible for providing instance as required
  */
-public final class Genie implements DependencyInjector {
+public final class Genie {
 
     static final Logger logger = LogManager.get(Genie.class);
 
@@ -173,6 +173,26 @@ public final class Genie implements DependencyInjector {
         return get(spec);
     }
 
+    /**
+     * Returns parameter as bean for a given method
+     * @param method the method
+     * @return the parameters that an be used to invoke the method
+     */
+    public Object[] getParams(Method method) {
+        Type[] ta = method.getGenericParameterTypes();
+        int len = ta.length;
+        Object[] oa = new Object[ta.length];
+        if (0 == len) {
+            return oa;
+        }
+        Annotation[][] aaa = method.getParameterAnnotations();
+        final Provider[] pa = paramProviders(ta, aaa, C.set(BeanSpec.of(method.getDeclaringClass())));
+        for (int i = 0; i < len; ++i) {
+            oa[i] = pa[i].get();
+        }
+        return oa;
+    }
+
     public <T> void registerProvider(Class<T> type, Provider<? extends T> provider) {
         AFFINITY.set(0);
         bindProviderToClass(type, provider);
@@ -284,19 +304,26 @@ public final class Genie implements DependencyInjector {
             return provider;
         }
 
-
-        // build provider from constructor, field or method
-        if (spec.notConstructable()) {
-            // does spec's bare class have provider?
-            provider = registry.get(spec.rawTypeSpec());
-            if (null == provider) {
-                throw new InjectException("Cannot instantiate %s", spec);
-            }
+        // does it require a value loading logic
+        if (spec.isValueLoad()) {
+            provider = ValueLoaderProvider.create(spec, this);
+            // no element loader decorating here for obvious reason
+            // no scoping decorating here because it is already decorated
         } else {
-            provider = buildProvider(spec, chain);
+            // build provider from constructor, field or method
+            if (spec.notConstructable()) {
+                // does spec's bare class have provider?
+                provider = registry.get(spec.rawTypeSpec());
+                if (null == provider) {
+                    throw new InjectException("Cannot instantiate %s", spec);
+                }
+            } else {
+                provider = buildProvider(spec, chain);
+            }
+
+            provider = decorate(spec, provider);
         }
 
-        provider = decorate(spec, provider);
         registry.putIfAbsent(spec, provider);
         return provider;
     }

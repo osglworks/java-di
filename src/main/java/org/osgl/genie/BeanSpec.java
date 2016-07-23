@@ -2,10 +2,7 @@ package org.osgl.genie;
 
 import org.osgl.$;
 import org.osgl.Osgl;
-import org.osgl.genie.annotation.Filter;
-import org.osgl.genie.annotation.Loader;
-import org.osgl.genie.annotation.MapKey;
-import org.osgl.genie.annotation.Provides;
+import org.osgl.genie.annotation.*;
 import org.osgl.util.C;
 import org.osgl.util.E;
 import org.osgl.util.S;
@@ -36,8 +33,8 @@ public class BeanSpec {
     private static Comparator<Annotation> ANNO_CMP = new Comparator<Annotation>() {
         @Override
         public int compare(Annotation o1, Annotation o2) {
-            Class c1 = o1.getClass();
-            Class c2 = o2.getClass();
+            Class c1 = o1.annotationType();
+            Class c2 = o2.annotationType();
             if (c1 != c2) {
                 return c1.getName().compareTo(c2.getName());
             }
@@ -47,11 +44,13 @@ public class BeanSpec {
 
     private final int hc;
     private final Type type;
-    private final C.List<Annotation> annotations = C.newList();
-    private final Set<Annotation> loaders = C.newSet();
+    private final Set<Annotation> elementLoaders = C.newSet();
     private final Set<Annotation> filters = C.newSet();
-    private final Osgl.Var<MapKey> mapKey = $.var();
-    private final Osgl.Var<Class<? extends Annotation>> scope = $.var();
+    private final Set<Annotation> qualifiers = C.newSet();
+    private final C.List<Annotation> annotations = C.newList();
+    private MapKey mapKey;
+    private Class<? extends Annotation> scope;
+    private Annotation valueLoader;
 
     private List<Type> typeParams;
 
@@ -66,9 +65,9 @@ public class BeanSpec {
      */
     BeanSpec(Type type, Annotation[] annotations) {
         this.type = type;
-        this.resolveType();
+        this.resolveTypeAnnotations();
         this.resolveAnnotations(annotations);
-        this.hc = $.hc(type, this.annotations);
+        this.hc = calcHashCode();
     }
 
     private BeanSpec(BeanSpec providerSpec) {
@@ -76,10 +75,12 @@ public class BeanSpec {
             throw new IllegalStateException("not a provider spec");
         }
         this.type = ((ParameterizedType) providerSpec.type).getActualTypeArguments()[0];
-        this.annotations.addAll(providerSpec.annotations);
-        this.loaders.addAll(providerSpec.loaders);
+        this.qualifiers.addAll(providerSpec.qualifiers);
+        this.elementLoaders.addAll(providerSpec.elementLoaders);
         this.filters.addAll(providerSpec.filters);
-        this.hc = $.hc(this.type, this.annotations);
+        this.valueLoader = providerSpec.valueLoader;
+        this.annotations.addAll(providerSpec.annotations);
+        this.hc = calcHashCode();
     }
 
     @Override
@@ -96,7 +97,7 @@ public class BeanSpec {
             BeanSpec that = (BeanSpec) obj;
             return that.hc == hc
                     && $.eq(type, that.type)
-                    && $.eq2(annotations, that.annotations);
+                    && $.eq(annotations, that.annotations);
         }
         return false;
     }
@@ -104,13 +105,25 @@ public class BeanSpec {
     @Override
     public String toString() {
         StringBuilder sb = S.builder(type());
-        if (!annotations().isEmpty()) {
-            sb.append("@[").append(S.join(", ", annotations())).append("]");
+        C.List<Object> list = C.newList();
+        if (null != valueLoader) {
+            list.append(valueLoader);
+        } else {
+            list.append(qualifiers).append(elementLoaders).append(filters);
+            if (null != mapKey) {
+                list.append(mapKey);
+            }
+        }
+        if (null != scope) {
+            list.append(scope.getSimpleName());
+        }
+        if (!list.isEmpty()) {
+            sb.append("@[").append(S.join(", ", list)).append("]");
         }
         return sb.toString();
     }
 
-    Class rawType() {
+    public Class rawType() {
         if (type instanceof Class) {
             return (Class) type;
         } else if (type instanceof ParameterizedType) {
@@ -133,7 +146,7 @@ public class BeanSpec {
     }
 
     MapKey mapKey() {
-        return mapKey.get();
+        return mapKey;
     }
 
     boolean isProvider() {
@@ -142,10 +155,6 @@ public class BeanSpec {
 
     BeanSpec providerSpec() {
         return new BeanSpec(this);
-    }
-
-    List<Annotation> annotations() {
-        return annotations;
     }
 
     public List<Type> typeParams() {
@@ -161,24 +170,32 @@ public class BeanSpec {
         return typeParams;
     }
 
-    boolean hasLoader() {
-        return !loaders.isEmpty();
+    boolean hasElementLoader() {
+        return !elementLoaders.isEmpty();
     }
 
     Set<Annotation> loaders() {
-        return loaders;
+        return elementLoaders;
     }
 
     Set<Annotation> filters() {
         return filters;
     }
 
+    Annotation valueLoader() {
+        return valueLoader;
+    }
+
+    boolean isValueLoad() {
+        return null != valueLoader;
+    }
+
     Class<? extends Annotation> scope() {
-        return scope.get();
+        return scope;
     }
 
     BeanSpec scope(Class<? extends Annotation> scopeAnno) {
-        scope.set(scopeAnno);
+        scope = scopeAnno;
         return this;
     }
 
@@ -187,7 +204,7 @@ public class BeanSpec {
         return c.isInterface() || c.isArray() || Modifier.isAbstract(c.getModifiers());
     }
 
-    private void resolveType() {
+    private void resolveTypeAnnotations() {
         for (Annotation annotation : rawType().getAnnotations()) {
             resolveScope(annotation);
         }
@@ -220,19 +237,22 @@ public class BeanSpec {
                     mapKey = $.cast(anno);
                 }
             }
-            if (cls.isAnnotationPresent(Loader.class)) {
+            if (cls.isAnnotationPresent(LoadValue.class)) {
+                valueLoader = anno;
+            } else if (cls.isAnnotationPresent(LoadCollection.class)) {
                 if (isContainer) {
+                    elementLoaders.add(anno);
                     annotations.add(anno);
-                    loaders.add(anno);
                 } else {
-                    Genie.logger.warn("Loader annotation[%s] ignored as target type is neither Collection nor Map", cls.getSimpleName());
+                    Genie.logger.warn("LoadCollection annotation[%s] ignored as target type is neither Collection nor Map", cls.getSimpleName());
                 }
             } else if (cls.isAnnotationPresent(Qualifier.class)) {
+                qualifiers.add(anno);
                 annotations.add(anno);
             } else if (cls.isAnnotationPresent(Filter.class)) {
                 if (isContainer) {
-                    annotations.add(anno);
                     filters.add(anno);
+                    annotations.add(anno);
                 } else {
                     Genie.logger.warn("Filter annotation[%s] ignored as target type is neither Collection nor Map", cls.getSimpleName());
                 }
@@ -240,28 +260,39 @@ public class BeanSpec {
                 resolveScope(anno);
             }
         }
-        if (isMap && hasLoader() && null == mapKey) {
+        if (isMap && hasElementLoader() && null == mapKey) {
             throw new InjectException("No MapKey annotation found on Map type target with ElementLoader annotation presented");
         }
-        if (null != mapKey) {
-            if (hasLoader()) {
-                this.mapKey.set(mapKey);
-            } else {
-                Genie.logger.warn("MapKey annotation ignored on target without ElementLoader annotation presented");
+        if (null != valueLoader) {
+            if (!annotations.isEmpty()) {
+                throw new InjectException("ValueLoader annotation cannot be used with Qualifier, ElementLoader and Filter annotations: %s", annotations);
             }
+            annotations.add(valueLoader);
+        } else {
+            if (null != mapKey) {
+                if (hasElementLoader()) {
+                    this.mapKey = mapKey;
+                    annotations.add(mapKey);
+                } else {
+                    Genie.logger.warn("MapKey annotation ignored on target without ElementLoader annotation presented");
+                }
+            }
+            Collections.sort(annotations, ANNO_CMP);
         }
-
-        Collections.sort(annotations, ANNO_CMP);
     }
 
     private void resolveScope(Annotation annotation) {
         Class<? extends Annotation> annoClass = annotation.annotationType();
         if (annoClass.isAnnotationPresent(Scope.class)) {
-            if (null != scope.get()) {
+            if (null != scope) {
                 throw new InjectException("Multiple Scope annotation found: %s", this);
             }
-            scope.set(annoClass);
+            scope = annoClass;
         }
+    }
+
+    private int calcHashCode() {
+        return $.hc(type, annotations);
     }
 
     static BeanSpec of(Class<?> clazz) {

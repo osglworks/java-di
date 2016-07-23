@@ -12,11 +12,11 @@ import java.lang.annotation.Target;
  * Mark elements of a field or method parameter should be
  * type of specified base class or interface.
  *
- * @see Loader
+ * @see LoadCollection
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.PARAMETER})
-@Loader(TypedElementLoader.class)
+@LoadCollection(TypedElementLoader.class)
 public @interface TypeOf {
     /**
      * Specify the base class or interface.
