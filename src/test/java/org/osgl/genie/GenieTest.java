@@ -2,8 +2,13 @@ package org.osgl.genie;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.osgl.$;
 import org.osgl.genie.ScopedObjects.*;
+import org.osgl.genie.annotation.TypeOf;
 import org.osgl.genie.loader.TypedElementLoader;
+
+import java.lang.reflect.Method;
+import java.util.List;
 
 /**
  * Test Genie DI solution
@@ -185,5 +190,25 @@ public class GenieTest extends TestBase {
         same(product3, product4);
         no(product == product3);
 
+    }
+
+    void methodX(@TypeOf List<ErrorHandler> handlers, @Person.Female Person person) {
+    }
+
+    @Test
+    public void testGetParams() throws Exception {
+        genie = new Genie(new ModuleWithBindings(), new Module() {
+            @Override
+            protected void configure() {
+                bind(TypedElementLoader.class).to(SimpleTypeElementLoader.class);
+            }
+        });
+        Method methodX = GenieTest.class.getDeclaredMethod("methodX", new Class[]{List.class, Person.class});
+        Object[] params = genie.getParams(methodX);
+        eq(2, params.length);
+        List<ErrorHandler> handlers = $.cast(params[0]);
+        eq(2, handlers.size());
+        Person person = $.cast(params[1]);
+        yes(person.gender().isFemale());
     }
 }
