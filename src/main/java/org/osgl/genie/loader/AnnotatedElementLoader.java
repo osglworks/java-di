@@ -4,6 +4,7 @@ import org.osgl.$;
 import org.osgl.Osgl;
 import org.osgl.genie.BeanSpec;
 import org.osgl.genie.Genie;
+import org.osgl.util.C;
 import org.osgl.util.E;
 
 import java.lang.annotation.Annotation;
@@ -27,10 +28,16 @@ public abstract class AnnotatedElementLoader extends ElementLoaderBase<Object> {
      * @return the list of bean instances
      */
     @Override
-    public Iterable<Object> load(Map<String, Object> options, BeanSpec container, Genie genie) {
+    public Iterable<Object> load(Map<String, Object> options, BeanSpec container, final Genie genie) {
         Object hint = options.get("value");
-        E.illegalArgumentIf(Annotation.class.isAssignableFrom((Class) hint));
-        return load(annoClassFromHint(hint), genie);
+        E.illegalArgumentIf(!Annotation.class.isAssignableFrom((Class) hint));
+        List<Class<?>> classes = load(annoClassFromHint(hint), genie);
+        return C.list(classes).map(new $.Transformer<Class, Object>() {
+            @Override
+            public Object transform(Class aClass) {
+                return genie.get(aClass);
+            }
+        });
     }
 
     /**
@@ -39,9 +46,9 @@ public abstract class AnnotatedElementLoader extends ElementLoaderBase<Object> {
      *
      * @param annoClass the annotation class
      * @param genie     dependency injector used to load element instances
-     * @return a list of beans as described above
+     * @return a list of classes that are annotated with `annoClass`
      */
-    protected abstract List<Object> load(Class<? extends Annotation> annoClass, Genie genie);
+    protected abstract List<Class<?>> load(Class<? extends Annotation> annoClass, Genie genie);
 
     /**
      * Returns a predicate check if an object has annotation as specified as `hint`
@@ -53,7 +60,7 @@ public abstract class AnnotatedElementLoader extends ElementLoaderBase<Object> {
     @Override
     public Osgl.Function filter(Map<String, Object> options, BeanSpec container) {
         Object hint = options.get("value");
-        E.illegalArgumentIf(Annotation.class.isAssignableFrom((Class) hint));
+        E.illegalArgumentIf(!Annotation.class.isAssignableFrom((Class) hint));
         final Class<? extends Annotation> annoClass = annoClassFromHint(hint);
         return new Osgl.Predicate() {
             @Override

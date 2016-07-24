@@ -1,6 +1,7 @@
 package org.osgl.genie.annotation;
 
 
+import org.osgl.genie.loader.AnnotatedElementLoader;
 import org.osgl.genie.loader.TypedElementLoader;
 
 import java.lang.annotation.ElementType;
@@ -14,7 +15,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.PARAMETER})
-@LoadCollection(TypedElementLoader.class)
+@LoadCollection(AnnotatedElementLoader.class)
 public @interface AnnotatedWith {
     /**
      * Specify the annotation class

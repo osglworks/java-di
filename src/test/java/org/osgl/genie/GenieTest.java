@@ -211,4 +211,11 @@ public class GenieTest extends TestBase {
         Person person = $.cast(params[1]);
         yes(person.gender().isFemale());
     }
+
+    @Test
+    public void testAnnotatedWithLoader() throws Exception {
+        genie = new Genie(AnnotatedClasses.class);
+        AnnotatedClasses bean = genie.get(AnnotatedClasses.class);
+        eq(2, bean.getBindingTypes().size());
+    }
 }
