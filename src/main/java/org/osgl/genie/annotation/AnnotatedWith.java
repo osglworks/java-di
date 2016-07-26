@@ -2,7 +2,6 @@ package org.osgl.genie.annotation;
 
 
 import org.osgl.genie.loader.AnnotatedElementLoader;
-import org.osgl.genie.loader.TypedElementLoader;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -23,4 +22,27 @@ public @interface AnnotatedWith {
      * @return the annotation class
      */
     Class<?> value();
+
+    /**
+     * Specify the type of element the loader should return
+     * @return the element type
+     */
+    org.osgl.genie.ElementType elementType() default org.osgl.genie.ElementType.BEAN;
+
+    /**
+     * Should the loader load non-public class or not
+     * @return `true` or `false` as described above
+     */
+    boolean loadNonPublic() default false;
+
+    /**
+     * Should the loader load abstract class or not
+     *
+     * **Note** the value of `loadAbstract` will be ignored if
+     * {@link #elementType()} is set to {@link org.osgl.genie.ElementType#BEAN}
+     *
+     * @return `true` or `false` as described above.
+     */
+    boolean loadAbstract() default false;
+
 }

@@ -3,11 +3,13 @@ package org.osgl.genie.loader;
 import org.osgl.$;
 import org.osgl.Osgl;
 import org.osgl.genie.BeanSpec;
+import org.osgl.genie.ElementType;
 import org.osgl.genie.Genie;
 import org.osgl.util.C;
 import org.osgl.util.E;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
 
@@ -31,13 +33,11 @@ public abstract class AnnotatedElementLoader extends ElementLoaderBase<Object> {
     public Iterable<Object> load(Map<String, Object> options, BeanSpec container, final Genie genie) {
         Object hint = options.get("value");
         E.illegalArgumentIf(!Annotation.class.isAssignableFrom((Class) hint));
-        List<Class<?>> classes = load(annoClassFromHint(hint), genie);
-        return C.list(classes).map(new $.Transformer<Class, Object>() {
-            @Override
-            public Object transform(Class aClass) {
-                return genie.get(aClass);
-            }
-        });
+        boolean loadNonPublic = (Boolean)options.get("loadNonPublic");
+        ElementType elementType = (ElementType)options.get("elementType");
+        boolean loadAbstract = elementType.loadAbstract() && (Boolean) options.get("loadAbstract");
+        List<Class<?>> classes = load(annoClassFromHint(hint), loadNonPublic, loadAbstract, genie);
+        return elementType.transform(classes, genie);
     }
 
     /**
@@ -45,10 +45,16 @@ public abstract class AnnotatedElementLoader extends ElementLoaderBase<Object> {
      * specified. The class of all beans returned must have `public` access
      *
      * @param annoClass the annotation class
+     * @param loadNonPublic specify if it should load non public classes
+     * @param loadAbstract specify it it should load abstract classes
      * @param genie     dependency injector used to load element instances
      * @return a list of classes that are annotated with `annoClass`
      */
-    protected abstract List<Class<?>> load(Class<? extends Annotation> annoClass, Genie genie);
+    protected abstract List<Class<?>> load(
+            Class<? extends Annotation> annoClass,
+            boolean loadNonPublic,
+            boolean loadAbstract,
+            Genie genie);
 
     /**
      * Returns a predicate check if an object has annotation as specified as `hint`
@@ -62,10 +68,26 @@ public abstract class AnnotatedElementLoader extends ElementLoaderBase<Object> {
         Object hint = options.get("value");
         E.illegalArgumentIf(!Annotation.class.isAssignableFrom((Class) hint));
         final Class<? extends Annotation> annoClass = annoClassFromHint(hint);
+        final ElementType elementType = (ElementType) options.get("elementType");
+        final boolean loadNonPublic = (Boolean)options.get("loadNonPublic");
+        final boolean loadAbstract = elementType.loadAbstract() && (Boolean) options.get("loadAbstract");
         return new Osgl.Predicate() {
             @Override
             public boolean test(Object o) {
-                return o.getClass().getAnnotation(annoClass) != null;
+                if (elementType == ElementType.BEAN) {
+                    Class<?> c = o.getClass();
+                    return (loadNonPublic || Modifier.isPublic(c.getModifiers())) && c.isAnnotationPresent(annoClass);
+                } else {
+                    if (o instanceof Class) {
+                        Class c = (Class) o;
+                        int modifiers = c.getModifiers();
+                        boolean yes = loadNonPublic || Modifier.isPublic(modifiers);
+                        yes = yes && loadAbstract || !Modifier.isAbstract(modifiers);
+                        yes = yes && c.isAnnotationPresent(annoClass);
+                        return yes;
+                    }
+                    return false;
+                }
             }
         };
     }

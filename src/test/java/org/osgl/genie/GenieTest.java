@@ -216,6 +216,9 @@ public class GenieTest extends TestBase {
     public void testAnnotatedWithLoader() throws Exception {
         genie = new Genie(AnnotatedClasses.class);
         AnnotatedClasses bean = genie.get(AnnotatedClasses.class);
-        eq(2, bean.getBindingTypes().size());
+        eq(1, bean.getPublicBeans().size());
+        eq(2, bean.getWithPrivateBeans().size());
+        eq(3, bean.getWithPrivateAndAbstractClasses().size());
     }
+
 }

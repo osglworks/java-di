@@ -3,12 +3,15 @@ package org.osgl.genie.loader;
 import org.osgl.$;
 import org.osgl.Osgl;
 import org.osgl.genie.BeanSpec;
+import org.osgl.genie.ElementType;
 import org.osgl.genie.Genie;
 import org.osgl.genie.InjectException;
 import org.osgl.genie.annotation.TypeOf;
 import org.osgl.util.C;
 import org.osgl.util.E;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
@@ -29,13 +32,11 @@ public abstract class TypedElementLoader<T> extends ElementLoaderBase<T> {
      */
     @Override
     public final Iterable<T> load(Map<String, Object> options, BeanSpec container, final Genie genie) {
-        List<Class<? extends T>> classes = load(targetClass(options, container));
-        return C.list(classes).map(new $.Transformer<Class<? extends T>, T>() {
-            @Override
-            public T transform(Class<? extends T> aClass) {
-                return genie.get(aClass);
-            }
-        });
+        boolean loadNonPublic = (Boolean)options.get("loadNonPublic");
+        ElementType elementType = (ElementType)options.get("elementType");
+        boolean loadAbstract = elementType.loadAbstract() && (Boolean) options.get("loadAbstract");
+        List<Class<? extends T>> classes = load(targetClass(options, container), loadNonPublic, loadAbstract, genie);
+        return elementType.transform((List)classes, genie);
     }
 
     /**
@@ -50,10 +51,26 @@ public abstract class TypedElementLoader<T> extends ElementLoaderBase<T> {
     @Override
     public final Osgl.Function<T, Boolean> filter(Map<String, Object> options, BeanSpec container) {
         final Class baseClass = targetClass(options, container);
-        return new $.Predicate<T>() {
+        final ElementType elementType = (ElementType) options.get("elementType");
+        final boolean loadNonPublic = (Boolean)options.get("loadNonPublic");
+        final boolean loadAbstract = elementType.loadAbstract() && (Boolean) options.get("loadAbstract");
+        return new Osgl.Predicate<T>() {
             @Override
             public boolean test(T o) {
-                return baseClass.isAssignableFrom(o.getClass());
+                if (elementType == ElementType.BEAN) {
+                    Class<?> c = o.getClass();
+                    return (loadNonPublic || Modifier.isPublic(c.getModifiers())) && baseClass.isAssignableFrom(c);
+                } else {
+                    if (o instanceof Class) {
+                        Class c = (Class) o;
+                        int modifiers = c.getModifiers();
+                        boolean yes = loadNonPublic || Modifier.isPublic(modifiers);
+                        yes = yes && loadAbstract || !Modifier.isAbstract(modifiers);
+                        yes = yes && baseClass.isAssignableFrom(c);
+                        return yes;
+                    }
+                    return false;
+                }
             }
         };
     }
@@ -66,7 +83,11 @@ public abstract class TypedElementLoader<T> extends ElementLoaderBase<T> {
      * @param type the class or interface specification
      * @return a list of beans as described
      */
-    protected abstract List<Class<? extends T>> load(Class<T> type);
+    protected abstract List<Class<? extends T>> load(
+            Class<T> type,
+            boolean loadNonPublic,
+            boolean loadAbstract,
+            Genie genie);
 
     private Class<T> targetClass(Map<String, Object> options, BeanSpec container) {
         Object hint = options.get("value");
