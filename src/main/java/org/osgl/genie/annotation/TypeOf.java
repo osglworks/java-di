@@ -34,6 +34,11 @@ public @interface TypeOf {
 
     /**
      * Specify the type of element the loader should return
+     *
+     * **Note** when the generic type of element is `Class<...>` the
+     * value of elementType will always be treated as {@link org.osgl.genie.ElementType#CLASS}
+     * and user setting through this property will be ignored
+     *
      * @return the element type
      */
     org.osgl.genie.ElementType elementType() default org.osgl.genie.ElementType.BEAN;

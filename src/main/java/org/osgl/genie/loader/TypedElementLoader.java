@@ -12,6 +12,7 @@ import org.osgl.util.E;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
@@ -34,10 +35,12 @@ public abstract class TypedElementLoader<T> extends ElementLoaderBase<T> {
     public final Iterable<T> load(Map<String, Object> options, BeanSpec container, final Genie genie) {
         ElementType elementType = (ElementType)options.get("elementType");
         boolean loadNonPublic = (Boolean)options.get("loadNonPublic");
-        boolean loadAbstract = elementType.loadAbstract() && (Boolean) options.get("loadAbstract");
         boolean loadRoot = (Boolean) options.get("loadRoot");
-        List<Class<? extends T>> classes = load(targetClass(options, container), loadNonPublic, loadAbstract, loadRoot);
-        return elementType.transform((List)classes, genie);
+        $.Var<ElementType> typeVar = $.var(elementType);
+        Class<T> targetClass = targetClass(typeVar, options, container);
+        boolean loadAbstract = typeVar.get().loadAbstract() && (Boolean) options.get("loadAbstract");
+        List<Class<? extends T>> classes = load(targetClass, loadNonPublic, loadAbstract, loadRoot);
+        return typeVar.get().transform((List)classes, genie);
     }
 
     /**
@@ -51,8 +54,9 @@ public abstract class TypedElementLoader<T> extends ElementLoaderBase<T> {
      */
     @Override
     public final Osgl.Function<T, Boolean> filter(Map<String, Object> options, BeanSpec container) {
-        final Class baseClass = targetClass(options, container);
-        final ElementType elementType = (ElementType) options.get("elementType");
+        $.Var<ElementType> typeVar = $.var((ElementType) options.get("elementType"));
+        final Class baseClass = targetClass(typeVar, options, container);
+        final ElementType elementType = typeVar.get();
         final boolean loadNonPublic = (Boolean)options.get("loadNonPublic");
         final boolean loadAbstract = elementType.loadAbstract() && (Boolean) options.get("loadAbstract");
         final boolean loadRoot = (Boolean) options.get("loadRoot");
@@ -97,20 +101,18 @@ public abstract class TypedElementLoader<T> extends ElementLoaderBase<T> {
             boolean loadAbstract,
             boolean loadRoot);
 
-    private Class<T> targetClass(Map<String, Object> options, BeanSpec container) {
+    private Class<T> targetClass($.Var<ElementType> typeVar, Map<String, Object> options, BeanSpec container) {
         Object hint = options.get("value");
         E.illegalArgumentIf(!(hint instanceof Class));
         Class<?> targetClass = $.cast(hint);
-        if (TypeOf.PlaceHolder.class == targetClass) {
-            List<Type> types = container.typeParams();
-            if (!types.isEmpty()) {
-                // the effective type is always the last one
-                // this is for both Collection and Map
-                Type type = types.get(types.size() - 1);
-                if (type instanceof Class) {
-                    targetClass = $.cast(type);
-                }
+        Class<?> inferredTargetClass = LoaderUtil.targetClass(typeVar, container);
+        if (null != inferredTargetClass) {
+            if (TypeOf.PlaceHolder.class == targetClass) {
+                targetClass = inferredTargetClass;
+            } else if (!inferredTargetClass.isAssignableFrom(targetClass)) {
+                throw new InjectException("specified class[%s] doesn't match the container spec: %s", targetClass, container);
             }
+        } else if (TypeOf.PlaceHolder.class == targetClass) {
             if (TypeOf.PlaceHolder.class == targetClass) {
                 throw new InjectException("Cannot load element - target type info is missing");
             }

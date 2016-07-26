@@ -5,7 +5,6 @@ import org.osgl.Osgl;
 import org.osgl.genie.BeanSpec;
 import org.osgl.genie.ElementType;
 import org.osgl.genie.Genie;
-import org.osgl.util.C;
 import org.osgl.util.E;
 
 import java.lang.annotation.Annotation;
@@ -34,7 +33,7 @@ public abstract class AnnotatedElementLoader extends ElementLoaderBase<Object> {
         Object hint = options.get("value");
         E.illegalArgumentIf(!Annotation.class.isAssignableFrom((Class) hint));
         boolean loadNonPublic = (Boolean)options.get("loadNonPublic");
-        ElementType elementType = (ElementType)options.get("elementType");
+        ElementType elementType = elementType(options, container);
         boolean loadAbstract = elementType.loadAbstract() && (Boolean) options.get("loadAbstract");
         List<Class<?>> classes = load(annoClassFromHint(hint), loadNonPublic, loadAbstract);
         return elementType.transform(classes, genie);
@@ -66,7 +65,7 @@ public abstract class AnnotatedElementLoader extends ElementLoaderBase<Object> {
         Object hint = options.get("value");
         E.illegalArgumentIf(!Annotation.class.isAssignableFrom((Class) hint));
         final Class<? extends Annotation> annoClass = annoClassFromHint(hint);
-        final ElementType elementType = (ElementType) options.get("elementType");
+        final ElementType elementType = elementType(options, container);
         final boolean loadNonPublic = (Boolean)options.get("loadNonPublic");
         final boolean loadAbstract = elementType.loadAbstract() && (Boolean) options.get("loadAbstract");
         return new Osgl.Predicate() {
@@ -92,6 +91,17 @@ public abstract class AnnotatedElementLoader extends ElementLoaderBase<Object> {
 
     private static Class<? extends Annotation> annoClassFromHint(Object hint) {
         return $.cast(hint);
+    }
+
+    private ElementType elementType(Map<String, Object> options, BeanSpec container) {
+        ElementType type = (ElementType) options.get("elementType");
+        if ((type == ElementType.CLASS)) {
+            return type;
+        }
+        // check container element generic type
+        $.Var<ElementType> typeVar = $.var(type);
+        LoaderUtil.targetClass(typeVar, container);
+        return typeVar.get();
     }
 
 

@@ -24,7 +24,6 @@ class AnnotatedClasses {
     @Inject
     @AnnotatedWith(
             value = BindingType.class,
-            elementType = ElementType.CLASS,
             loadNonPublic = true,
             loadAbstract = true
     )
