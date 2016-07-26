@@ -10,7 +10,7 @@ import java.util.List;
  */
 public class SimpleTypeElementLoader extends TypedElementLoader {
     @Override
-    protected List<Class> load(Class type, boolean loadNonPublic, boolean loadAbstract, Genie genie) {
+    protected List<Class> load(Class type, boolean loadNonPublic, boolean loadAbstract, boolean loadRoot, Genie genie) {
         if (type == ErrorHandler.class) {
             return (List)C.list(NotFoundHandler.class, InternalErrorHandler.class);
         }

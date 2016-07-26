@@ -32,10 +32,11 @@ public abstract class TypedElementLoader<T> extends ElementLoaderBase<T> {
      */
     @Override
     public final Iterable<T> load(Map<String, Object> options, BeanSpec container, final Genie genie) {
-        boolean loadNonPublic = (Boolean)options.get("loadNonPublic");
         ElementType elementType = (ElementType)options.get("elementType");
+        boolean loadNonPublic = (Boolean)options.get("loadNonPublic");
         boolean loadAbstract = elementType.loadAbstract() && (Boolean) options.get("loadAbstract");
-        List<Class<? extends T>> classes = load(targetClass(options, container), loadNonPublic, loadAbstract, genie);
+        boolean loadRoot = (Boolean) options.get("loadRoot");
+        List<Class<? extends T>> classes = load(targetClass(options, container), loadNonPublic, loadAbstract, loadRoot, genie);
         return elementType.transform((List)classes, genie);
     }
 
@@ -54,12 +55,16 @@ public abstract class TypedElementLoader<T> extends ElementLoaderBase<T> {
         final ElementType elementType = (ElementType) options.get("elementType");
         final boolean loadNonPublic = (Boolean)options.get("loadNonPublic");
         final boolean loadAbstract = elementType.loadAbstract() && (Boolean) options.get("loadAbstract");
+        final boolean loadRoot = (Boolean) options.get("loadRoot");
         return new Osgl.Predicate<T>() {
             @Override
             public boolean test(T o) {
                 if (elementType == ElementType.BEAN) {
                     Class<?> c = o.getClass();
-                    return (loadNonPublic || Modifier.isPublic(c.getModifiers())) && baseClass.isAssignableFrom(c);
+                    return (loadNonPublic || Modifier.isPublic(c.getModifiers()))
+                            && (baseClass.isAssignableFrom(c)
+                            && (loadRoot || baseClass != c)
+                    );
                 } else {
                     if (o instanceof Class) {
                         Class c = (Class) o;
@@ -67,6 +72,7 @@ public abstract class TypedElementLoader<T> extends ElementLoaderBase<T> {
                         boolean yes = loadNonPublic || Modifier.isPublic(modifiers);
                         yes = yes && loadAbstract || !Modifier.isAbstract(modifiers);
                         yes = yes && baseClass.isAssignableFrom(c);
+                        yes = yes && (loadRoot || baseClass != c);
                         return yes;
                     }
                     return false;
@@ -87,6 +93,7 @@ public abstract class TypedElementLoader<T> extends ElementLoaderBase<T> {
             Class<T> type,
             boolean loadNonPublic,
             boolean loadAbstract,
+            boolean loadRoot,
             Genie genie);
 
     private Class<T> targetClass(Map<String, Object> options, BeanSpec container) {
