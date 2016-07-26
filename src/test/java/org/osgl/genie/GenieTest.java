@@ -225,7 +225,7 @@ public class GenieTest extends TestBase {
     public void testTypedLoader() throws Exception {
         genie = new Genie(TypedClasses.class);
         TypedClasses bean = genie.get(TypedClasses.class);
-        eq(2, bean.baseImplementations.size());
+        eq(1, bean.publicImpls.size());
         eq(2, bean.withNonPublic.size());
         eq(4, bean.allBaseTypes.size());
     }

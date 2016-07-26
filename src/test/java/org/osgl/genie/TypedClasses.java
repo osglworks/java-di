@@ -11,8 +11,8 @@ import java.util.List;
 public class TypedClasses {
 
     @Inject
-    @TypeOf(loadRoot = true)
-    List<Base> baseImplementations;
+    @TypeOf
+    List<Base> publicImpls;
 
     @Inject
     @TypeOf(loadNonPublic = true)
