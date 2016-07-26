@@ -49,8 +49,7 @@ class AnnotatedClasses {
             protected List<Class<?>> load(
                     Class<? extends Annotation> annoClass,
                     boolean loadNonPublic,
-                    boolean loadAbstract,
-                    Genie genie
+                    boolean loadAbstract
             ) {
                 if (annoClass == BindingType.class) {
                     if (loadNonPublic && loadAbstract) {

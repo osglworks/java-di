@@ -36,7 +36,7 @@ public abstract class AnnotatedElementLoader extends ElementLoaderBase<Object> {
         boolean loadNonPublic = (Boolean)options.get("loadNonPublic");
         ElementType elementType = (ElementType)options.get("elementType");
         boolean loadAbstract = elementType.loadAbstract() && (Boolean) options.get("loadAbstract");
-        List<Class<?>> classes = load(annoClassFromHint(hint), loadNonPublic, loadAbstract, genie);
+        List<Class<?>> classes = load(annoClassFromHint(hint), loadNonPublic, loadAbstract);
         return elementType.transform(classes, genie);
     }
 
@@ -46,15 +46,13 @@ public abstract class AnnotatedElementLoader extends ElementLoaderBase<Object> {
      *
      * @param annoClass the annotation class
      * @param loadNonPublic specify if it should load non public classes
-     * @param loadAbstract specify it it should load abstract classes
-     * @param genie     dependency injector used to load element instances
+     * @param loadAbstract specify if it should load abstract classes
      * @return a list of classes that are annotated with `annoClass`
      */
     protected abstract List<Class<?>> load(
             Class<? extends Annotation> annoClass,
             boolean loadNonPublic,
-            boolean loadAbstract,
-            Genie genie);
+            boolean loadAbstract);
 
     /**
      * Returns a predicate check if an object has annotation as specified as `hint`

@@ -36,7 +36,7 @@ public abstract class TypedElementLoader<T> extends ElementLoaderBase<T> {
         boolean loadNonPublic = (Boolean)options.get("loadNonPublic");
         boolean loadAbstract = elementType.loadAbstract() && (Boolean) options.get("loadAbstract");
         boolean loadRoot = (Boolean) options.get("loadRoot");
-        List<Class<? extends T>> classes = load(targetClass(options, container), loadNonPublic, loadAbstract, loadRoot, genie);
+        List<Class<? extends T>> classes = load(targetClass(options, container), loadNonPublic, loadAbstract, loadRoot);
         return elementType.transform((List)classes, genie);
     }
 
@@ -87,14 +87,15 @@ public abstract class TypedElementLoader<T> extends ElementLoaderBase<T> {
      * specified `type`
      *
      * @param type the class or interface specification
+     * @param loadNonPublic specify if it should load non public classes
+     * @param loadAbstract specify if it should load abstract classes
      * @return a list of beans as described
      */
     protected abstract List<Class<? extends T>> load(
             Class<T> type,
             boolean loadNonPublic,
             boolean loadAbstract,
-            boolean loadRoot,
-            Genie genie);
+            boolean loadRoot);
 
     private Class<T> targetClass(Map<String, Object> options, BeanSpec container) {
         Object hint = options.get("value");
