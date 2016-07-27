@@ -280,7 +280,7 @@ public final class Genie {
         }));
     }
 
-    private <T> T get(BeanSpec spec) {
+    public <T> T get(BeanSpec spec) {
         Provider<?> provider = findProvider(spec, C.set(spec));
         return (T) provider.get();
     }

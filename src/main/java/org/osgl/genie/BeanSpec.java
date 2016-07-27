@@ -63,7 +63,7 @@ public class BeanSpec {
      *                    or `null` if this is a direct API injection
      *                    request
      */
-    BeanSpec(Type type, Annotation[] annotations) {
+    public BeanSpec(Type type, Annotation[] annotations) {
         this.type = type;
         this.resolveTypeAnnotations();
         this.resolveAnnotations(annotations);
