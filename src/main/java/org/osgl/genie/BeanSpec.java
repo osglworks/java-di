@@ -1,8 +1,8 @@
 package org.osgl.genie;
 
 import org.osgl.$;
-import org.osgl.Osgl;
 import org.osgl.genie.annotation.*;
+import org.osgl.genie.spi.ScopeResolver;
 import org.osgl.util.C;
 import org.osgl.util.E;
 import org.osgl.util.S;
@@ -53,6 +53,8 @@ public class BeanSpec {
     private Annotation valueLoader;
 
     private List<Type> typeParams;
+
+    private static volatile ScopeResolver scopeResolver;
 
     /**
      * Construct the `BeanSpec` with bean type and field or parameter
@@ -283,7 +285,7 @@ public class BeanSpec {
 
     private void resolveScope(Annotation annotation) {
         Class<? extends Annotation> annoClass = annotation.annotationType();
-        if (annoClass.isAnnotationPresent(Scope.class)) {
+        if (scopeResolver.isScope(annoClass)) {
             if (null != scope) {
                 throw new InjectException("Multiple Scope annotation found: %s", this);
             }
@@ -303,4 +305,7 @@ public class BeanSpec {
         return new BeanSpec(type, paramAnnotations);
     }
 
+    static void scopeResolver(ScopeResolver scopeResolver) {
+        BeanSpec.scopeResolver = $.notNull(scopeResolver);
+    }
 }

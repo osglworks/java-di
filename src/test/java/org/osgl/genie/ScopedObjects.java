@@ -43,6 +43,9 @@ public abstract class ScopedObjects {
     @RequestScoped
     public static class RequestObject extends ScopedObjects implements RequestProduct {}
 
+    @javax.enterprise.context.RequestScoped
+    public static class JEERequestObject extends ScopedObjects implements RequestProduct {}
+
     @SessionScoped
     public static class SessionObject extends ScopedObjects implements SessionProduct {}
 

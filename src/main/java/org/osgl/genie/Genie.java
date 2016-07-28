@@ -3,6 +3,7 @@ package org.osgl.genie;
 import org.osgl.$;
 import org.osgl.genie.annotation.Provides;
 import org.osgl.genie.provider.*;
+import org.osgl.genie.spi.ScopeResolver;
 import org.osgl.genie.util.AnnotationUtil;
 import org.osgl.logging.LogManager;
 import org.osgl.logging.Logger;
@@ -159,6 +160,7 @@ public final class Genie {
                 registerModule(module);
             }
         }
+        BeanSpec.scopeResolver(get(ScopeResolver.class));
     }
 
     /**
@@ -227,6 +229,7 @@ public final class Genie {
     }
 
     private void registerBuiltInProviders() {
+        registerProvider(ScopeResolver.class, ScopeResolver.BuiltInScopeResolver.INSTANCE);
         registerProvider(Collection.class, OsglListProvider.INSTANCE);
         registerProvider(Deque.class, DequeProvider.INSTANCE);
         registerProvider(C.List.class, OsglListProvider.INSTANCE);
@@ -240,7 +243,14 @@ public final class Genie {
     private void registerProvider(BeanSpec spec, Provider<?> provider) {
         Provider previous = registry.putIfAbsent(spec, provider);
         if (null != previous) {
-            throw new InjectException("Provider has already registered for spec: %s", spec);
+            if (previous instanceof WeightedProvider) {
+                previous = ((WeightedProvider) previous).realProvider;
+            }
+            String newName = provider.getClass().getName();
+            if (newName.contains("org.osgl.genie.Genie$")) {
+                newName = provider.toString();
+            }
+            logger.warn("Provider %s \n\tfor [%s] \n\tis replaced with: %s", previous.getClass().getName(), spec, newName);
         }
     }
 
@@ -276,6 +286,11 @@ public final class Genie {
             @Override
             public Object get() {
                 return methodInjector.applyTo(instance);
+            }
+
+            @Override
+            public String toString() {
+                return S.fmt("%s::%s", instance.getClass().getName(), methodInjector.method.getName());
             }
         }));
     }

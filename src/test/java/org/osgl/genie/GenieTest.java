@@ -189,7 +189,13 @@ public class GenieTest extends TestBase {
         SessionProduct product4 = genie.get(SessionProduct.class);
         same(product3, product4);
         no(product == product3);
+    }
 
+    @Test
+    public void test3rdPartyScopeResolver() {
+        genie = Genie.create(JEEScopeResolver.class);
+        JEEScopeResolver.RequestProdHolder bean = genie.get(JEEScopeResolver.RequestProdHolder.class);
+        yes(bean.prod instanceof JEERequestObject);
     }
 
     void methodX(@TypeOf List<ErrorHandler> handlers, @Person.Female Person person) {
