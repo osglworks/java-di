@@ -10,6 +10,7 @@ import org.osgl.logging.Logger;
 import org.osgl.util.C;
 import org.osgl.util.S;
 
+import javax.enterprise.inject.spi.Bean;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Scope;
@@ -175,6 +176,23 @@ public final class Genie {
         return get(spec);
     }
 
+    public <T> T get(BeanSpec spec) {
+        Provider<?> provider = findProvider(spec, C.set(spec));
+        return (T) provider.get();
+    }
+
+    /**
+     * Returns a bean of given type and annotations. This is helpful
+     * when it needs to inject a value for a method parameter
+     * @param type the type of the bean
+     * @param annotations the annotations tagged to the (parameter)
+     * @param <T> the generic type
+     * @return the bean instance
+     */
+    public <T> T get(Type type, Annotation[] annotations) {
+        return get(BeanSpec.of(type, annotations));
+    }
+
     /**
      * Returns parameter as bean for a given method
      * @param method the method
@@ -293,11 +311,6 @@ public final class Genie {
                 return S.fmt("%s::%s", instance.getClass().getName(), methodInjector.method.getName());
             }
         }));
-    }
-
-    public <T> T get(BeanSpec spec) {
-        Provider<?> provider = findProvider(spec, C.set(spec));
-        return (T) provider.get();
     }
 
     private Provider<?> findProvider(final BeanSpec spec, final Set<BeanSpec> chain) {
