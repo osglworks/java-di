@@ -108,7 +108,7 @@ TomAndJen tj = genie.get(TomAndJen.class);
 
 Now the bean `tj` returned from Genie has `tom` instantiated as `Man` and `jen` instantiated as `Woman`.
 
-So above shows how to configure type bindings by extending the `org.osgl.genie.Module` class and use binder API in the `configure` method. Genie also provide another approach to define the type bindings, which use `org.osgl.genie.Provides` annotation on a factory method. And this approach behavior exactly the same as the binder API approach:
+So above shows how to configure type bindings by extending the `org.osgl.inject.Module` class and use binder API in the `configure` method. Genie also provide another approach to define the type bindings, which use `org.osgl.inject.Provides` annotation on a factory method. And this approach behavior exactly the same as the binder API approach:
 
 ```java
 Genie genie = Genie.create(new Object() {
