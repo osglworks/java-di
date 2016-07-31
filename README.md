@@ -22,6 +22,16 @@ Genie is a JSR330 Dependency Injection solution inspired by [Feather](https://gi
   </parent>
 ```
 
+## Features:
+
+* JSR330 Dependency injection support on Constructor/Field/Method
+* Module and `@Provides` factory methods
+* Fully support on `@Qualifier` tags
+* Support `Singleton`, `SessionScoped`, `RequestScoped` annotation from built-in and CDI-api-1.2, plus Guice version
+* Support Collection/Map loader
+* Support generic value loader and more specific configuration value loader
+* Support `@javax.annotations.PostConstruct` semantic
+
 ## Documents
 
 * [Getting started](doc/getting_start.md)
