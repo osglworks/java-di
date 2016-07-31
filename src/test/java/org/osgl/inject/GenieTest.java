@@ -304,4 +304,5 @@ public class GenieTest extends TestBase {
         SessionPostConstruct d = genie.get(SessionPostConstruct.class);
         eq(2, SessionPostConstruct.instances.get());
     }
+
 }

@@ -165,6 +165,7 @@ public final class Genie {
     }
 
     private ConcurrentMap<BeanSpec, Provider<?>> registry = new ConcurrentHashMap<BeanSpec, Provider<?>>();
+    private ConcurrentMap<Class, Provider> expressRegistry = new ConcurrentHashMap<Class, Provider>();
     private Map<Class<? extends Annotation>, Class<? extends Annotation>> scopeAliases = new HashMap<Class<? extends Annotation>, Class<? extends Annotation>>();
     private Map<Class<? extends Annotation>, ScopeCache> scopeProviders = new HashMap<Class<? extends Annotation>, ScopeCache>();
 
@@ -186,12 +187,17 @@ public final class Genie {
      * @return the bean
      */
     public <T> T get(Class<T> type) {
-        BeanSpec spec = BeanSpec.of(type, this);
-        return get(spec);
+        Provider provider = expressRegistry.get(type);
+        if (null == provider) {
+            BeanSpec spec = BeanSpec.of(type, this);
+            provider = findProvider(spec, C.<BeanSpec>empty());
+            expressRegistry.putIfAbsent(type, provider);
+        }
+        return (T)provider.get();
     }
 
     public <T> T get(BeanSpec spec) {
-        Provider<?> provider = findProvider(spec, C.set(spec));
+        Provider<?> provider = findProvider(spec, C.<BeanSpec>empty());
         return (T) provider.get();
     }
 
@@ -220,7 +226,9 @@ public final class Genie {
             return oa;
         }
         Annotation[][] aaa = method.getParameterAnnotations();
-        final Provider[] pa = paramProviders(ta, aaa, C.set(BeanSpec.of(method.getDeclaringClass(), this)));
+        Set<BeanSpec> chain = new HashSet<BeanSpec>();
+        chain.add(BeanSpec.of(method.getDeclaringClass(), this));
+        final Provider[] pa = paramProviders(ta, aaa, chain);
         for (int i = 0; i < len; ++i) {
             oa[i] = pa[i].get();
         }
@@ -308,8 +316,9 @@ public final class Genie {
             GeniePlugin plugin = $.newInstance(pluginClass);
             plugin.register(this);
         } catch (Exception e) {
-            // CDI dependency not provided, ignore it
-            logger.error(e, "error registering plug: %s", pluginClass);
+            logger.warn(e, "error registering plug: %s", pluginClass);
+        } catch (NoClassDefFoundError e) {
+            // plugin dependency not provided, ignore it
         }
     }
 
@@ -354,7 +363,7 @@ public final class Genie {
     private void registerFactoryMethod(final Object instance, final Method factory) {
         Type retType = factory.getGenericReturnType();
         final BeanSpec spec = BeanSpec.of(retType, factory.getAnnotations(), this);
-        final MethodInjector methodInjector = methodInjector(factory, C.set(spec));
+        final MethodInjector methodInjector = methodInjector(factory, C.<BeanSpec>empty());
         registerProvider(spec, decorate(spec, new Provider() {
             @Override
             public Object get() {
@@ -563,7 +572,7 @@ public final class Genie {
     }
 
     private static Set<BeanSpec> chain(Set<BeanSpec> chain, BeanSpec nextSpec) {
-        Set<BeanSpec> newChain = C.newSet(chain);
+        Set<BeanSpec> newChain = new HashSet<BeanSpec>(chain);
         newChain.add(nextSpec);
         return newChain;
     }
