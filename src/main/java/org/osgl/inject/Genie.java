@@ -445,30 +445,34 @@ public final class Genie {
     private Provider buildFieldMethodInjector(final Class target, final BeanSpec spec, Set<BeanSpec> chain) {
         final List<FieldInjector> fieldInjectors = fieldInjectors(target, chain);
         final List<MethodInjector> methodInjectors = methodInjectors(target, chain);
-        return new Provider() {
-            @Override
-            public Object get() {
-                try {
-                    Constructor constructor = target.getDeclaredConstructor();
-                    if (null == constructor) {
-                        throw new InjectException("cannot instantiate %s: %s", spec, "no default constructor found");
-                    }
-                    constructor.setAccessible(true);
-                    Object bean = constructor.newInstance();
-                    for (FieldInjector fj : fieldInjectors) {
-                        fj.applyTo(bean);
-                    }
-                    for (MethodInjector mj : methodInjectors) {
-                        mj.applyTo(bean);
-                    }
-                    return bean;
-                } catch (InjectException e) {
-                    throw e;
-                } catch (Exception e) {
-                    throw new InjectException(e, "cannot instantiate %s", spec);
-                }
+        try {
+            final Constructor constructor = target.getDeclaredConstructor();
+            if (null == constructor) {
+                throw new InjectException("cannot instantiate %s: %s", spec, "no default constructor found");
             }
-        };
+            constructor.setAccessible(true);
+            return new Provider() {
+                @Override
+                public Object get() {
+                    try {
+                        Object bean = constructor.newInstance();
+                        for (FieldInjector fj : fieldInjectors) {
+                            fj.applyTo(bean);
+                        }
+                        for (MethodInjector mj : methodInjectors) {
+                            mj.applyTo(bean);
+                        }
+                        return bean;
+                    } catch (InjectException e) {
+                        throw e;
+                    } catch (Exception e) {
+                        throw new InjectException(e, "cannot instantiate %s", spec);
+                    }
+                }
+            };
+        } catch (NoSuchMethodException e) {
+            throw new InjectException(e, "cannot instantiate %s", spec);
+        }
     }
 
     private Constructor constructor(Class target) {
