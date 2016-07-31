@@ -133,6 +133,12 @@ public final class Genie {
                 throw new InjectException(e, "Unable to inject field value on %s", bean.getClass());
             }
         }
+
+
+        @Override
+        public String toString() {
+            return $.fmt("Field for %s", field);
+        }
     }
 
     private static class MethodInjector {
@@ -150,6 +156,11 @@ public final class Genie {
             } catch (Exception e) {
                 throw new InjectException(e, "Unable to invoke method[%s] on %s", method.getName(), bean.getClass());
             }
+        }
+
+        @Override
+        public String toString() {
+            return $.fmt("MethodInjector for %s", method);
         }
     }
 
@@ -298,6 +309,7 @@ public final class Genie {
             plugin.register(this);
         } catch (Exception e) {
             // CDI dependency not provided, ignore it
+            logger.error(e, "error registering plug: %s", pluginClass);
         }
     }
 
@@ -378,8 +390,6 @@ public final class Genie {
         // does it require a value loading logic
         if (spec.isValueLoad()) {
             provider = ValueLoaderProvider.create(spec, this);
-            // no element loader decorating here for obvious reason
-            // no scoping decorating here because it is already decorated
         } else {
             // build provider from constructor, field or method
             if (spec.notConstructable()) {
@@ -391,16 +401,14 @@ public final class Genie {
             } else {
                 provider = buildProvider(spec, chain);
             }
-
-            provider = decorate(spec, provider);
         }
-
-        registry.putIfAbsent(spec, provider);
-        return provider;
+        Provider<?> decorated = decorate(spec, provider);
+        registry.putIfAbsent(spec, decorated);
+        return decorated;
     }
 
     private Provider<?> decorate(BeanSpec spec, Provider provider) {
-        return ScopedProvider.decorate(spec, ElementLoaderProvider.decorate(spec, provider, this), this);
+        return ScopedProvider.decorate(spec, PostConstructorInvoker.decorate(spec, ElementLoaderProvider.decorate(spec, provider, this), this), this);
     }
 
     private Provider buildProvider(BeanSpec spec, Set<BeanSpec> chain) {

@@ -35,7 +35,7 @@ class ValueLoaderProvider<T> implements Provider<T> {
     static <T> Provider<T> create(BeanSpec spec, Genie genie) {
         Annotation anno = spec.valueLoader();
         E.illegalArgumentIf(null == anno);
-        return ScopedProvider.decorate(spec, new ValueLoaderProvider<T>(spec, genie), genie);
+        return new ValueLoaderProvider<T>(spec, genie);
     }
 
 }

@@ -1,5 +1,6 @@
 package org.osgl.inject;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgl.$;
@@ -20,6 +21,11 @@ public class GenieTest extends TestBase {
     @Before
     public void setup() {
         genie = Genie.create();
+    }
+
+    @After
+    public void teardown() {
+        BaseWithPostConstructor.current.remove();
     }
 
     @Test
@@ -192,10 +198,25 @@ public class GenieTest extends TestBase {
     }
 
     @Test
-    public void test3rdPartyScopeResolver() {
+    public void testCDIScope() {
         genie = new Genie(CDIScopedFactory.class);
+
+        Context s1 = new Context();
+        Context.set(s1);
+
         CDIScopedFactory.ProductHolder holder = genie.get(CDIScopedFactory.ProductHolder.class);
         yes(holder.product instanceof JEESessionObject);
+
+        SessionProduct product = genie.get(SessionProduct.class);
+        SessionProduct product2 = genie.get(SessionProduct.class);
+        same(product, product2);
+
+        Context s2 = new Context();
+        Context.set(s2);
+        SessionProduct product3 = genie.get(SessionProduct.class);
+        SessionProduct product4 = genie.get(SessionProduct.class);
+        same(product3, product4);
+        no(product == product3);
     }
 
     void methodX(@TypeOf List<ErrorHandler> handlers, @Person.Female Person person) {
@@ -236,4 +257,51 @@ public class GenieTest extends TestBase {
         eq(4, bean.allBaseTypes.size());
     }
 
+    @Test
+    public void testPostConstructor() {
+        genie.get(BaseWithPostConstructor.Holder.class);
+        assertNotNull(BaseWithPostConstructor.current.get());
+    }
+
+    @Test
+    public void testDerivedPostConstructor() {
+        genie = new Genie(DerivedFromBaseWithPostConstructor.Module.class);
+        genie.get(DerivedFromBaseWithPostConstructor.Holder.class);
+        BaseWithPostConstructor bean = BaseWithPostConstructor.current.get();
+        assertNotNull(bean);
+        yes(bean instanceof DerivedFromBaseWithPostConstructor);
+    }
+
+    @Test
+    public void testOverwritePostConstructor() {
+        genie = new Genie(OverwriteBaseWithPostConstructor.Module.class);
+        OverwriteBaseWithPostConstructor.Holder holder = genie.get(OverwriteBaseWithPostConstructor.Holder.class);
+        yes(holder.bean instanceof OverwriteBaseWithPostConstructor);
+        BaseWithPostConstructor bean = BaseWithPostConstructor.current.get();
+        assertNull(bean);
+    }
+
+    @Test
+    public void testScopedPostConstruct() {
+        genie = new Genie(ScopedFactory.class);
+        eq(0, SingletonPostConstruct.instances.get());
+        SingletonPostConstruct s1 = genie.get(SingletonPostConstruct.class);
+        eq(1, SingletonPostConstruct.instances.get());
+        SingletonPostConstruct s2 = genie.get(SingletonPostConstruct.class);
+        eq(1, SingletonPostConstruct.instances.get());
+
+        Context c1 = new Context();
+        Context.set(c1);
+        eq(0, SessionPostConstruct.instances.get());
+        SessionPostConstruct a = genie.get(SessionPostConstruct.class);
+        eq(1, SessionPostConstruct.instances.get());
+        SessionPostConstruct b = genie.get(SessionPostConstruct.class);
+        eq(1, SessionPostConstruct.instances.get());
+
+        Context.set(new Context());
+        SessionPostConstruct c = genie.get(SessionPostConstruct.class);
+        eq(2, SessionPostConstruct.instances.get());
+        SessionPostConstruct d = genie.get(SessionPostConstruct.class);
+        eq(2, SessionPostConstruct.instances.get());
+    }
 }

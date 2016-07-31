@@ -5,12 +5,19 @@ import org.osgl.inject.annotation.Provides;
 
 import javax.enterprise.context.SessionScoped;
 import javax.inject.Inject;
+import javax.inject.Provider;
+import javax.inject.Singleton;
 
-class CDIScopedFactory {
+class CDIScopedFactory extends Module {
+
+    @Override
+    protected void configure() {
+        bind(ScopeCache.SessionScope.class).to(ScopedFactory.SESSION_SCOPE_PROVIDER);
+    }
 
     @Provides
     @SessionScoped
-    public static SessionProduct createSession(ScopedObjects.JEESessionObject bean) {
+    static SessionProduct createSession(ScopedObjects.JEESessionObject bean) {
         return bean;
     }
 

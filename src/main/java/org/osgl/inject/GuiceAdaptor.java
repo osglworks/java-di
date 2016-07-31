@@ -5,7 +5,7 @@ import org.osgl.inject.annotation.SessionScoped;
 
 import javax.inject.Singleton;
 
-class GuiceAdaptor implements GeniePlugin {
+public class GuiceAdaptor implements GeniePlugin {
     @Override
     public void register(Genie genie) {
         genie.registerScopeAlias(Singleton.class, com.google.inject.Singleton.class);

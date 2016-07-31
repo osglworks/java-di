@@ -9,8 +9,29 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.util.Map;
 
-public class ScopedFactory extends Module {
+class ScopedFactory extends Module {
     final Map<Class, Object> registry = C.newMap();
+
+    private static final ScopeCache.SessionScope SESSION_SCOPE = new ScopeCache.SessionScope() {
+        @Override
+        public <T> T get(Class<T> clazz) {
+            Context context = Context.get();
+            return context.get(clazz.getName());
+        }
+
+        @Override
+        public <T> void put(Class<T> clazz, T bean) {
+            Context context = Context.get();
+            context.put(clazz.getName(), bean);
+        }
+    };
+
+    static final Provider<ScopeCache.SessionScope> SESSION_SCOPE_PROVIDER = new Provider<ScopeCache.SessionScope>() {
+        @Override
+        public ScopeCache.SessionScope get() {
+            return SESSION_SCOPE;
+        }
+    };
 
     @Override
     protected void configure() {
@@ -30,24 +51,7 @@ public class ScopedFactory extends Module {
                 };
             }
         });
-        bind(ScopeCache.SessionScope.class).to(new Provider<ScopeCache.SessionScope>() {
-            @Override
-            public ScopeCache.SessionScope get() {
-                return new ScopeCache.SessionScope() {
-                    @Override
-                    public <T> T get(Class<T> clazz) {
-                        Context context = Context.get();
-                        return context.get(clazz.getName());
-                    }
-
-                    @Override
-                    public <T> void put(Class<T> clazz, T bean) {
-                        Context context = Context.get();
-                        context.put(clazz.getName(), bean);
-                    }
-                };
-            }
-        });
+        bind(ScopeCache.SessionScope.class).to(SESSION_SCOPE_PROVIDER);
 
         bind(SingletonBoundObject.class).to(SingletonBean.class).in(Singleton.class);
     }
