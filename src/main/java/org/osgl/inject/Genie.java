@@ -170,8 +170,14 @@ public final class Genie {
     private Map<Class<? extends Annotation>, ScopeCache> scopeProviders = new HashMap<Class<? extends Annotation>, ScopeCache>();
 
     Genie(Object... modules) {
+        this(false, modules);
+    }
+
+    Genie(boolean noPlugin, Object ... modules) {
         registerBuiltInProviders();
-        registerBuiltInPlugins();
+        if (!noPlugin) {
+            registerBuiltInPlugins();
+        }
         if (modules.length > 0) {
             for (Object module : modules) {
                 registerModule(module);
@@ -564,6 +570,16 @@ public final class Genie {
      */
     public static Genie create(Object... modules) {
         return new Genie(modules);
+    }
+
+    /**
+     * Create a Genie instance with modules specified
+     *
+     * @param modules modules that provides binding or {@literal@}Provides methods
+     * @return an new Genie instance with modules
+     */
+    public static Genie createWithoutPlugins(Object... modules) {
+        return new Genie(true, modules);
     }
 
     private static Object[] params(Provider<?>[] paramProviders) {
