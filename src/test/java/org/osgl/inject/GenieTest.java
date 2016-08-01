@@ -35,6 +35,7 @@ public class GenieTest extends TestBase {
     @After
     public void teardown() {
         BaseWithPostConstructor.current.remove();
+        Context.reset();
     }
 
     @Test

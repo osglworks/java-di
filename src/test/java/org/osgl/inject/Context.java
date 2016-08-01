@@ -22,19 +22,23 @@ class Context {
         return id;
     }
 
-    public <T> T get(String key) {
+    <T> T get(String key) {
         return (T) data.get(key);
     }
 
-    public <T> void put(String key, T object) {
+    <T> void put(String key, T object) {
         data.put(key, object);
     }
 
     private static final ThreadLocal<Context> current = new ThreadLocal<Context>();
-    public static final Context get() {
+
+    static Context get() {
         return current.get();
     }
-    public static final void set(Context context) {
+    static void set(Context context) {
         current.set(context);
+    }
+    static void reset() {
+        current.remove();
     }
 }
