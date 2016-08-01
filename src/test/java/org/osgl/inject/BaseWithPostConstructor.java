@@ -12,7 +12,11 @@ class BaseWithPostConstructor {
         current.set(this);
     }
 
-    public static class Holder {
+    static class Holder {
         @Inject BaseWithPostConstructor bean;
+    }
+
+    static void reset() {
+        current.remove();
     }
 }
