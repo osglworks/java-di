@@ -47,6 +47,15 @@ public class BeanSpec {
     private final Set<Annotation> elementLoaders = C.newSet();
     private final Set<Annotation> filters = C.newSet();
     private final Set<Annotation> qualifiers = C.newSet();
+    /**
+     * The list will be used for calculating the hashCode and do
+     * equality test. The following annotations will added into
+     * the list:
+     * * {@link #elementLoaders}
+     * * {@link #filters}
+     * * {@link #qualifiers}
+     * * {@link #valueLoader}
+     */
     private final C.List<Annotation> annotations = C.newList();
     private MapKey mapKey;
     private Class<? extends Annotation> scope;
@@ -90,6 +99,22 @@ public class BeanSpec {
         return hc;
     }
 
+    /**
+     * A bean spec equals to another bean spec if all of the following conditions are met:
+     * * the {@link #type} of the two bean spec equals to each other
+     * * the {@link #annotations} of the two bean spec equals to each other
+     *
+     * Specifically, {@link #scope} does not participate comparison because
+     * 1. Scope annotations shall be put onto {@link java.lang.annotation.ElementType#TYPE type},
+     *    or the factory method with {@link Provides} annotation, which is equivalent to `Type`.
+     *    So it is safe to ignore scope annotation because one type cannot be annotated with different
+     *    scope
+     * 2. If we count scope annotation in equality test, we will never be able to get the correct
+     *    provider stem from the factory methods.
+     *
+     * @param obj the object to compare with this object
+     * @return `true` if the two objects equals as per described above
+     */
     @Override
     public boolean equals(Object obj) {
         if (obj == this) {
@@ -293,6 +318,12 @@ public class BeanSpec {
         }
     }
 
+    /**
+     * Return hash code based on {@link #type} and {@link #annotations}.
+     *
+     * @return {@link Object#hashCode()} of this bean
+     * @see #equals(Object)
+     */
     private int calcHashCode() {
         return $.hc(type, annotations);
     }
