@@ -1,6 +1,8 @@
 package org.osgl.inject;
 
 import org.osgl.$;
+import org.osgl.exception.UnexpectedException;
+import org.osgl.inject.annotation.PostConstructProcess;
 import org.osgl.inject.annotation.Provides;
 import org.osgl.inject.annotation.RequestScoped;
 import org.osgl.inject.annotation.SessionScoped;
@@ -9,6 +11,7 @@ import org.osgl.inject.util.AnnotationUtil;
 import org.osgl.logging.LogManager;
 import org.osgl.logging.Logger;
 import org.osgl.util.C;
+import org.osgl.util.E;
 import org.osgl.util.S;
 
 import javax.inject.Inject;
@@ -24,7 +27,7 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * Genie is responsible for providing instance as required
  */
-public final class Genie {
+public final class Genie implements Injector {
 
     static final Logger logger = LogManager.get(Genie.class);
 
@@ -168,12 +171,13 @@ public final class Genie {
     private ConcurrentMap<Class, Provider> expressRegistry = new ConcurrentHashMap<Class, Provider>();
     private Map<Class<? extends Annotation>, Class<? extends Annotation>> scopeAliases = new HashMap<Class<? extends Annotation>, Class<? extends Annotation>>();
     private Map<Class<? extends Annotation>, ScopeCache> scopeProviders = new HashMap<Class<? extends Annotation>, ScopeCache>();
+    private ConcurrentMap<Class<? extends Annotation>, PostConstructProcessor<?>> postConstructProcessors = new ConcurrentHashMap<Class<? extends Annotation>, PostConstructProcessor<?>>();
 
     Genie(Object... modules) {
         this(false, modules);
     }
 
-    Genie(boolean noPlugin, Object ... modules) {
+    Genie(boolean noPlugin, Object... modules) {
         registerBuiltInProviders();
         if (!noPlugin) {
             registerBuiltInPlugins();
@@ -185,13 +189,6 @@ public final class Genie {
         }
     }
 
-    /**
-     * Returns a bean of given type
-     *
-     * @param type the class of the bean
-     * @param <T>  generic type of the bean
-     * @return the bean
-     */
     public <T> T get(Class<T> type) {
         Provider provider = expressRegistry.get(type);
         if (null == provider) {
@@ -199,32 +196,20 @@ public final class Genie {
             provider = findProvider(spec, C.<BeanSpec>empty());
             expressRegistry.putIfAbsent(type, provider);
         }
-        return (T)provider.get();
+        return (T) provider.get();
     }
 
-    public <T> T get(BeanSpec spec) {
+    private <T> T get(BeanSpec spec) {
         Provider<?> provider = findProvider(spec, C.<BeanSpec>empty());
         return (T) provider.get();
     }
 
-    /**
-     * Returns a bean of given type and annotations. This is helpful
-     * when it needs to inject a value for a method parameter
-     * @param type the type of the bean
-     * @param annotations the annotations tagged to the (parameter)
-     * @param <T> the generic type
-     * @return the bean instance
-     */
     public <T> T get(Type type, Annotation[] annotations) {
         return get(BeanSpec.of(type, annotations, this));
     }
 
-    /**
-     * Returns parameter as bean for a given method
-     * @param method the method
-     * @return the parameters that an be used to invoke the method
-     */
-    public Object[] getParams(Method method) {
+    public Object[] getParams(Method method, ValueLoader<?> defaultValueLoader) {
+        E.tbd("Cache provider exploring result; implement defaultValueLoader logic");
         Type[] ta = method.getGenericParameterTypes();
         int len = ta.length;
         Object[] oa = new Object[ta.length];
@@ -258,6 +243,13 @@ public final class Genie {
         scopeProviders.put(scopeAnnotation, get(scopeCacheClass));
     }
 
+    public void registerPostConstructProcessor(
+            Class<? extends Annotation> annoClass,
+            PostConstructProcessor<?> processor
+    ) {
+        postConstructProcessors.put(annoClass, processor);
+    }
+
     boolean isScopeAnnotation(Class<? extends Annotation> annoClass) {
         if (Singleton.class == annoClass || SessionScoped.class == annoClass || RequestScoped.class == annoClass) {
             return true;
@@ -271,6 +263,28 @@ public final class Genie {
 
     ScopeCache scopeCache(Class<? extends Annotation> scope) {
         return scopeProviders.get(scope);
+    }
+
+    boolean isPostConstructProcessor(Class<? extends Annotation> annoClass) {
+        return postConstructProcessors.containsKey(annoClass) || annoClass.isAnnotationPresent(PostConstructProcess.class);
+    }
+
+    PostConstructProcessor postConstructProcessor(Annotation annotation) {
+        Class<? extends Annotation> annoClass = annotation.annotationType();
+        PostConstructProcessor processor = postConstructProcessors.get(annoClass);
+        if (null == processor) {
+            if (!annoClass.isAnnotationPresent(PostConstructProcess.class)) {
+                throw new UnexpectedException("Cannot find PostConstructProcessor on %s", annoClass);
+            }
+            PostConstructProcess pcp = annoClass.getAnnotation(PostConstructProcess.class);
+            Class<? extends PostConstructProcessor> cls = pcp.value();
+            processor = get(cls);
+            PostConstructProcessor p2 = postConstructProcessors.putIfAbsent(annoClass, processor);
+            if (null != p2) {
+                processor = p2;
+            }
+        }
+        return processor;
     }
 
     private void bindProviderToClass(Class<?> target, Provider<?> provider) {
@@ -423,7 +437,13 @@ public final class Genie {
     }
 
     private Provider<?> decorate(BeanSpec spec, Provider provider) {
-        return ScopedProvider.decorate(spec, PostConstructorInvoker.decorate(spec, ElementLoaderProvider.decorate(spec, provider, this), this), this);
+        return ScopedProvider.decorate(spec,
+                PostConstructProcessorInvoker.decorate(spec,
+                        PostConstructorInvoker.decorate(spec,
+                                ElementLoaderProvider.decorate(spec, provider, this)
+                                , this)
+                        , this)
+                , this);
     }
 
     private Provider buildProvider(BeanSpec spec, Set<BeanSpec> chain) {
@@ -470,6 +490,8 @@ public final class Genie {
                         }
                         return bean;
                     } catch (InjectException e) {
+                        throw e;
+                    } catch (RuntimeException e) {
                         throw e;
                     } catch (Exception e) {
                         throw new InjectException(e, "cannot instantiate %s", spec);

@@ -10,7 +10,6 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Qualifier;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -47,6 +46,7 @@ public class BeanSpec {
     private final Set<Annotation> elementLoaders = C.newSet();
     private final Set<Annotation> filters = C.newSet();
     private final Set<Annotation> qualifiers = C.newSet();
+    private final Set<Annotation> postProcessors = C.newSet();
     /**
      * The list will be used for calculating the hashCode and do
      * equality test. The following annotations will added into
@@ -55,6 +55,7 @@ public class BeanSpec {
      * * {@link #filters}
      * * {@link #qualifiers}
      * * {@link #valueLoader}
+     * * {@link #postProcessors}
      */
     private final C.List<Annotation> annotations = C.newList();
     private MapKey mapKey;
@@ -209,6 +210,10 @@ public class BeanSpec {
         return filters;
     }
 
+    Set<Annotation> postProcessors() {
+        return postProcessors;
+    }
+
     Annotation valueLoader() {
         return valueLoader;
     }
@@ -245,12 +250,13 @@ public class BeanSpec {
         boolean isMap = Map.class.isAssignableFrom(rawType);
         boolean isContainer = Collection.class.isAssignableFrom(rawType) || isMap;
         MapKey mapKey = null;
+        List<Annotation> loadValueIncompatibles = new ArrayList<Annotation>();
         // Note only qualifiers and bean loaders annotation are considered
         // effective annotation. Scope annotations is not effective here
         // because they are tagged on target type, not the field or method
         // parameter
         for (Annotation anno : aa) {
-            Class cls = anno.annotationType();
+            Class<? extends Annotation> cls = anno.annotationType();
             if (Inject.class == cls || Provides.class == cls) {
                 continue;
             }
@@ -269,20 +275,23 @@ public class BeanSpec {
             } else if (cls.isAnnotationPresent(LoadCollection.class)) {
                 if (isContainer) {
                     elementLoaders.add(anno);
-                    annotations.add(anno);
+                    loadValueIncompatibles.add(anno);
                 } else {
                     Genie.logger.warn("LoadCollection annotation[%s] ignored as target type is neither Collection nor Map", cls.getSimpleName());
                 }
             } else if (cls.isAnnotationPresent(Qualifier.class)) {
                 qualifiers.add(anno);
-                annotations.add(anno);
+                loadValueIncompatibles.add(anno);
             } else if (cls.isAnnotationPresent(Filter.class)) {
                 if (isContainer) {
                     filters.add(anno);
-                    annotations.add(anno);
+                    loadValueIncompatibles.add(anno);
                 } else {
                     Genie.logger.warn("Filter annotation[%s] ignored as target type is neither Collection nor Map", cls.getSimpleName());
                 }
+            } else if (genie.isPostConstructProcessor(cls)) {
+                postProcessors.add(anno);
+                annotations.add(anno);
             } else {
                 resolveScope(anno);
             }
@@ -291,11 +300,12 @@ public class BeanSpec {
             throw new InjectException("No MapKey annotation found on Map type target with ElementLoader annotation presented");
         }
         if (null != valueLoader) {
-            if (!annotations.isEmpty()) {
+            if (!loadValueIncompatibles.isEmpty()) {
                 throw new InjectException("ValueLoader annotation cannot be used with Qualifier, ElementLoader and Filter annotations: %s", annotations);
             }
             annotations.add(valueLoader);
         } else {
+            annotations.addAll(loadValueIncompatibles);
             if (null != mapKey) {
                 if (hasElementLoader()) {
                     this.mapKey = mapKey;
