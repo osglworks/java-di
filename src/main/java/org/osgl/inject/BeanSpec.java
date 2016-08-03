@@ -7,6 +7,7 @@ import org.osgl.util.E;
 import org.osgl.util.S;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Qualifier;
 import java.lang.annotation.Annotation;
@@ -58,10 +59,13 @@ public class BeanSpec {
      * * {@link #postProcessors}
      */
     private final C.List<Annotation> annotations = C.newList();
+    /**
+     * Store the name value of Named annotation if presented
+     */
+    private String name;
     private MapKey mapKey;
     private Class<? extends Annotation> scope;
     private Annotation valueLoader;
-
     private List<Type> typeParams;
 
     /**
@@ -161,6 +165,10 @@ public class BeanSpec {
         }
     }
 
+    public String name() {
+        return name;
+    }
+
     BeanSpec rawTypeSpec() {
         return BeanSpec.of(rawType(), genie);
     }
@@ -202,6 +210,10 @@ public class BeanSpec {
         return !elementLoaders.isEmpty();
     }
 
+    boolean hasValueLoader() {
+        return null != valueLoader;
+    }
+
     Set<Annotation> loaders() {
         return elementLoaders;
     }
@@ -216,10 +228,6 @@ public class BeanSpec {
 
     Annotation valueLoader() {
         return valueLoader;
-    }
-
-    boolean isValueLoad() {
-        return null != valueLoader;
     }
 
     Class<? extends Annotation> scope() {
@@ -279,6 +287,10 @@ public class BeanSpec {
                 } else {
                     Genie.logger.warn("LoadCollection annotation[%s] ignored as target type is neither Collection nor Map", cls.getSimpleName());
                 }
+            } else if (Named.class == cls) {
+                qualifiers.add(anno);
+                loadValueIncompatibles.add(anno);
+                name = ((Named)anno).value();
             } else if (cls.isAnnotationPresent(Qualifier.class)) {
                 qualifiers.add(anno);
                 loadValueIncompatibles.add(anno);

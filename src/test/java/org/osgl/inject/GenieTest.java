@@ -8,10 +8,13 @@ import org.osgl.$;
 import org.osgl.inject.ScopedObjects.*;
 import org.osgl.inject.annotation.LoadValue;
 import org.osgl.inject.annotation.PostConstructProcess;
+import org.osgl.inject.annotation.Provided;
 import org.osgl.inject.annotation.TypeOf;
 import org.osgl.inject.loader.TypedElementLoader;
+import org.osgl.util.C;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.validation.ValidationException;
 import javax.validation.constraints.AssertTrue;
 import java.lang.annotation.*;
@@ -229,7 +232,9 @@ public class GenieTest extends TestBase {
         no(product == product3);
     }
 
-    void methodX(@TypeOf List<ErrorHandler> handlers, @Person.Female Person person) {
+    void methodX(@Named("i") int i,
+                 @Provided @TypeOf List<ErrorHandler> handlers,
+                 @Provided @Person.Female Person person) {
     }
 
     @Test
@@ -241,12 +246,20 @@ public class GenieTest extends TestBase {
                 bind(TypedElementLoader.class).to(SimpleTypeElementLoader.class);
             }
         });
-        Method methodX = GenieTest.class.getDeclaredMethod("methodX", new Class[]{List.class, Person.class});
-        Object[] params = genie.getParams(methodX, null);
-        eq(2, params.length);
-        List<ErrorHandler> handlers = $.cast(params[0]);
+        final Map<String, Object> exteralParams = C.map("i", 5);
+        ValueLoader defLoader = new ValueLoader() {
+            @Override
+            public Object load(Map options, BeanSpec spec) {
+                return exteralParams.get(spec.name());
+            }
+        };
+        Method methodX = GenieTest.class.getDeclaredMethod("methodX", new Class[]{int.class, List.class, Person.class});
+        Object[] params = genie.getParams(methodX, defLoader);
+        eq(3, params.length);
+        eq(5, params[0]);
+        List<ErrorHandler> handlers = $.cast(params[1]);
         eq(2, handlers.size());
-        Person person = $.cast(params[1]);
+        Person person = $.cast(params[2]);
         yes(person.gender().isFemale());
     }
 
