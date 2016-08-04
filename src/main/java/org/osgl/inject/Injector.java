@@ -1,5 +1,7 @@
 package org.osgl.inject;
 
+import org.osgl.$;
+
 import javax.inject.Provider;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -7,7 +9,7 @@ import java.lang.reflect.Type;
 
 /**
  * A generic Injector interface defines the contract
- * {@link Genie} provides
+ * a depdency injector like {@link Genie} should provide
  */
 public interface Injector {
     /**
@@ -20,27 +22,22 @@ public interface Injector {
     <T> T get(Class<T> type);
 
     /**
-     * Returns a bean of given type and annotations. This is helpful
-     * when it needs to inject a value for a method parameter
-     *
-     * @param type        the type of the bean
-     * @param annotations the annotations tagged to the (parameter)
-     * @param <T>         the generic type
-     * @return the bean instance
-     */
-    <T> T get(Type type, Annotation[] annotations);
-
-    /**
-     * Returns parameter array for a given method.
+     * Returns parameter value array for a given method.
      *
      * A typical scenario of using this function is when a MVC framework
-     * needs to invoke a controller action handler, it can delegate the
-     * param preparing job to the injector by providing a generic
-     * {@link ValueLoader value loader}, which load value from some
-     * contextual data source, e.g. the request params or header etc.
+     * needs to invoke a controller method, it can delegate the
+     * param resolving job to the injector by providing a context
+     * param provider lookup as described in the param spec. In case
+     * the framework needs to invoke the same method in a different context,
+     * e.g. in a CLI session, a class typed parameter named context is
+     * passed in.
      *
-     * Note not all params is loaded by the default value loader. Belows
-     * are the exceptions:
+     * The injector shall only build the providers for the first time, and the
+     * following calls to this function shall use the cached providers to
+     * improve speed.
+     *
+     * Note not all params is loaded by providers get from the context param
+     * provider lookup:
      *
      * The params annotated with {@link org.osgl.inject.annotation.Provided}
      * shall not be load using the default value loader, instead it needs to
@@ -58,12 +55,10 @@ public interface Injector {
      * to load the elements
      *
      * @param method the method
-     * @param defaultValueLoader provides value when param is not annotated
-     *                           with {@link org.osgl.inject.annotation.Provided}
-     *                           and neither {@link ValueLoader} is specified nor
-     *                           {@link ElementLoader} is specified
-     * @return the parameters that an be used to invoke the method
+     * @param ctxParamProviderLookup a function that returns a provider for a given {@link BeanSpec}
+     * @param context identify the current context
+     * @return the param value array to feed into the method
      */
-    Object[] getParams(Method method, ValueLoader<?> defaultValueLoader);
+    Object[] getParams(Method method, $.Func1<BeanSpec, Provider> ctxParamProviderLookup, Class context);
 
 }

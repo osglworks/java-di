@@ -8,7 +8,6 @@ import org.osgl.inject.util.AnnotationUtil;
 import org.osgl.logging.LogManager;
 import org.osgl.logging.Logger;
 import org.osgl.util.C;
-import org.osgl.util.E;
 import org.osgl.util.S;
 
 import javax.inject.Inject;
@@ -21,9 +20,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-/**
- * Genie is responsible for providing instance as required
- */
 public final class Genie implements Injector {
 
     static final Logger logger = LogManager.get(Genie.class);
@@ -163,12 +159,14 @@ public final class Genie implements Injector {
             return $.fmt("MethodInjector for %s", method);
         }
     }
+    private static final Provider[] NO_PROVIDER = new Provider[0];
 
     private ConcurrentMap<BeanSpec, Provider<?>> registry = new ConcurrentHashMap<BeanSpec, Provider<?>>();
     private ConcurrentMap<Class, Provider> expressRegistry = new ConcurrentHashMap<Class, Provider>();
     private Map<Class<? extends Annotation>, Class<? extends Annotation>> scopeAliases = new HashMap<Class<? extends Annotation>, Class<? extends Annotation>>();
     private Map<Class<? extends Annotation>, ScopeCache> scopeProviders = new HashMap<Class<? extends Annotation>, ScopeCache>();
     private ConcurrentMap<Class<? extends Annotation>, PostConstructProcessor<?>> postConstructProcessors = new ConcurrentHashMap<Class<? extends Annotation>, PostConstructProcessor<?>>();
+    private final ConcurrentHashMap<$.T2<Method, Class>, Provider[]> paramValueProviders = new ConcurrentHashMap<$.T2<Method, Class>, Provider[]>();
 
     Genie(Object... modules) {
         this(false, modules);
@@ -196,21 +194,18 @@ public final class Genie implements Injector {
         return (T) provider.get();
     }
 
-    private <T> T get(BeanSpec spec) {
-        Provider<?> provider = findProvider(spec, C.<BeanSpec>empty());
-        return (T) provider.get();
+    public <T> void registerProvider(Class<T> type, Provider<? extends T> provider) {
+        AFFINITY.set(0);
+        bindProviderToClass(type, provider);
     }
 
-    public <T> T get(Type type, Annotation[] annotations) {
-        return get(BeanSpec.of(type, annotations, this));
-    }
-
-    private final ConcurrentHashMap<Method, Provider[]> paramValueProviders = new ConcurrentHashMap<Method, Provider[]>();
-    public Object[] getParams(Method method, ValueLoader<?> defaultValueLoader) {
-        Provider[] pa = paramValueProviders.get(method);
+    @Override
+    public Object[] getParams(Method method, $.Func1<BeanSpec, Provider> ctxParamProviderLookup, Class context) {
+        $.T2<Method, Class> key = $.T2(method, context);
+        Provider[] pa = paramValueProviders.get(key);
         if (null == pa) {
-            pa = buildParamValueProviders(method, defaultValueLoader);
-            paramValueProviders.putIfAbsent(method, pa);
+            pa = buildParamValueProviders(method, ctxParamProviderLookup);
+            paramValueProviders.putIfAbsent(key, pa);
         }
         int len = pa.length;
         Object[] params = new Object[len];
@@ -220,8 +215,7 @@ public final class Genie implements Injector {
         return params;
     }
 
-    private static final Provider[] NO_PROVIDER = new Provider[0];
-    private Provider[] buildParamValueProviders(Method method, ValueLoader<?> defaultValueLoader) {
+    private Provider[] buildParamValueProviders(Method method, $.Func1<BeanSpec, Provider> ctxParamProviderLookup) {
         Type[] ta = method.getGenericParameterTypes();
         int len = ta.length;
         if (0 == len) {
@@ -230,7 +224,7 @@ public final class Genie implements Injector {
         Annotation[][] aaa = method.getParameterAnnotations();
         Set<BeanSpec> chain = new HashSet<BeanSpec>();
         chain.add(BeanSpec.of(method.getDeclaringClass(), this));
-        return paramProviders(ta, aaa, chain, defaultValueLoader);
+        return paramProviders(ta, aaa, chain, ctxParamProviderLookup);
     }
 
     public void registerScopeAlias(Class<? extends Annotation> scopeAnnotation, Class<? extends Annotation> scopeAlias) {
@@ -287,11 +281,6 @@ public final class Genie implements Injector {
             }
         }
         return processor;
-    }
-
-    private <T> void registerProvider(Class<T> type, Provider<? extends T> provider) {
-        AFFINITY.set(0);
-        bindProviderToClass(type, provider);
     }
 
     private void bindProviderToClass(Class<?> target, Provider<?> provider) {
@@ -586,7 +575,12 @@ public final class Genie implements Injector {
         return null;
     }
 
-    private Provider[] paramProviders(Type[] paramTypes, Annotation[][] aaa, Set<BeanSpec> chain, final ValueLoader<?> defaultValueLoader) {
+    private Provider[] paramProviders(
+            Type[] paramTypes,
+            Annotation[][] aaa,
+            Set<BeanSpec> chain,
+            final $.Func1<BeanSpec, Provider> ctxParamProviderLookup
+    ) {
         final int len = paramTypes.length;
         Provider[] pa = new Provider[len];
         for (int i = 0; i < len; ++i) {
@@ -596,18 +590,13 @@ public final class Genie implements Injector {
             if (chain.contains(paramSpec)) {
                 foundCircularDependency(chain, paramSpec);
             }
-            if (null != defaultValueLoader) {
+            if (null != ctxParamProviderLookup) {
                 if (!paramSpec.hasElementLoader() && null == filterAnnotation(annotations, Provided.class)) {
                     Provider provider;
                     if (paramSpec.hasValueLoader()) {
                         provider = ValueLoaderProvider.create(paramSpec, this);
                     } else {
-                        provider = new Provider<Object>() {
-                            @Override
-                            public Object get() {
-                                return defaultValueLoader.load(Collections.EMPTY_MAP, paramSpec);
-                            }
-                        };
+                        provider = ctxParamProviderLookup.apply(paramSpec);
                     }
                     pa[i] = provider;
                 } else {

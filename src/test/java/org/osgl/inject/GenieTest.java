@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.osgl.$;
+import org.osgl.exception.NotAppliedException;
 import org.osgl.inject.ScopedObjects.*;
 import org.osgl.inject.annotation.LoadValue;
 import org.osgl.inject.annotation.PostConstructProcess;
@@ -12,9 +13,11 @@ import org.osgl.inject.annotation.Provided;
 import org.osgl.inject.annotation.TypeOf;
 import org.osgl.inject.loader.TypedElementLoader;
 import org.osgl.util.C;
+import org.osgl.util.S;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.validation.ValidationException;
 import javax.validation.constraints.AssertTrue;
 import java.lang.annotation.*;
@@ -232,13 +235,12 @@ public class GenieTest extends TestBase {
         no(product == product3);
     }
 
+    @SuppressWarnings("unused")
     void methodX(@Named("i") int i,
                  @Provided @TypeOf List<ErrorHandler> handlers,
-                 @Provided @Person.Female Person person) {
-    }
+                 @Provided @Person.Female Person person) {}
 
     @Test
-    @Ignore("Genie::getParams is not ready yet")
     public void testGetParams() throws Exception {
         genie = new Genie(new ModuleWithBindings(), new Module() {
             @Override
@@ -246,15 +248,20 @@ public class GenieTest extends TestBase {
                 bind(TypedElementLoader.class).to(SimpleTypeElementLoader.class);
             }
         });
-        final Map<String, Object> exteralParams = C.map("i", 5);
-        ValueLoader defLoader = new ValueLoader() {
+        final Map<String, Object> externalParams = C.map("i", 5);
+        $.F1<BeanSpec, Provider> lookup = new $.F1<BeanSpec, Provider>() {
             @Override
-            public Object load(Map options, BeanSpec spec) {
-                return exteralParams.get(spec.name());
+            public Provider apply(final BeanSpec beanSpec) throws NotAppliedException, $.Break {
+                return new Provider() {
+                    @Override
+                    public Object get() {
+                        return externalParams.get(beanSpec.name());
+                    }
+                };
             }
         };
         Method methodX = GenieTest.class.getDeclaredMethod("methodX", new Class[]{int.class, List.class, Person.class});
-        Object[] params = genie.getParams(methodX, defLoader);
+        Object[] params = genie.getParams(methodX, lookup, Test.class);
         eq(3, params.length);
         eq(5, params[0]);
         List<ErrorHandler> handlers = $.cast(params[1]);
