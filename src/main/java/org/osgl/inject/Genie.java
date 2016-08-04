@@ -10,10 +10,7 @@ import org.osgl.logging.Logger;
 import org.osgl.util.C;
 import org.osgl.util.S;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.inject.Scope;
-import javax.inject.Singleton;
+import javax.inject.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
@@ -28,6 +25,7 @@ public final class Genie implements Injector {
 
     public static class Binder<T> {
         private Class<T> type;
+        private String name;
         private Provider<? extends T> provider;
         private List<Annotation> annotations = C.newList();
         private Genie genie;
@@ -35,6 +33,11 @@ public final class Genie implements Injector {
 
         Binder(Class<T> type) {
             this.type = type;
+        }
+
+        public Binder<T> named(String name) {
+            this.name = name;
+            return this;
         }
 
         public Binder<T> to(final Class<? extends T> impl) {
@@ -79,7 +82,7 @@ public final class Genie implements Injector {
         }
 
         BeanSpec beanSpec(Genie genie) {
-            BeanSpec spec = BeanSpec.of(type, annotations.toArray(new Annotation[annotations.size()]), genie);
+            BeanSpec spec = BeanSpec.of(name, type, annotations.toArray(new Annotation[annotations.size()]), genie);
             if (scope != null) {
                 spec.scope(scope);
             }
@@ -163,6 +166,7 @@ public final class Genie implements Injector {
 
     private ConcurrentMap<BeanSpec, Provider<?>> registry = new ConcurrentHashMap<BeanSpec, Provider<?>>();
     private ConcurrentMap<Class, Provider> expressRegistry = new ConcurrentHashMap<Class, Provider>();
+    private Set<Class<? extends Annotation>> qualifierRegistry = new HashSet<Class<? extends Annotation>>();
     private Map<Class<? extends Annotation>, Class<? extends Annotation>> scopeAliases = new HashMap<Class<? extends Annotation>, Class<? extends Annotation>>();
     private Map<Class<? extends Annotation>, ScopeCache> scopeProviders = new HashMap<Class<? extends Annotation>, ScopeCache>();
     private ConcurrentMap<Class<? extends Annotation>, PostConstructProcessor<?>> postConstructProcessors = new ConcurrentHashMap<Class<? extends Annotation>, PostConstructProcessor<?>>();
@@ -194,13 +198,8 @@ public final class Genie implements Injector {
         return (T) provider.get();
     }
 
-    public <T> void registerProvider(Class<T> type, Provider<? extends T> provider) {
-        AFFINITY.set(0);
-        bindProviderToClass(type, provider);
-    }
-
     @Override
-    public Object[] getParams(Method method, $.Func1<BeanSpec, Provider> ctxParamProviderLookup, Class context) {
+    public Object[] getParams(Method method, $.Func2<BeanSpec, Injector, Provider> ctxParamProviderLookup, Class context) {
         $.T2<Method, Class> key = $.T2(method, context);
         Provider[] pa = paramValueProviders.get(key);
         if (null == pa) {
@@ -215,16 +214,17 @@ public final class Genie implements Injector {
         return params;
     }
 
-    private Provider[] buildParamValueProviders(Method method, $.Func1<BeanSpec, Provider> ctxParamProviderLookup) {
-        Type[] ta = method.getGenericParameterTypes();
-        int len = ta.length;
-        if (0 == len) {
-            return NO_PROVIDER;
-        }
-        Annotation[][] aaa = method.getParameterAnnotations();
-        Set<BeanSpec> chain = new HashSet<BeanSpec>();
-        chain.add(BeanSpec.of(method.getDeclaringClass(), this));
-        return paramProviders(ta, aaa, chain, ctxParamProviderLookup);
+    public <T> void registerProvider(Class<T> type, Provider<? extends T> provider) {
+        AFFINITY.set(0);
+        bindProviderToClass(type, provider);
+    }
+
+    public void registerQualifiers(Class<? extends Annotation> ... qualifiers) {
+        this.qualifierRegistry.addAll(C.listOf(qualifiers));
+    }
+
+    public void registerQualifiers(Collection<Class<? extends Annotation>> qualifiers) {
+        this.qualifierRegistry.addAll(qualifiers);
     }
 
     public void registerScopeAlias(Class<? extends Annotation> scopeAnnotation, Class<? extends Annotation> scopeAlias) {
@@ -246,7 +246,7 @@ public final class Genie implements Injector {
         postConstructProcessors.put(annoClass, processor);
     }
 
-    boolean isScopeAnnotation(Class<? extends Annotation> annoClass) {
+    boolean isScope(Class<? extends Annotation> annoClass) {
         if (Singleton.class == annoClass || SessionScoped.class == annoClass || RequestScoped.class == annoClass) {
             return true;
         }
@@ -259,6 +259,10 @@ public final class Genie implements Injector {
 
     ScopeCache scopeCache(Class<? extends Annotation> scope) {
         return scopeProviders.get(scope);
+    }
+
+    boolean isQualifier(Class<? extends Annotation> annoClass) {
+        return qualifierRegistry.contains(annoClass) || annoClass.isAnnotationPresent(Qualifier.class);
     }
 
     boolean isPostConstructProcessor(Class<? extends Annotation> annoClass) {
@@ -566,6 +570,18 @@ public final class Genie implements Injector {
         return new MethodInjector(method, paramProviders);
     }
 
+    private Provider[] buildParamValueProviders(Method method, $.Func2<BeanSpec, Injector, Provider> ctxParamProviderLookup) {
+        Type[] ta = method.getGenericParameterTypes();
+        int len = ta.length;
+        if (0 == len) {
+            return NO_PROVIDER;
+        }
+        Annotation[][] aaa = method.getParameterAnnotations();
+        Set<BeanSpec> chain = new HashSet<BeanSpec>();
+        chain.add(BeanSpec.of(method.getDeclaringClass(), this));
+        return paramProviders(ta, aaa, chain, ctxParamProviderLookup);
+    }
+
     private static <T extends Annotation> T filterAnnotation(Annotation[] aa, Class<T> ac) {
         for (Annotation a : aa) {
             if (a.annotationType() == ac) {
@@ -579,7 +595,7 @@ public final class Genie implements Injector {
             Type[] paramTypes,
             Annotation[][] aaa,
             Set<BeanSpec> chain,
-            final $.Func1<BeanSpec, Provider> ctxParamProviderLookup
+            final $.Func2<BeanSpec, Injector, Provider> ctxParamProviderLookup
     ) {
         final int len = paramTypes.length;
         Provider[] pa = new Provider[len];
@@ -596,7 +612,7 @@ public final class Genie implements Injector {
                     if (paramSpec.hasValueLoader()) {
                         provider = ValueLoaderProvider.create(paramSpec, this);
                     } else {
-                        provider = ctxParamProviderLookup.apply(paramSpec);
+                        provider = ctxParamProviderLookup.apply(paramSpec, this);
                     }
                     pa[i] = provider;
                 } else {

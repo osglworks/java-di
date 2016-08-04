@@ -59,6 +59,6 @@ public interface Injector {
      * @param context identify the current context
      * @return the param value array to feed into the method
      */
-    Object[] getParams(Method method, $.Func1<BeanSpec, Provider> ctxParamProviderLookup, Class context);
+    Object[] getParams(Method method, $.Func2<BeanSpec, Injector, Provider> ctxParamProviderLookup, Class context);
 
 }

@@ -4,17 +4,23 @@ import org.osgl.inject.Genie.Binder;
 import org.osgl.util.C;
 import org.osgl.util.E;
 
-import java.util.List;
-import java.util.Map;
+import java.lang.annotation.Annotation;
+import java.util.*;
 
 public abstract class Module {
 
-    private List<Binder> binders = C.newList();
+    private List<Binder> binders = new ArrayList<Binder>();
+    private Set<Class<? extends Annotation>> qualifiers = new HashSet<Class<? extends Annotation>>();
 
     protected final <T> Binder<T> bind(Class<T> type) {
         Binder<T> binder = new Binder<T>(type);
         binders.add(binder);
         return binder;
+    }
+
+    protected final Module registerQualifiers(Class<? extends Annotation> ... qualifiers) {
+        this.qualifiers.addAll(C.listOf(qualifiers));
+        return this;
     }
 
     protected abstract void configure();
@@ -25,6 +31,7 @@ public abstract class Module {
         for (Binder<?> binder : binders) {
             binder.register(genie);
         }
+        genie.registerQualifiers(qualifiers);
     }
 
     private void validate(Genie genie) {

@@ -249,9 +249,9 @@ public class GenieTest extends TestBase {
             }
         });
         final Map<String, Object> externalParams = C.map("i", 5);
-        $.F1<BeanSpec, Provider> lookup = new $.F1<BeanSpec, Provider>() {
+        $.F2<BeanSpec, Injector, Provider> lookup = new $.F2<BeanSpec, Injector, Provider>() {
             @Override
-            public Provider apply(final BeanSpec beanSpec) throws NotAppliedException, $.Break {
+            public Provider apply(final BeanSpec beanSpec, final Injector injector) throws NotAppliedException, $.Break {
                 return new Provider() {
                     @Override
                     public Object get() {

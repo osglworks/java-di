@@ -58,7 +58,7 @@ public class BeanSpec {
      * * {@link #valueLoader}
      * * {@link #postProcessors}
      */
-    private final C.List<Annotation> annotations = C.newList();
+    private final Map<Class<? extends Annotation>, Annotation> annotations = new HashMap<Class<? extends Annotation>, Annotation>();
     /**
      * Store the name value of Named annotation if presented
      */
@@ -95,7 +95,7 @@ public class BeanSpec {
         this.elementLoaders.addAll(providerSpec.elementLoaders);
         this.filters.addAll(providerSpec.filters);
         this.valueLoader = providerSpec.valueLoader;
-        this.annotations.addAll(providerSpec.annotations);
+        this.annotations.putAll(providerSpec.annotations);
         this.hc = calcHashCode();
     }
 
@@ -129,6 +129,7 @@ public class BeanSpec {
             BeanSpec that = (BeanSpec) obj;
             return that.hc == hc
                     && $.eq(type, that.type)
+                    && $.eq(name, that.name)
                     && $.eq(annotations, that.annotations);
         }
         return false;
@@ -137,6 +138,9 @@ public class BeanSpec {
     @Override
     public String toString() {
         StringBuilder sb = S.builder(type());
+        if (S.notBlank(name)) {
+            sb.append("(").append(name).append(")");
+        }
         C.List<Object> list = C.newList();
         if (null != valueLoader) {
             list.append(valueLoader);
@@ -167,6 +171,10 @@ public class BeanSpec {
 
     public String name() {
         return name;
+    }
+
+    public <T extends Annotation> T getAnnotation(Class<T> annoClass) {
+        return (T)annotations.get(annoClass);
     }
 
     BeanSpec rawTypeSpec() {
@@ -288,10 +296,9 @@ public class BeanSpec {
                     Genie.logger.warn("LoadCollection annotation[%s] ignored as target type is neither Collection nor Map", cls.getSimpleName());
                 }
             } else if (Named.class == cls) {
-                qualifiers.add(anno);
                 loadValueIncompatibles.add(anno);
                 name = ((Named)anno).value();
-            } else if (cls.isAnnotationPresent(Qualifier.class)) {
+            } else if (genie.isQualifier(cls)) {
                 qualifiers.add(anno);
                 loadValueIncompatibles.add(anno);
             } else if (cls.isAnnotationPresent(Filter.class)) {
@@ -303,7 +310,7 @@ public class BeanSpec {
                 }
             } else if (genie.isPostConstructProcessor(cls)) {
                 postProcessors.add(anno);
-                annotations.add(anno);
+                annotations.put(cls, anno);
             } else {
                 resolveScope(anno);
             }
@@ -315,24 +322,25 @@ public class BeanSpec {
             if (!loadValueIncompatibles.isEmpty()) {
                 throw new InjectException("ValueLoader annotation cannot be used with Qualifier, ElementLoader and Filter annotations: %s", annotations);
             }
-            annotations.add(valueLoader);
+            annotations.put(valueLoader.annotationType(), valueLoader);
         } else {
-            annotations.addAll(loadValueIncompatibles);
+            for (Annotation anno: loadValueIncompatibles) {
+                annotations.put(anno.annotationType(), anno);
+            }
             if (null != mapKey) {
                 if (hasElementLoader()) {
                     this.mapKey = mapKey;
-                    annotations.add(mapKey);
+                    annotations.put(mapKey.annotationType(), mapKey);
                 } else {
                     Genie.logger.warn("MapKey annotation ignored on target without ElementLoader annotation presented");
                 }
             }
-            Collections.sort(annotations, ANNO_CMP);
         }
     }
 
     private void resolveScope(Annotation annotation) {
         Class<? extends Annotation> annoClass = annotation.annotationType();
-        if (genie.isScopeAnnotation(annoClass)) {
+        if (genie.isScope(annoClass)) {
             if (null != scope) {
                 throw new InjectException("Multiple Scope annotation found: %s", this);
             }
@@ -347,7 +355,7 @@ public class BeanSpec {
      * @see #equals(Object)
      */
     private int calcHashCode() {
-        return $.hc(type, annotations);
+        return $.hc(type, name, annotations);
     }
 
     static BeanSpec of(Class<?> clazz, Genie genie) {
@@ -356,6 +364,12 @@ public class BeanSpec {
 
     static BeanSpec of(Type type, Annotation[] paramAnnotations, Genie genie) {
         return new BeanSpec(type, paramAnnotations, genie);
+    }
+
+    static BeanSpec of(String name, Type type, Annotation[] paramAnnotations, Genie genie) {
+        BeanSpec spec = of(type, paramAnnotations, genie);
+        spec.name = name;
+        return spec;
     }
 
 }
