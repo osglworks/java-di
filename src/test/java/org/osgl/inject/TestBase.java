@@ -57,4 +57,5 @@ public class TestBase extends Assert {
     protected static <T> T fieldVal(Object entity, String field) {
         return $.getProperty(entity, field);
     }
+
 }

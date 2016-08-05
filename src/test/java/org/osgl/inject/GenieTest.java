@@ -418,4 +418,10 @@ public class GenieTest extends TestBase {
         }
     }
 
+    @Test
+    public void testArrayInject() {
+        FibonacciSeriesHolder2 bean = genie.get(FibonacciSeriesHolder2.class);
+        eq("1,1,2,3,5,8,13", bean.toString());
+    }
+
 }

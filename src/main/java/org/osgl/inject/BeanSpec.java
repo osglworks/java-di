@@ -20,30 +20,10 @@ import java.util.*;
  * Specification of a bean to be injected
  */
 public class BeanSpec {
-
-    /**
-     * Used to sort annotation list so we can make equality compare between
-     * `BeanSpec` generated from {@link Provides provider} factory method
-     * and the `BeanSpec` generated from field or method parameters.
-     * <p>
-     * The logic simply relies on annotation's class. As it is clear that the
-     * same annotation type cannot be tagged multiple times
-     */
-    private static Comparator<Annotation> ANNO_CMP = new Comparator<Annotation>() {
-        @Override
-        public int compare(Annotation o1, Annotation o2) {
-            Class c1 = o1.annotationType();
-            Class c2 = o2.annotationType();
-            if (c1 != c2) {
-                return c1.getName().compareTo(c2.getName());
-            }
-            return 0;
-        }
-    };
-
     private final Genie genie;
     private final int hc;
     private final Type type;
+    private final boolean isArray;
     private final Set<Annotation> elementLoaders = C.newSet();
     private final Set<Annotation> filters = C.newSet();
     private final Set<Annotation> qualifiers = C.newSet();
@@ -80,22 +60,21 @@ public class BeanSpec {
     private BeanSpec(Type type, Annotation[] annotations, Genie genie) {
         this.genie = genie;
         this.type = type;
+        this.isArray = rawType().isArray();
         this.resolveTypeAnnotations();
         this.resolveAnnotations(annotations);
         this.hc = calcHashCode();
     }
 
-    private BeanSpec(BeanSpec providerSpec) {
-        if (!providerSpec.isProvider()) {
-            throw new IllegalStateException("not a provider spec");
-        }
-        this.genie = providerSpec.genie;
-        this.type = ((ParameterizedType) providerSpec.type).getActualTypeArguments()[0];
-        this.qualifiers.addAll(providerSpec.qualifiers);
-        this.elementLoaders.addAll(providerSpec.elementLoaders);
-        this.filters.addAll(providerSpec.filters);
-        this.valueLoader = providerSpec.valueLoader;
-        this.annotations.putAll(providerSpec.annotations);
+    private BeanSpec(BeanSpec source, Type convertTo) {
+        this.genie = source.genie;
+        this.type = convertTo;
+        this.isArray = rawType().isArray();
+        this.qualifiers.addAll(source.qualifiers);
+        this.elementLoaders.addAll(source.elementLoaders);
+        this.filters.addAll(source.filters);
+        this.valueLoader = source.valueLoader;
+        this.annotations.putAll(source.annotations);
         this.hc = calcHashCode();
     }
 
@@ -173,6 +152,18 @@ public class BeanSpec {
         return name;
     }
 
+    public boolean isArray() {
+        return isArray;
+    }
+
+    /**
+     * Convert an array bean spec to a list bean spec
+     * @return
+     */
+    public BeanSpec toList() {
+        return new BeanSpec(this, ArrayList.class);
+    }
+
     public <T extends Annotation> T getAnnotation(Class<T> annoClass) {
         return (T)annotations.get(annoClass);
     }
@@ -197,8 +188,8 @@ public class BeanSpec {
         return Provider.class.isAssignableFrom(rawType());
     }
 
-    BeanSpec providerSpec() {
-        return new BeanSpec(this);
+    BeanSpec toProvidee() {
+        return new BeanSpec(this, ((ParameterizedType) type).getActualTypeArguments()[0]);
     }
 
     public List<Type> typeParams() {
@@ -264,7 +255,7 @@ public class BeanSpec {
         }
         Class<?> rawType = rawType();
         boolean isMap = Map.class.isAssignableFrom(rawType);
-        boolean isContainer = Collection.class.isAssignableFrom(rawType) || isMap;
+        boolean isContainer = isMap || Collection.class.isAssignableFrom(rawType) || rawType.isArray();
         MapKey mapKey = null;
         List<Annotation> loadValueIncompatibles = new ArrayList<Annotation>();
         // Note only qualifiers and bean loaders annotation are considered
@@ -358,11 +349,11 @@ public class BeanSpec {
         return $.hc(type, name, annotations);
     }
 
-    static BeanSpec of(Class<?> clazz, Genie genie) {
+    public static BeanSpec of(Class<?> clazz, Genie genie) {
         return new BeanSpec(clazz, null, genie);
     }
 
-    static BeanSpec of(Type type, Annotation[] paramAnnotations, Genie genie) {
+    public static BeanSpec of(Type type, Annotation[] paramAnnotations, Genie genie) {
         return new BeanSpec(type, paramAnnotations, genie);
     }
 

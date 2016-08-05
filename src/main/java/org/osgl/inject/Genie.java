@@ -171,6 +171,7 @@ public final class Genie implements Injector {
     private Map<Class<? extends Annotation>, ScopeCache> scopeProviders = new HashMap<Class<? extends Annotation>, ScopeCache>();
     private ConcurrentMap<Class<? extends Annotation>, PostConstructProcessor<?>> postConstructProcessors = new ConcurrentHashMap<Class<? extends Annotation>, PostConstructProcessor<?>>();
     private final ConcurrentHashMap<$.T2<Method, Class>, Provider[]> paramValueProviders = new ConcurrentHashMap<$.T2<Method, Class>, Provider[]>();
+    private ConcurrentMap<Class, BeanSpec> beanSpecLookup = new ConcurrentHashMap<Class, BeanSpec>();
 
     Genie(Object... modules) {
         this(false, modules);
@@ -191,10 +192,20 @@ public final class Genie implements Injector {
     public <T> T get(Class<T> type) {
         Provider provider = expressRegistry.get(type);
         if (null == provider) {
-            BeanSpec spec = BeanSpec.of(type, this);
+            if (type.isArray()) {
+                provider = ArrayProvider.of(type, this);
+                expressRegistry.putIfAbsent(type, provider);
+                return (T) provider.get();
+            }
+            BeanSpec spec = beanSpecOf(type);
             provider = findProvider(spec, C.<BeanSpec>empty());
             expressRegistry.putIfAbsent(type, provider);
         }
+        return (T) provider.get();
+    }
+
+    public <T> T get(BeanSpec beanSpec) {
+        Provider provider = findProvider(beanSpec, C.<BeanSpec>empty());
         return (T) provider.get();
     }
 
@@ -287,6 +298,15 @@ public final class Genie implements Injector {
         return processor;
     }
 
+    private BeanSpec beanSpecOf(Class type) {
+        BeanSpec spec = beanSpecLookup.get(type);
+        if (null == spec) {
+            spec = BeanSpec.of(type, this);
+            beanSpecLookup.putIfAbsent(type, spec);
+        }
+        return spec;
+    }
+
     private void bindProviderToClass(Class<?> target, Provider<?> provider) {
         addIntoRegistry(target, provider);
         AFFINITY.set(AFFINITY.get() + 1);
@@ -305,7 +325,7 @@ public final class Genie implements Injector {
 
     private void addIntoRegistry(Class<?> type, Provider<?> val) {
         WeightedProvider current = WeightedProvider.decorate(val);
-        BeanSpec spec = BeanSpec.of(type, this);
+        BeanSpec spec = beanSpecOf(type);
         WeightedProvider<?> old = (WeightedProvider<?>) registry.get(spec);
         if (null == old || old.compareTo(current) > 0) {
             registry.put(spec, current);
@@ -319,6 +339,8 @@ public final class Genie implements Injector {
     private void registerBuiltInProviders() {
         registerProvider(Collection.class, OsglListProvider.INSTANCE);
         registerProvider(Deque.class, DequeProvider.INSTANCE);
+        registerProvider(ArrayList.class, ArrayListProvider.INSTANCE);
+        registerProvider(LinkedList.class, LinkedListProvider.INSTANCE);
         registerProvider(C.List.class, OsglListProvider.INSTANCE);
         registerProvider(C.Set.class, OsglSetProvider.INSTANCE);
         registerProvider(C.Map.class, OsglMapProvider.INSTANCE);
@@ -399,7 +421,7 @@ public final class Genie implements Injector {
     }
 
     private Provider<?> findProvider(final BeanSpec spec, final Set<BeanSpec> chain) {
-        // 0. try registry
+        // try registry
         Provider<?> provider = registry.get(spec);
         if (null != provider) {
             return provider;
@@ -410,7 +432,7 @@ public final class Genie implements Injector {
             provider = new Provider<Provider<?>>() {
                 @Override
                 public Provider<?> get() {
-                    return findProvider(spec.providerSpec(), C.<BeanSpec>empty());
+                    return findProvider(spec.toProvidee(), C.<BeanSpec>empty());
                 }
             };
             registry.putIfAbsent(spec, provider);
@@ -421,6 +443,10 @@ public final class Genie implements Injector {
         if (spec.hasValueLoader()) {
             provider = ValueLoaderProvider.create(spec, this);
         } else {
+            // does it require an array
+            if (spec.isArray()) {
+                return ArrayProvider.of(spec, this);
+            }
             // build provider from constructor, field or method
             if (spec.notConstructable()) {
                 // does spec's bare class have provider?
@@ -578,7 +604,7 @@ public final class Genie implements Injector {
         }
         Annotation[][] aaa = method.getParameterAnnotations();
         Set<BeanSpec> chain = new HashSet<BeanSpec>();
-        chain.add(BeanSpec.of(method.getDeclaringClass(), this));
+        chain.add(beanSpecOf(method.getDeclaringClass()));
         return paramProviders(ta, aaa, chain, ctxParamProviderLookup);
     }
 
