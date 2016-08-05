@@ -32,6 +32,7 @@ public class ArrayProvider implements Provider {
         loaders.put(Double.class, new DoubleArrayLoader());
         loaders.put(double.class, new PrimitiveDoubleArrayLoader());
         loaders.put(String.class, new StringArrayLoader());
+        loaders.put(Date.class, new DateArrayLoader());
     }
 
     private ArrayProvider(Class elementType, Genie genie) {
