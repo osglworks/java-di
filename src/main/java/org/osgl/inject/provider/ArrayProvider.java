@@ -8,9 +8,9 @@ import java.lang.reflect.Array;
 import java.util.*;
 
 public class ArrayProvider implements Provider {
-    private Class elementType;
-    private BeanSpec listSpec;
-    private Genie genie;
+    protected final Class elementType;
+    protected final BeanSpec listSpec;
+    protected final Genie genie;
 
     private static final DefaultArrayLoader DEF_LOADER = new DefaultArrayLoader();
     private static final Map<Class, ArrayLoader> loaders = new HashMap<Class, ArrayLoader>();
@@ -50,6 +50,10 @@ public class ArrayProvider implements Provider {
     @Override
     public Object get() {
         ArrayList list = genie.get(listSpec);
+        return listToArray(list);
+    }
+
+    protected Object listToArray(List list) {
         ArrayLoader loader = loaders.get(elementType);
         if (null == loader) {
             loader = DEF_LOADER;

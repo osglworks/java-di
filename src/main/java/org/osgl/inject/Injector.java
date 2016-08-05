@@ -9,7 +9,7 @@ import java.lang.reflect.Type;
 
 /**
  * A generic Injector interface defines the contract
- * a depdency injector like {@link Genie} should provide
+ * a dependency injector like {@link Genie} should provide
  */
 public interface Injector {
     /**
