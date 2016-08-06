@@ -139,13 +139,7 @@ public class BeanSpec {
     }
 
     public Class rawType() {
-        if (type instanceof Class) {
-            return (Class) type;
-        } else if (type instanceof ParameterizedType) {
-            return (Class) ((ParameterizedType) type).getRawType();
-        } else {
-            throw E.unexpected("type not recognized: %s", type);
-        }
+        return rawTypeOf(type);
     }
 
     public String name() {
@@ -355,6 +349,16 @@ public class BeanSpec {
 
     public static BeanSpec of(Type type, Annotation[] paramAnnotations, Genie genie) {
         return new BeanSpec(type, paramAnnotations, genie);
+    }
+
+    public static Class<?> rawTypeOf(Type type) {
+        if (type instanceof Class) {
+            return (Class) type;
+        } else if (type instanceof ParameterizedType) {
+            return (Class) ((ParameterizedType) type).getRawType();
+        } else {
+            throw E.unexpected("type not recognized: %s", type);
+        }
     }
 
     static BeanSpec of(String name, Type type, Annotation[] paramAnnotations, Genie genie) {

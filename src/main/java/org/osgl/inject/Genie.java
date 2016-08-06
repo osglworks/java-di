@@ -126,6 +126,9 @@ public final class Genie implements Injector {
 
         void applyTo(Object bean) {
             Object obj = provider.get();
+            if (null == obj) {
+                return;
+            }
             try {
                 field.set(bean, obj);
             } catch (Exception e) {

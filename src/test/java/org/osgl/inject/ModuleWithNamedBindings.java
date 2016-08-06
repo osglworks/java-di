@@ -4,14 +4,12 @@ import org.osgl.inject.annotation.Provides;
 
 import javax.inject.Named;
 
-class ModuleWithNamedBindings {
+class ModuleWithNamedBindings extends Module {
 
-    @Provides
-    @Named("male")
-    public Person male(Person.Man man) {
-        return man;
+    @Override
+    protected void configure() {
+        bind(Person.class).named("male").to(Person.Man.class);
     }
-
 
     @Provides
     @Named("female")

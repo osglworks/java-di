@@ -140,6 +140,13 @@ public class GenieTest extends TestBase {
     }
 
     @Test
+    public void testGeneralQualifier() {
+        genie = new Genie(LeatherSmoother.Module.class);
+        LeatherSmoother.Host bean = genie.get(LeatherSmoother.Host.class);
+        yes(bean.smoother instanceof LeatherSmoother.RedLeatherSmoother);
+    }
+
+    @Test
     public void testMapInjection() {
         genie = new Genie(new Module() {
             @Override
