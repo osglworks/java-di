@@ -56,10 +56,13 @@ public class BeanSpec {
      * @param annotations the annotation tagged on field or parameter,
      *                    or `null` if this is a direct API injection
      *                    request
+     * @param name        optional, the name coming from the Named qualifier
+     * @param genie       the Genie injector
      */
-    private BeanSpec(Type type, Annotation[] annotations, Genie genie) {
+    private BeanSpec(Type type, Annotation[] annotations, String name, Genie genie) {
         this.genie = genie;
         this.type = type;
+        this.name = name;
         this.isArray = rawType().isArray();
         this.resolveTypeAnnotations();
         this.resolveAnnotations(annotations);
@@ -310,7 +313,11 @@ public class BeanSpec {
             annotations.put(valueLoader.annotationType(), valueLoader);
         } else {
             for (Annotation anno: loadValueIncompatibles) {
-                annotations.put(anno.annotationType(), anno);
+                Class<? extends Annotation> annoType = anno.annotationType();
+                if (Named.class == annoType) {
+                    continue;
+                }
+                annotations.put(annoType, anno);
             }
             if (null != mapKey) {
                 if (hasElementLoader()) {
@@ -344,11 +351,15 @@ public class BeanSpec {
     }
 
     public static BeanSpec of(Class<?> clazz, Genie genie) {
-        return new BeanSpec(clazz, null, genie);
+        return new BeanSpec(clazz, null, null, genie);
     }
 
     public static BeanSpec of(Type type, Annotation[] paramAnnotations, Genie genie) {
-        return new BeanSpec(type, paramAnnotations, genie);
+        return new BeanSpec(type, paramAnnotations, null, genie);
+    }
+
+    static BeanSpec of(Type type, Annotation[] paramAnnotations, String name, Genie genie) {
+        return new BeanSpec(type, paramAnnotations, name, genie);
     }
 
     public static Class<?> rawTypeOf(Type type) {
@@ -359,12 +370,6 @@ public class BeanSpec {
         } else {
             throw E.unexpected("type not recognized: %s", type);
         }
-    }
-
-    static BeanSpec of(String name, Type type, Annotation[] paramAnnotations, Genie genie) {
-        BeanSpec spec = of(type, paramAnnotations, genie);
-        spec.name = name;
-        return spec;
     }
 
 }

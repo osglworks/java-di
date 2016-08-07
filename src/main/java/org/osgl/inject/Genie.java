@@ -82,7 +82,7 @@ public final class Genie implements Injector {
         }
 
         BeanSpec beanSpec(Genie genie) {
-            BeanSpec spec = BeanSpec.of(name, type, annotations.toArray(new Annotation[annotations.size()]), genie);
+            BeanSpec spec = BeanSpec.of(type, annotations.toArray(new Annotation[annotations.size()]), name, genie);
             if (scope != null) {
                 spec.scope(scope);
             }
