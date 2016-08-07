@@ -254,6 +254,7 @@ public class BeanSpec {
         boolean isMap = Map.class.isAssignableFrom(rawType);
         boolean isContainer = isMap || Collection.class.isAssignableFrom(rawType) || rawType.isArray();
         MapKey mapKey = null;
+        Annotation named = null;
         List<Annotation> loadValueIncompatibles = new ArrayList<Annotation>();
         // Note only qualifiers and bean loaders annotation are considered
         // effective annotation. Scope annotations is not effective here
@@ -284,7 +285,7 @@ public class BeanSpec {
                     Genie.logger.warn("LoadCollection annotation[%s] ignored as target type is neither Collection nor Map", cls.getSimpleName());
                 }
             } else if (Named.class == cls) {
-                loadValueIncompatibles.add(anno);
+                named = anno;
                 name = ((Named)anno).value();
             } else if (genie.isQualifier(cls)) {
                 qualifiers.add(anno);
@@ -307,17 +308,13 @@ public class BeanSpec {
             throw new InjectException("No MapKey annotation found on Map type target with ElementLoader annotation presented");
         }
         if (null != valueLoader) {
-            if (!loadValueIncompatibles.isEmpty()) {
+            if (!loadValueIncompatibles.isEmpty() || null != named) {
                 throw new InjectException("ValueLoader annotation cannot be used with Qualifier, ElementLoader and Filter annotations: %s", annotations);
             }
             annotations.put(valueLoader.annotationType(), valueLoader);
         } else {
             for (Annotation anno: loadValueIncompatibles) {
-                Class<? extends Annotation> annoType = anno.annotationType();
-                if (Named.class == annoType) {
-                    continue;
-                }
-                annotations.put(annoType, anno);
+                annotations.put(anno.annotationType(), anno);
             }
             if (null != mapKey) {
                 if (hasElementLoader()) {
