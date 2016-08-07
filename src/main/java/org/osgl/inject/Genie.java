@@ -519,8 +519,6 @@ public final class Genie implements Injector {
                             mj.applyTo(bean);
                         }
                         return bean;
-                    } catch (InjectException e) {
-                        throw e;
                     } catch (RuntimeException e) {
                         throw e;
                     } catch (Exception e) {
