@@ -9,7 +9,6 @@ import org.osgl.util.S;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
-import javax.inject.Qualifier;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -20,7 +19,7 @@ import java.util.*;
  * Specification of a bean to be injected
  */
 public class BeanSpec {
-    private final Genie genie;
+    private final Injector injector;
     private final int hc;
     private final Type type;
     private final boolean isArray;
@@ -57,10 +56,10 @@ public class BeanSpec {
      *                    or `null` if this is a direct API injection
      *                    request
      * @param name        optional, the name coming from the Named qualifier
-     * @param genie       the Genie injector
+     * @param injector       the Genie injector
      */
-    private BeanSpec(Type type, Annotation[] annotations, String name, Genie genie) {
-        this.genie = genie;
+    private BeanSpec(Type type, Annotation[] annotations, String name, Injector injector) {
+        this.injector = injector;
         this.type = type;
         this.name = name;
         this.isArray = rawType().isArray();
@@ -70,7 +69,7 @@ public class BeanSpec {
     }
 
     private BeanSpec(BeanSpec source, Type convertTo) {
-        this.genie = source.genie;
+        this.injector = source.injector;
         this.type = convertTo;
         this.isArray = rawType().isArray();
         this.qualifiers.addAll(source.qualifiers);
@@ -166,7 +165,7 @@ public class BeanSpec {
     }
 
     BeanSpec rawTypeSpec() {
-        return BeanSpec.of(rawType(), genie);
+        return BeanSpec.of(rawType(), injector);
     }
 
     Type type() {
@@ -287,7 +286,7 @@ public class BeanSpec {
             } else if (Named.class == cls) {
                 named = anno;
                 name = ((Named)anno).value();
-            } else if (genie.isQualifier(cls)) {
+            } else if (injector.isQualifier(cls)) {
                 qualifiers.add(anno);
                 loadValueIncompatibles.add(anno);
             } else if (cls.isAnnotationPresent(Filter.class)) {
@@ -297,7 +296,7 @@ public class BeanSpec {
                 } else {
                     Genie.logger.warn("Filter annotation[%s] ignored as target type is neither Collection nor Map", cls.getSimpleName());
                 }
-            } else if (genie.isPostConstructProcessor(cls)) {
+            } else if (injector.isPostConstructProcessor(cls)) {
                 postProcessors.add(anno);
                 annotations.put(cls, anno);
             } else {
@@ -329,7 +328,7 @@ public class BeanSpec {
 
     private void resolveScope(Annotation annotation) {
         Class<? extends Annotation> annoClass = annotation.annotationType();
-        if (genie.isScope(annoClass)) {
+        if (injector.isScope(annoClass)) {
             if (null != scope) {
                 throw new InjectException("Multiple Scope annotation found: %s", this);
             }
@@ -347,7 +346,7 @@ public class BeanSpec {
         return $.hc(type, name, annotations);
     }
 
-    public static BeanSpec of(Class<?> clazz, Genie genie) {
+    public static BeanSpec of(Class<?> clazz, Injector genie) {
         return new BeanSpec(clazz, null, null, genie);
     }
 

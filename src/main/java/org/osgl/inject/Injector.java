@@ -61,4 +61,24 @@ public interface Injector {
      */
     Object[] getParams(Method method, $.Func2<BeanSpec, Injector, Provider> ctxParamProviderLookup, Class context);
 
+    /**
+     * Check if a supplied annotation class is a {@link javax.inject.Qualifier}
+     * @param annoClass
+     * @return `true` if the annotation type is a qualifier or `false` otherwise
+     */
+    boolean isQualifier(Class<? extends Annotation> annoClass);
+
+    /**
+     * Check if a supplied annotation class specifies a {@link PostConstructProcessor}
+     * @param annoClass the annotation type
+     * @return `true` if the annotation type specifies post construct processor
+     */
+    boolean isPostConstructProcessor(Class<? extends Annotation> annoClass);
+
+    /**
+     * Check if a supplied annotation class is a {@link javax.inject.Scope} annotation
+     * @param annoClass the annotation type
+     * @return `true` if the annotation type indicate a scope
+     */
+    boolean isScope(Class<? extends Annotation> annoClass);
 }

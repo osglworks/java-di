@@ -270,11 +270,19 @@ public final class Genie implements Injector {
         postConstructProcessors.put(annoClass, processor);
     }
 
-    boolean isScope(Class<? extends Annotation> annoClass) {
+    public boolean isScope(Class<? extends Annotation> annoClass) {
         if (Singleton.class == annoClass || SessionScoped.class == annoClass || RequestScoped.class == annoClass) {
             return true;
         }
         return scopeAliases.containsKey(annoClass) || scopeProviders.containsKey(annoClass);
+    }
+
+    public boolean isQualifier(Class<? extends Annotation> annoClass) {
+        return qualifierRegistry.contains(annoClass) || annoClass.isAnnotationPresent(Qualifier.class);
+    }
+
+    public boolean isPostConstructProcessor(Class<? extends Annotation> annoClass) {
+        return postConstructProcessors.containsKey(annoClass) || annoClass.isAnnotationPresent(PostConstructProcess.class);
     }
 
     Class<? extends Annotation> scopeByAlias(Class<? extends Annotation> alias) {
@@ -283,14 +291,6 @@ public final class Genie implements Injector {
 
     ScopeCache scopeCache(Class<? extends Annotation> scope) {
         return scopeProviders.get(scope);
-    }
-
-    boolean isQualifier(Class<? extends Annotation> annoClass) {
-        return qualifierRegistry.contains(annoClass) || annoClass.isAnnotationPresent(Qualifier.class);
-    }
-
-    boolean isPostConstructProcessor(Class<? extends Annotation> annoClass) {
-        return postConstructProcessors.containsKey(annoClass) || annoClass.isAnnotationPresent(PostConstructProcess.class);
     }
 
     PostConstructProcessor postConstructProcessor(Annotation annotation) {
