@@ -242,41 +242,6 @@ public class GenieTest extends TestBase {
         no(product == product3);
     }
 
-    @SuppressWarnings("unused")
-    void methodX(@Named("i") int i,
-                 @Provided @TypeOf List<ErrorHandler> handlers,
-                 @Provided @Person.Female Person person) {}
-
-    @Test
-    public void testGetParams() throws Exception {
-        genie = new Genie(new ModuleWithBindings(), new Module() {
-            @Override
-            protected void configure() {
-                bind(TypedElementLoader.class).to(SimpleTypeElementLoader.class);
-            }
-        });
-        final Map<String, Object> externalParams = C.map("i", 5);
-        $.F2<BeanSpec, Injector, Provider> lookup = new $.F2<BeanSpec, Injector, Provider>() {
-            @Override
-            public Provider apply(final BeanSpec beanSpec, final Injector injector) throws NotAppliedException, $.Break {
-                return new Provider() {
-                    @Override
-                    public Object get() {
-                        return externalParams.get(beanSpec.name());
-                    }
-                };
-            }
-        };
-        Method methodX = GenieTest.class.getDeclaredMethod("methodX", new Class[]{int.class, List.class, Person.class});
-        Object[] params = genie.getParams(methodX, lookup, Test.class);
-        eq(3, params.length);
-        eq(5, params[0]);
-        List<ErrorHandler> handlers = $.cast(params[1]);
-        eq(2, handlers.size());
-        Person person = $.cast(params[2]);
-        yes(person.gender().isFemale());
-    }
-
     @Test
     public void testAnnotatedWithLoader() throws Exception {
         genie = new Genie(AnnotatedClasses.class);

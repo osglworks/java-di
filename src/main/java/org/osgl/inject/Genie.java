@@ -183,7 +183,6 @@ public final class Genie implements Injector {
     private Map<Class<? extends Annotation>, Class<? extends Annotation>> scopeAliases = new HashMap<Class<? extends Annotation>, Class<? extends Annotation>>();
     private Map<Class<? extends Annotation>, ScopeCache> scopeProviders = new HashMap<Class<? extends Annotation>, ScopeCache>();
     private ConcurrentMap<Class<? extends Annotation>, PostConstructProcessor<?>> postConstructProcessors = new ConcurrentHashMap<Class<? extends Annotation>, PostConstructProcessor<?>>();
-    private final ConcurrentHashMap<$.T2<Method, Class>, Provider[]> paramValueProviders = new ConcurrentHashMap<$.T2<Method, Class>, Provider[]>();
     private ConcurrentMap<Class, BeanSpec> beanSpecLookup = new ConcurrentHashMap<Class, BeanSpec>();
 
     Genie(Object... modules) {
@@ -220,22 +219,6 @@ public final class Genie implements Injector {
     public <T> T get(BeanSpec beanSpec) {
         Provider provider = findProvider(beanSpec, C.<BeanSpec>empty());
         return (T) provider.get();
-    }
-
-    @Override
-    public Object[] getParams(Method method, $.Func2<BeanSpec, Injector, Provider> ctxParamProviderLookup, Class context) {
-        $.T2<Method, Class> key = $.T2(method, context);
-        Provider[] pa = paramValueProviders.get(key);
-        if (null == pa) {
-            pa = buildParamValueProviders(method, ctxParamProviderLookup);
-            paramValueProviders.putIfAbsent(key, pa);
-        }
-        int len = pa.length;
-        Object[] params = new Object[len];
-        for (int i = 0; i < len; ++i) {
-            params[i] = pa[i].get();
-        }
-        return params;
     }
 
     public <T> void registerProvider(Class<T> type, Provider<? extends T> provider) {
