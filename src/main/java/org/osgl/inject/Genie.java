@@ -50,6 +50,16 @@ public final class Genie implements Injector {
             return this;
         }
 
+        public Binder<T> to(final T instance) {
+            this.provider = new Provider<T>() {
+                @Override
+                public T get() {
+                    return instance;
+                }
+            };
+            return this;
+        }
+
         public Binder<T> to(Provider<? extends T> provider) {
             this.provider = provider;
             return this;
