@@ -176,6 +176,10 @@ public class BeanSpec {
         return (T)allAnnotations.get(annoClass);
     }
 
+    public boolean hasAnnotation(Class<? extends Annotation> annoClass) {
+        return allAnnotations.containsKey(annoClass);
+    }
+
     BeanSpec rawTypeSpec() {
         return BeanSpec.of(rawType(), injector);
     }
