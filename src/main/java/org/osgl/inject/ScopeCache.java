@@ -7,21 +7,21 @@ public interface ScopeCache {
     /**
      * Get a bean from the cache defined in the scope
      *
-     * @param key the key to retrieve the bean
+     * @param clazz the key to retrieve the bean
      * @param <T>   generic type of the bean
      * @return the bean instance
      */
-    <T> T get(String key);
+    <T> T get(Class<T> clazz);
 
     /**
      * Put a bean instance into the cache associated with the class key
      * specified
      *
-     * @param key the key to store the bean instance
+     * @param clazz the key to store the bean instance
      * @param bean  the bean instance to be stored
      * @param <T>   generic type of the bean
      */
-    <T> void put(String key, T bean);
+    <T> void put(Class<T> clazz, T bean);
 
     /**
      * Implementation of `ScopeCache.SingletonScope` provide access
