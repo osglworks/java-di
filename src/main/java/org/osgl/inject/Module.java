@@ -11,6 +11,7 @@ public abstract class Module {
 
     private List<Binder> binders = new ArrayList<Binder>();
     private Set<Class<? extends Annotation>> qualifiers = new HashSet<Class<? extends Annotation>>();
+    private boolean configured;
 
     protected final <T> Binder<T> bind(Class<T> type) {
         Binder<T> binder = new Binder<T>(type);
@@ -26,7 +27,10 @@ public abstract class Module {
     protected abstract void configure();
 
     final void applyTo(Genie genie) {
-        configure();
+        if (!configured) {
+            configure();
+        }
+        configured = true;
         validate(genie);
         for (Binder<?> binder : binders) {
             binder.register(genie);
