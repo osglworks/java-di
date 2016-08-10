@@ -320,8 +320,8 @@ public final class Genie implements Injector {
     }
 
     private void addIntoRegistry(Class<?> type, Provider<?> val) {
-        WeightedProvider current = WeightedProvider.decorate(val);
         BeanSpec spec = beanSpecOf(type);
+        WeightedProvider current = WeightedProvider.decorate(val);
         WeightedProvider<?> old = (WeightedProvider<?>) registry.get(spec);
         if (null == old || old.compareTo(current) > 0) {
             registry.put(spec, current);
@@ -460,13 +460,14 @@ public final class Genie implements Injector {
     }
 
     private Provider<?> decorate(BeanSpec spec, Provider provider) {
-        return ScopedProvider.decorate(spec,
+        return WeightedProvider.decorate(ScopedProvider.decorate(spec,
                 PostConstructProcessorInvoker.decorate(spec,
                         PostConstructorInvoker.decorate(spec,
                                 ElementLoaderProvider.decorate(spec, provider, this)
                                 , this)
                         , this)
-                , this);
+                , this)
+        ) ;
     }
 
     private Provider buildProvider(BeanSpec spec, Set<BeanSpec> chain) {

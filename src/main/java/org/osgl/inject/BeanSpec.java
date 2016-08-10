@@ -63,7 +63,7 @@ public class BeanSpec {
      *                    or `null` if this is a direct API injection
      *                    request
      * @param name        optional, the name coming from the Named qualifier
-     * @param injector       the Genie injector
+     * @param injector    the injector instance
      */
     private BeanSpec(Type type, Annotation[] annotations, String name, Injector injector) {
         this.injector = injector;
@@ -148,6 +148,10 @@ public class BeanSpec {
         return sb.toString();
     }
 
+    public Injector injector() {
+        return injector;
+    }
+
     public Type type() {
         return type;
     }
@@ -164,6 +168,10 @@ public class BeanSpec {
         return isArray;
     }
 
+    public Annotation[] allAnnotations() {
+        return allAnnotations.values().toArray(new Annotation[allAnnotations.size()]);
+    }
+
     /**
      * Convert an array bean spec to a list bean spec
      * @return
@@ -178,6 +186,10 @@ public class BeanSpec {
 
     public boolean hasAnnotation(Class<? extends Annotation> annoClass) {
         return allAnnotations.containsKey(annoClass);
+    }
+
+    public boolean hasAnnotation() {
+        return !allAnnotations.isEmpty();
     }
 
     BeanSpec rawTypeSpec() {
@@ -360,16 +372,16 @@ public class BeanSpec {
         return $.hc(type, name, annotations);
     }
 
-    public static BeanSpec of(Class<?> clazz, Injector genie) {
-        return new BeanSpec(clazz, null, null, genie);
+    public static BeanSpec of(Class<?> clazz, Injector injector) {
+        return new BeanSpec(clazz, null, null, injector);
     }
 
-    public static BeanSpec of(Type type, Annotation[] paramAnnotations, Genie genie) {
-        return new BeanSpec(type, paramAnnotations, null, genie);
+    public static BeanSpec of(Type type, Annotation[] paramAnnotations, Injector injector) {
+        return new BeanSpec(type, paramAnnotations, null, injector);
     }
 
-    static BeanSpec of(Type type, Annotation[] paramAnnotations, String name, Genie genie) {
-        return new BeanSpec(type, paramAnnotations, name, genie);
+    static BeanSpec of(Type type, Annotation[] paramAnnotations, String name, Injector injector) {
+        return new BeanSpec(type, paramAnnotations, name, injector);
     }
 
     public static Class<?> rawTypeOf(Type type) {
