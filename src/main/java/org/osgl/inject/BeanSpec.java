@@ -28,7 +28,7 @@ public class BeanSpec {
     private final Set<Annotation> qualifiers = C.newSet();
     private final Set<Annotation> postProcessors = C.newSet();
     /**
-     * The list will be used for calculating the hashCode and do
+     * The annotations will be used for calculating the hashCode and do
      * equality test. The following annotations will added into
      * the list:
      * * {@link #elementLoaders}
@@ -38,6 +38,13 @@ public class BeanSpec {
      * * {@link #postProcessors}
      */
     private final Map<Class<? extends Annotation>, Annotation> annotations = new HashMap<Class<? extends Annotation>, Annotation>();
+    /**
+     * Stores all annotations including the ones that participating hashCode calculating and
+     * those who don't
+     * equality test
+     * @see #annotations
+     */
+    private final Map<Class<? extends Annotation>, Annotation> allAnnotations = new HashMap<Class<? extends Annotation>, Annotation>();
     /**
      * Store the name value of Named annotation if presented
      */
@@ -77,6 +84,7 @@ public class BeanSpec {
         this.filters.addAll(source.filters);
         this.valueLoader = source.valueLoader;
         this.annotations.putAll(source.annotations);
+        this.allAnnotations.putAll(source.allAnnotations);
         this.hc = calcHashCode();
     }
 
@@ -161,7 +169,7 @@ public class BeanSpec {
     }
 
     public <T extends Annotation> T getAnnotation(Class<T> annoClass) {
-        return (T)annotations.get(annoClass);
+        return (T)allAnnotations.get(annoClass);
     }
 
     BeanSpec rawTypeSpec() {
@@ -242,6 +250,7 @@ public class BeanSpec {
     private void resolveTypeAnnotations() {
         for (Annotation annotation : rawType().getAnnotations()) {
             resolveScope(annotation);
+            allAnnotations.put(annotation.annotationType(), annotation);
         }
     }
 
@@ -261,6 +270,7 @@ public class BeanSpec {
         // parameter
         for (Annotation anno : aa) {
             Class<? extends Annotation> cls = anno.annotationType();
+            allAnnotations.put(cls, anno);
             if (Inject.class == cls || Provides.class == cls) {
                 continue;
             }
