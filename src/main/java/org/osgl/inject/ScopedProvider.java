@@ -2,6 +2,7 @@ package org.osgl.inject;
 
 import org.osgl.inject.annotation.RequestScoped;
 import org.osgl.inject.annotation.SessionScoped;
+import org.osgl.util.S;
 
 import javax.inject.Provider;
 import javax.inject.Singleton;
@@ -14,22 +15,22 @@ import java.lang.annotation.Annotation;
 class ScopedProvider<T> implements Provider<T> {
 
     private Provider<T> realProvider;
-    private Class<T> targetClass;
+    private final String key;
     private ScopeCache cache;
 
     private ScopedProvider(Class<T> targetClass, ScopeCache cache, Provider<T> realProvider) {
-        this.targetClass = targetClass;
+        this.key = key(targetClass);
         this.realProvider = realProvider;
         this.cache = cache;
     }
 
     @Override
     public T get() {
-        T bean = cache.get(targetClass);
+        T bean = cache.get(key);
         if (null == bean) {
             bean = realProvider.get();
         }
-        cache.put(targetClass, bean);
+        cache.put(key, bean);
         return bean;
     }
 
@@ -67,5 +68,9 @@ class ScopedProvider<T> implements Provider<T> {
             return genie.get(ScopeCache.SessionScope.class);
         }
         return null;
+    }
+
+    private static String key(Class<?> targetClass) {
+        return S.fmt("genie:%s", targetClass.getName());
     }
 }

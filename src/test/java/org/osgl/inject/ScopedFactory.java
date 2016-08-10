@@ -10,19 +10,19 @@ import javax.inject.Singleton;
 import java.util.Map;
 
 class ScopedFactory extends Module {
-    final Map<Class, Object> registry = C.newMap();
+    final Map<String, Object> registry = C.newMap();
 
     private static final ScopeCache.SessionScope SESSION_SCOPE = new ScopeCache.SessionScope() {
         @Override
-        public <T> T get(Class<T> clazz) {
+        public <T> T get(String key) {
             Context context = Context.get();
-            return context.get(clazz.getName());
+            return context.get(key);
         }
 
         @Override
-        public <T> void put(Class<T> clazz, T bean) {
+        public <T> void put(String key, T bean) {
             Context context = Context.get();
-            context.put(clazz.getName(), bean);
+            context.put(key, bean);
         }
     };
 
@@ -40,13 +40,13 @@ class ScopedFactory extends Module {
             public ScopeCache.SingletonScope get() {
                 return new ScopeCache.SingletonScope() {
                     @Override
-                    public <T> T get(Class<T> clazz) {
-                        return (T) registry.get(clazz);
+                    public <T> T get(String key) {
+                        return (T) registry.get(key);
                     }
 
                     @Override
-                    public <T> void put(Class<T> clazz, T bean) {
-                        registry.put(clazz, bean);
+                    public <T> void put(String key, T bean) {
+                        registry.put(key, bean);
                     }
                 };
             }
