@@ -8,6 +8,7 @@ import org.osgl.inject.util.AnnotationUtil;
 import org.osgl.logging.LogManager;
 import org.osgl.logging.Logger;
 import org.osgl.util.C;
+import org.osgl.util.E;
 import org.osgl.util.S;
 
 import javax.inject.*;
@@ -88,7 +89,7 @@ public final class Genie implements Injector {
             }
             this.genie = genie;
             BeanSpec spec = beanSpec(genie);
-            genie.registerProvider(spec, genie.decorate(spec, provider));
+            genie.addIntoRegistry(spec, genie.decorate(spec, provider), annotations.isEmpty() && S.blank(name));
         }
 
         BeanSpec beanSpec(Genie genie) {
@@ -175,6 +176,7 @@ public final class Genie implements Injector {
             return $.fmt("MethodInjector for %s", method);
         }
     }
+
     private static final Provider[] NO_PROVIDER = new Provider[0];
 
     private ConcurrentMap<BeanSpec, Provider<?>> registry = new ConcurrentHashMap<BeanSpec, Provider<?>>();
@@ -226,7 +228,7 @@ public final class Genie implements Injector {
         bindProviderToClass(type, provider);
     }
 
-    public void registerQualifiers(Class<? extends Annotation> ... qualifiers) {
+    public void registerQualifiers(Class<? extends Annotation>... qualifiers) {
         this.qualifierRegistry.addAll(C.listOf(qualifiers));
     }
 
@@ -319,17 +321,44 @@ public final class Genie implements Injector {
         }
     }
 
-    private void addIntoRegistry(Class<?> type, Provider<?> val) {
-        BeanSpec spec = beanSpecOf(type);
+    private void addIntoRegistry(BeanSpec spec, Provider<?> val, boolean addIntoExpressRegistry) {
         WeightedProvider current = WeightedProvider.decorate(val);
-        WeightedProvider<?> old = (WeightedProvider<?>) registry.get(spec);
-        if (null == old || old.compareTo(current) > 0) {
+        Provider<?> old = registry.get(spec);
+        if (null == old) {
             registry.put(spec, current);
-            expressRegistry.put(type, current);
+            if (addIntoExpressRegistry) {
+                expressRegistry.put(spec.rawType(), current);
+            }
+            return;
         }
-        if (null != old && old.affinity == 0 && current.affinity == 0) {
-            throw new InjectException("Provider has already registered for spec: %s", spec);
+        String newName = providerName(current.realProvider);
+        if (old instanceof WeightedProvider) {
+            WeightedProvider weightedOld = (WeightedProvider) old;
+            String oldName = providerName(weightedOld.realProvider);
+            if (weightedOld.affinity > current.affinity) {
+                registry.put(spec, current);
+                if (addIntoExpressRegistry) {
+                    expressRegistry.put(spec.rawType(), current);
+                }
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Provider %s \n\tfor [%s] \n\tis replaced with: %s", oldName, spec, newName);
+                }
+            } else {
+                if (weightedOld.affinity == 0 && current.affinity == 0) {
+                    throw new InjectException("Provider has already registered for spec: %s", spec);
+                } else {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Provider %s \n\t for [%s] \n\t cannot be replaced with: %s", oldName, spec, newName);
+                    }
+                }
+            }
+        } else {
+            throw E.unexpected("Provider has already registered for spec: %s", spec);
         }
+    }
+
+    private void addIntoRegistry(Class<?> type, Provider<?> val) {
+        addIntoRegistry(BeanSpec.of(type, this), val, true);
     }
 
     private void registerBuiltInProviders() {
@@ -361,20 +390,6 @@ public final class Genie implements Injector {
         }
     }
 
-    private void registerProvider(BeanSpec spec, Provider<?> provider) {
-        Provider previous = registry.putIfAbsent(spec, provider);
-        if (null != previous) {
-            if (previous instanceof WeightedProvider) {
-                previous = ((WeightedProvider) previous).realProvider;
-            }
-            String newName = provider.getClass().getName();
-            if (newName.contains("org.osgl.inject.Genie$")) {
-                newName = provider.toString();
-            }
-            logger.warn("Provider %s \n\tfor [%s] \n\tis replaced with: %s", previous.getClass().getName(), spec, newName);
-        }
-    }
-
     private void registerModule(Object module) {
         boolean isClass = module instanceof Class;
         Class moduleClass = isClass ? (Class) module : module.getClass();
@@ -401,9 +416,10 @@ public final class Genie implements Injector {
 
     private void registerFactoryMethod(final Object instance, final Method factory) {
         Type retType = factory.getGenericReturnType();
-        final BeanSpec spec = BeanSpec.of(retType, factory.getAnnotations(), this);
+        Annotation[] factoryAnnotations = factory.getAnnotations();
+        final BeanSpec spec = BeanSpec.of(retType, factoryAnnotations, this);
         final MethodInjector methodInjector = methodInjector(factory, C.<BeanSpec>empty());
-        registerProvider(spec, decorate(spec, new Provider() {
+        addIntoRegistry(spec, decorate(spec, new Provider() {
             @Override
             public Object get() {
                 return methodInjector.applyTo(instance);
@@ -413,7 +429,7 @@ public final class Genie implements Injector {
             public String toString() {
                 return S.fmt("%s::%s", instance.getClass().getName(), methodInjector.method.getName());
             }
-        }));
+        }), factoryAnnotations.length == 0);
     }
 
     private Provider<?> findProvider(final BeanSpec spec, final Set<BeanSpec> chain) {
@@ -460,14 +476,13 @@ public final class Genie implements Injector {
     }
 
     private Provider<?> decorate(BeanSpec spec, Provider provider) {
-        return WeightedProvider.decorate(ScopedProvider.decorate(spec,
+        return ScopedProvider.decorate(spec,
                 PostConstructProcessorInvoker.decorate(spec,
                         PostConstructorInvoker.decorate(spec,
                                 ElementLoaderProvider.decorate(spec, provider, this)
                                 , this)
                         , this)
-                , this)
-        ) ;
+                , this);
     }
 
     private Provider buildProvider(BeanSpec spec, Set<BeanSpec> chain) {
@@ -692,6 +707,14 @@ public final class Genie implements Injector {
 
     private static void foundCircularDependency(Set<BeanSpec> chain, BeanSpec last) {
         throw InjectException.circularDependency(debugChain(chain, last));
+    }
+
+    private static String providerName(Provider provider) {
+        String name = provider.getClass().getName();
+        if (name.contains("org.osgl.inject.Genie$")) {
+            name = provider.toString();
+        }
+        return name;
     }
 
 }
