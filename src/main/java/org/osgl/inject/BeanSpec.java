@@ -148,6 +148,10 @@ public class BeanSpec {
         return sb.toString();
     }
 
+    public Type type() {
+        return type;
+    }
+
     public Class rawType() {
         return rawTypeOf(type);
     }
@@ -174,10 +178,6 @@ public class BeanSpec {
 
     BeanSpec rawTypeSpec() {
         return BeanSpec.of(rawType(), injector);
-    }
-
-    Type type() {
-        return type;
     }
 
     boolean isMap() {
