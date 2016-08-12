@@ -204,18 +204,23 @@ public final class Genie implements Injector {
     }
 
     public <T> T get(Class<T> type) {
+        return getProvider(type).get();
+    }
+
+    @Override
+    public <T> Provider<T> getProvider(Class<T> type) {
         Provider provider = expressRegistry.get(type);
         if (null == provider) {
             if (type.isArray()) {
                 provider = ArrayProvider.of(type, this);
                 expressRegistry.putIfAbsent(type, provider);
-                return (T) provider.get();
+                return (Provider<T>) provider;
             }
             BeanSpec spec = beanSpecOf(type);
             provider = findProvider(spec, C.<BeanSpec>empty());
             expressRegistry.putIfAbsent(type, provider);
         }
-        return (T) provider.get();
+        return (Provider<T>) provider;
     }
 
     public <T> T get(BeanSpec beanSpec) {

@@ -1,11 +1,7 @@
 package org.osgl.inject;
 
-import org.osgl.$;
-
 import javax.inject.Provider;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 
 /**
  * A generic Injector interface defines the contract
@@ -20,6 +16,14 @@ public interface Injector {
      * @return the bean
      */
     <T> T get(Class<T> type);
+
+    /**
+     * Returns a provider of given type
+     * @param type the class of the bean that provider provides
+     * @param <T> the generic type of the bean
+     * @return the provider that provides the bean
+     */
+    <T> Provider<T> getProvider(Class<T> type);
 
     /**
      * Check if a supplied annotation class is a {@link javax.inject.Qualifier}
