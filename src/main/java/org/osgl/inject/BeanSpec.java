@@ -380,7 +380,7 @@ public class BeanSpec {
         return new BeanSpec(type, paramAnnotations, null, injector);
     }
 
-    static BeanSpec of(Type type, Annotation[] paramAnnotations, String name, Injector injector) {
+    public static BeanSpec of(Type type, Annotation[] paramAnnotations, String name, Injector injector) {
         return new BeanSpec(type, paramAnnotations, name, injector);
     }
 
