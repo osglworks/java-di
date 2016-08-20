@@ -31,13 +31,17 @@ public final class Genie implements Injector {
         private List<Annotation> annotations = C.newList();
         private Genie genie;
         private Class<? extends Annotation> scope;
+        private boolean forceFireEvent;
+        private boolean fireEvent;
 
         Binder(Class<T> type) {
             this.type = type;
+            this.fireEvent = true;
         }
 
         public Binder<T> named(String name) {
             this.name = name;
+            this.fireEvent = false;
             return this;
         }
 
@@ -71,11 +75,25 @@ public final class Genie implements Injector {
                 throw new InjectException("Annotation class passed to \"in\" method must have @Scope annotation presented");
             }
             this.scope = scope;
+            this.fireEvent = false;
             return this;
         }
 
         public Binder<T> withAnnotation(Class<? extends Annotation> annotation) {
             annotations.add(AnnotationUtil.createAnnotation(annotation));
+            this.fireEvent = false;
+            return this;
+        }
+
+        public Binder<T> forceFireEvent() {
+            this.forceFireEvent = true;
+            this.fireEvent = true;
+            return this;
+        }
+
+        public Binder<T> doNotFireEvent() {
+            this.forceFireEvent = false;
+            this.fireEvent = false;
             return this;
         }
 
@@ -90,7 +108,9 @@ public final class Genie implements Injector {
             this.genie = genie;
             BeanSpec spec = beanSpec(genie);
             genie.addIntoRegistry(spec, genie.decorate(spec, provider), annotations.isEmpty() && S.blank(name));
-            genie.fireProviderRegisteredEvent(type);
+            if (fireEvent || forceFireEvent) {
+                genie.fireProviderRegisteredEvent(type);
+            }
         }
 
         BeanSpec beanSpec(Genie genie) {
@@ -256,8 +276,12 @@ public final class Genie implements Injector {
     }
 
     public <T> void registerProvider(Class<T> type, Provider<? extends T> provider) {
+        registerProvider(type, provider, true);
+    }
+
+    private <T> void registerProvider(Class<T> type, Provider<? extends T> provider, boolean fireEvent) {
         AFFINITY.set(0);
-        bindProviderToClass(type, provider);
+        bindProviderToClass(type, provider, fireEvent);
     }
 
     public void registerQualifiers(Class<? extends Annotation>... qualifiers) {
@@ -337,21 +361,23 @@ public final class Genie implements Injector {
         return spec;
     }
 
-    private void bindProviderToClass(Class<?> target, Provider<?> provider) {
+    private void bindProviderToClass(Class<?> target, Provider<?> provider, boolean fireEvent) {
         addIntoRegistry(target, provider);
         AFFINITY.set(AFFINITY.get() + 1);
         Class dad = target.getSuperclass();
         if (null != dad && Object.class != dad) {
-            bindProviderToClass(dad, provider);
+            bindProviderToClass(dad, provider, fireEvent);
         }
         Class[] roles = target.getInterfaces();
         if (null == roles) {
             return;
         }
         for (Class role : roles) {
-            bindProviderToClass(role, provider);
+            bindProviderToClass(role, provider, fireEvent);
         }
-        fireProviderRegisteredEvent(target);
+        if (fireEvent) {
+            fireProviderRegisteredEvent(target);
+        }
     }
 
     private void addIntoRegistry(BeanSpec spec, Provider<?> val, boolean addIntoExpressRegistry) {
@@ -395,16 +421,16 @@ public final class Genie implements Injector {
     }
 
     private void registerBuiltInProviders() {
-        registerProvider(Collection.class, OsglListProvider.INSTANCE);
-        registerProvider(Deque.class, DequeProvider.INSTANCE);
-        registerProvider(ArrayList.class, ArrayListProvider.INSTANCE);
-        registerProvider(LinkedList.class, LinkedListProvider.INSTANCE);
-        registerProvider(C.List.class, OsglListProvider.INSTANCE);
-        registerProvider(C.Set.class, OsglSetProvider.INSTANCE);
-        registerProvider(C.Map.class, OsglMapProvider.INSTANCE);
-        registerProvider(ConcurrentMap.class, ConcurrentMapProvider.INSTANCE);
-        registerProvider(SortedMap.class, SortedMapProvider.INSTANCE);
-        registerProvider(SortedSet.class, SortedSetProvider.INSTANCE);
+        registerProvider(Collection.class, OsglListProvider.INSTANCE, false);
+        registerProvider(Deque.class, DequeProvider.INSTANCE, false);
+        registerProvider(ArrayList.class, ArrayListProvider.INSTANCE, false);
+        registerProvider(LinkedList.class, LinkedListProvider.INSTANCE, false);
+        registerProvider(C.List.class, OsglListProvider.INSTANCE, false);
+        registerProvider(C.Set.class, OsglSetProvider.INSTANCE, false);
+        registerProvider(C.Map.class, OsglMapProvider.INSTANCE, false);
+        registerProvider(ConcurrentMap.class, ConcurrentMapProvider.INSTANCE, false);
+        registerProvider(SortedMap.class, SortedMapProvider.INSTANCE, false);
+        registerProvider(SortedSet.class, SortedSetProvider.INSTANCE, false);
     }
 
     private void registerBuiltInPlugins() {
