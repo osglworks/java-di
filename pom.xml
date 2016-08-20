@@ -17,6 +17,7 @@
 <!-- history
 0.2.0-SNAPSHOT
 - Refactory code and simplified Loader/Filter API
+- Inject event dispatching
 0.1.0-SNAPSHOT
 - base verion when history log started
 -->
