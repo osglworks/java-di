@@ -90,6 +90,7 @@ public final class Genie implements Injector {
             this.genie = genie;
             BeanSpec spec = beanSpec(genie);
             genie.addIntoRegistry(spec, genie.decorate(spec, provider), annotations.isEmpty() && S.blank(name));
+            genie.fireProviderRegisteredEvent(type);
         }
 
         BeanSpec beanSpec(Genie genie) {
@@ -186,18 +187,44 @@ public final class Genie implements Injector {
     private Map<Class<? extends Annotation>, ScopeCache> scopeProviders = new HashMap<Class<? extends Annotation>, ScopeCache>();
     private ConcurrentMap<Class<? extends Annotation>, PostConstructProcessor<?>> postConstructProcessors = new ConcurrentHashMap<Class<? extends Annotation>, PostConstructProcessor<?>>();
     private ConcurrentMap<Class, BeanSpec> beanSpecLookup = new ConcurrentHashMap<Class, BeanSpec>();
+    private List<InjectListener> listeners = new ArrayList<InjectListener>();
 
     Genie(Object... modules) {
-        this(false, modules);
+        init(false, modules);
     }
 
     Genie(boolean noPlugin, Object... modules) {
+        init(noPlugin, modules);
+    }
+
+    private Genie(InjectListener listener, Object... modules) {
+        this.listeners.add(listener);
+        init(false, modules);
+    }
+
+    private void init(boolean noPlugin, Object... modules) {
         registerBuiltInProviders();
         if (!noPlugin) {
             registerBuiltInPlugins();
         }
         if (modules.length > 0) {
+            List list = new ArrayList();
             for (Object module : modules) {
+                if (module instanceof InjectListener) {
+                    listeners.add((InjectListener) module);
+                    continue;
+                }
+                if (module instanceof Class) {
+                    Class moduleClass = (Class) module;
+                    if (InjectListener.class.isAssignableFrom(moduleClass)) {
+                        listeners.add((InjectListener) $.newInstance(moduleClass));
+                        continue;
+                    }
+                }
+                list.add(module);
+            }
+            // register real modules after listener get registered
+            for (Object module : list) {
                 registerModule(module);
             }
         }
@@ -324,6 +351,7 @@ public final class Genie implements Injector {
         for (Class role : roles) {
             bindProviderToClass(role, provider);
         }
+        fireProviderRegisteredEvent(target);
     }
 
     private void addIntoRegistry(BeanSpec spec, Provider<?> val, boolean addIntoExpressRegistry) {
@@ -435,6 +463,7 @@ public final class Genie implements Injector {
                 return S.fmt("%s::%s", instance.getClass().getName(), methodInjector.method.getName());
             }
         }), factoryAnnotations.length == 0);
+        fireProviderRegisteredEvent(spec.rawType());
     }
 
     private Provider<?> findProvider(final BeanSpec spec, final Set<BeanSpec> chain) {
@@ -480,14 +509,21 @@ public final class Genie implements Injector {
         return decorated;
     }
 
-    private Provider<?> decorate(BeanSpec spec, Provider provider) {
-        return ScopedProvider.decorate(spec,
-                PostConstructProcessorInvoker.decorate(spec,
-                        PostConstructorInvoker.decorate(spec,
-                                ElementLoaderProvider.decorate(spec, provider, this)
-                                , this)
+    private Provider<?> decorate(final BeanSpec spec, Provider provider) {
+        final Provider postConstructed = PostConstructProcessorInvoker.decorate(spec,
+                PostConstructorInvoker.decorate(spec,
+                        ElementLoaderProvider.decorate(spec, provider, this)
                         , this)
                 , this);
+        Provider eventFired = new Provider() {
+            @Override
+            public Object get() {
+                Object bean = postConstructed.get();
+                fireInjectEvent(bean, spec);
+                return bean;
+            }
+        };
+        return ScopedProvider.decorate(spec, eventFired, this);
     }
 
     private Provider buildProvider(BeanSpec spec, Set<BeanSpec> chain) {
@@ -664,6 +700,22 @@ public final class Genie implements Injector {
             }
         }
         return pa;
+    }
+
+    private void fireProviderRegisteredEvent(Class targetType) {
+        for (InjectListener l : listeners) {
+            l.providerRegistered(targetType);
+        }
+    }
+
+    void fireInjectEvent(Object bean, BeanSpec beanSpec) {
+        for (InjectListener l : listeners) {
+            l.injected(bean, beanSpec);
+        }
+    }
+
+    public static Genie create(InjectListener listener, Object... modules) {
+        return new Genie(listener, modules);
     }
 
     /**

@@ -396,4 +396,13 @@ public class GenieTest extends TestBase {
         eq("1,1,2,3,5,8,13", bean.toString());
     }
 
+    @Test
+    public void testInjectListener() {
+        genie = new Genie(new DaoInjectListener());
+        UserService userService = genie.get(UserService.class);
+        eq(userService.dao.modelType(), User.class);
+        OrderService orderService = genie.get(OrderService.class);
+        eq(orderService.dao.modelType(), Order.class);
+    }
+
 }

@@ -174,7 +174,7 @@ public class BeanSpec {
 
     /**
      * Convert an array bean spec to a list bean spec
-     * @return
+     * @return the array bean spec with component type derived from this bean spec
      */
     public BeanSpec toList() {
         return new BeanSpec(this, ArrayList.class);
