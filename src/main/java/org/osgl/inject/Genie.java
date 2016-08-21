@@ -500,7 +500,7 @@ public final class Genie implements Injector {
         }
 
         // does it want to inject a Provider?
-        if (spec.isProvider()) {
+        if (spec.isProvider() && !spec.typeParams().isEmpty()) {
             provider = new Provider<Provider<?>>() {
                 @Override
                 public Provider<?> get() {
@@ -513,7 +513,7 @@ public final class Genie implements Injector {
 
         // does it require a value loading logic
         if (spec.hasValueLoader()) {
-            provider = ValueLoaderProvider.create(spec, this);
+            provider = ValueLoaderFactory.create(spec, this);
         } else {
             // does it require an array
             if (spec.isArray()) {
@@ -713,7 +713,7 @@ public final class Genie implements Injector {
                 if (!paramSpec.hasElementLoader() && null == filterAnnotation(annotations, Provided.class)) {
                     Provider provider;
                     if (paramSpec.hasValueLoader()) {
-                        provider = ValueLoaderProvider.create(paramSpec, this);
+                        provider = ValueLoaderFactory.create(paramSpec, this);
                     } else {
                         provider = ctxParamProviderLookup.apply(paramSpec, this);
                     }

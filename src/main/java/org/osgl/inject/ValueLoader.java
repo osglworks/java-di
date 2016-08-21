@@ -1,5 +1,6 @@
 package org.osgl.inject;
 
+import javax.inject.Provider;
 import java.util.Map;
 
 /**
@@ -10,15 +11,35 @@ import java.util.Map;
  *
  * @param <T> the generic element type
  */
-public interface ValueLoader<T> {
+public interface ValueLoader<T> extends Provider<T> {
 
-    /**
-     * Provide element data to be loaded
+     /**
+     * Initialize the value loader with options and bean spec
      *
      * @param options   options that could be used to regulate the data loading logic
      * @param spec the bean spec about the data to be loaded
+     */
+    void init(Map<String, Object> options, BeanSpec spec);
+
+    /**
+     * Provide element data to be loaded using the options and bean spec
+     * initialized by {@link #init(Map, BeanSpec)}
+     *
      * @return an {@link Iterable} of elements
      */
-    T load(Map<String, Object> options, BeanSpec spec);
+    @Override
+    T get();
+
+    abstract class Base<T> implements ValueLoader<T> {
+
+        protected Map<String, Object> options;
+        protected BeanSpec spec;
+
+        @Override
+        public final void init(Map options, BeanSpec spec) {
+            this.options = options;
+            this.spec = spec;
+        }
+    }
 
 }

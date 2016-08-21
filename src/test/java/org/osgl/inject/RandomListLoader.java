@@ -6,13 +6,15 @@ import org.osgl.util.N;
 import java.util.List;
 import java.util.Map;
 
-public class RandomListLoader implements ValueLoader<List<Integer>> {
+public class RandomListLoader extends ValueLoader.Base<List<Integer>> {
+
     @Override
-    public List<Integer> load(Map<String, Object> options, BeanSpec spec) {
+    public List<Integer> get() {
         List<Integer> list = C.newList();
         for (int i = 0; i < 10; ++i) {
             list.add(N.randInt(100));
         }
         return list;
     }
+
 }

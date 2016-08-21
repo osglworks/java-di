@@ -325,11 +325,13 @@ public class GenieTest extends TestBase {
         boolean value() default false;
     }
 
-    private static class BoolValueLoader implements ValueLoader<Boolean> {
+    private static class BoolValueLoader extends ValueLoader.Base<Boolean> {
+
         @Override
-        public Boolean load(Map options, BeanSpec spec) {
+        public Boolean get() {
             return (Boolean) options.get("value");
         }
+
     }
 
     static class FooToFail {

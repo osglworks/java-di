@@ -12,9 +12,10 @@ import java.util.Map;
 /**
  * Load value from configuration source
  */
-public abstract class ConfigurationValueLoader<T> implements ValueLoader<T> {
+public abstract class ConfigurationValueLoader<T> extends ValueLoader.Base<T> {
+
     @Override
-    public T load(Map<String, Object> options, BeanSpec spec) {
+    public T get() {
         String confKey = (String) options.get("value");
         if (S.isBlank(confKey)) {
             throw new InjectException(("Missing configuration key"));
