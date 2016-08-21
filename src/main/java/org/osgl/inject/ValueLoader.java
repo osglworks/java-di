@@ -39,7 +39,14 @@ public interface ValueLoader<T> extends Provider<T> {
         public final void init(Map options, BeanSpec spec) {
             this.options = options;
             this.spec = spec;
+            this.initialized();
         }
+
+        /**
+         * Extend class can do further configuration here with
+         * all information of options and bean spec has been set
+         */
+        protected void initialized() {}
     }
 
 }
