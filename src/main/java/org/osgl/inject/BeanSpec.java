@@ -76,8 +76,23 @@ public class BeanSpec {
     }
 
     private BeanSpec(BeanSpec source, Type convertTo) {
+        this.name = source.name;
         this.injector = source.injector;
         this.type = convertTo;
+        this.isArray = rawType().isArray();
+        this.qualifiers.addAll(source.qualifiers);
+        this.elementLoaders.addAll(source.elementLoaders);
+        this.filters.addAll(source.filters);
+        this.valueLoader = source.valueLoader;
+        this.annotations.putAll(source.annotations);
+        this.allAnnotations.putAll(source.allAnnotations);
+        this.hc = calcHashCode();
+    }
+
+    private BeanSpec(BeanSpec source, String name) {
+        this.name = name;
+        this.injector = source.injector;
+        this.type = source.type;
         this.isArray = rawType().isArray();
         this.qualifiers.addAll(source.qualifiers);
         this.elementLoaders.addAll(source.elementLoaders);
@@ -212,6 +227,10 @@ public class BeanSpec {
         return new BeanSpec(this, ((ParameterizedType) type).getActualTypeArguments()[0]);
     }
 
+    BeanSpec withoutName() {
+        return new BeanSpec(this, (String) null);
+    }
+
     public List<Type> typeParams() {
         if (null == typeParams) {
             if (type instanceof ParameterizedType) {
@@ -333,8 +352,8 @@ public class BeanSpec {
             throw new InjectException("No MapKey annotation found on Map type target with ElementLoader annotation presented");
         }
         if (null != valueLoader) {
-            if (!loadValueIncompatibles.isEmpty() || null != named) {
-                throw new InjectException("ValueLoader annotation cannot be used with Qualifier, ElementLoader and Filter annotations: %s", annotations);
+            if (!loadValueIncompatibles.isEmpty()) {
+                throw new InjectException("ValueLoader annotation cannot be used with ElementLoader and Filter annotations: %s", annotations);
             }
             annotations.put(valueLoader.annotationType(), valueLoader);
         } else {

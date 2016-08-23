@@ -203,6 +203,7 @@ public final class Genie implements Injector {
     private ConcurrentMap<BeanSpec, Provider<?>> registry = new ConcurrentHashMap<BeanSpec, Provider<?>>();
     private ConcurrentMap<Class, Provider> expressRegistry = new ConcurrentHashMap<Class, Provider>();
     private Set<Class<? extends Annotation>> qualifierRegistry = new HashSet<Class<? extends Annotation>>();
+    private Set<Class<? extends Annotation>> injectTagRegistry = new HashSet<Class<? extends Annotation>>();
     private Map<Class<? extends Annotation>, Class<? extends Annotation>> scopeAliases = new HashMap<Class<? extends Annotation>, Class<? extends Annotation>>();
     private Map<Class<? extends Annotation>, ScopeCache> scopeProviders = new HashMap<Class<? extends Annotation>, ScopeCache>();
     private ConcurrentMap<Class<? extends Annotation>, PostConstructProcessor<?>> postConstructProcessors = new ConcurrentHashMap<Class<? extends Annotation>, PostConstructProcessor<?>>();
@@ -286,6 +287,10 @@ public final class Genie implements Injector {
 
     public void registerQualifiers(Class<? extends Annotation>... qualifiers) {
         this.qualifierRegistry.addAll(C.listOf(qualifiers));
+    }
+
+    public void registerInjectTag(Class<? extends Annotation>... injectTags) {
+        this.injectTagRegistry.addAll(C.listOf(injectTags));
     }
 
     public void registerQualifiers(Collection<Class<? extends Annotation>> qualifiers) {
@@ -498,6 +503,11 @@ public final class Genie implements Injector {
         if (null != provider) {
             return provider;
         }
+        // try without name
+        provider = registry.get(spec.withoutName());
+        if (null != provider) {
+            return provider;
+        }
 
         // does it want to inject a Provider?
         if (spec.isProvider() && !spec.typeParams().isEmpty()) {
@@ -610,7 +620,7 @@ public final class Genie implements Injector {
     private Constructor constructor(Class target) {
         Constructor[] ca = target.getDeclaredConstructors();
         for (Constructor c : ca) {
-            if (c.isAnnotationPresent(Inject.class)) {
+            if (subjectToInject(c)) {
                 c.setAccessible(true);
                 return c;
             }
@@ -623,7 +633,7 @@ public final class Genie implements Injector {
         List<FieldInjector> fieldInjectors = C.newList();
         while (null != current && !current.equals(Object.class)) {
             for (Field field : current.getDeclaredFields()) {
-                if (field.isAnnotationPresent(Inject.class)) {
+                if (subjectToInject(field)) {
                     field.setAccessible(true);
                     fieldInjectors.add(fieldInjector(field, chain));
                 }
@@ -635,7 +645,7 @@ public final class Genie implements Injector {
 
     private FieldInjector fieldInjector(Field field, Set<BeanSpec> chain) {
         Annotation[] annotations = field.getDeclaredAnnotations();
-        BeanSpec fieldSpec = BeanSpec.of(field.getGenericType(), annotations, this);
+        BeanSpec fieldSpec = BeanSpec.of(field.getGenericType(), annotations, field.getName(), this);
         if (chain.contains(fieldSpec)) {
             foundCircularDependency(chain, fieldSpec);
         }
@@ -647,7 +657,7 @@ public final class Genie implements Injector {
         List<MethodInjector> methodInjectors = C.newList();
         while (null != current && !current.equals(Object.class)) {
             for (Method method : current.getDeclaredMethods()) {
-                if (method.isAnnotationPresent(Inject.class)) {
+                if (subjectToInject(method)) {
                     method.setAccessible(true);
                     methodInjectors.add(methodInjector(method, chain));
                 }
@@ -739,6 +749,43 @@ public final class Genie implements Injector {
             l.injected(bean, beanSpec);
         }
     }
+
+    private boolean subjectToInject(Constructor constructor) {
+        if (constructor.isAnnotationPresent(Inject.class)) {
+            return true;
+        }
+        for (Class<? extends Annotation> tag : injectTagRegistry) {
+            if (constructor.isAnnotationPresent(tag)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean subjectToInject(Method method) {
+        if (method.isAnnotationPresent(Inject.class)) {
+            return true;
+        }
+        for (Class<? extends Annotation> tag : injectTagRegistry) {
+            if (method.isAnnotationPresent(tag)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean subjectToInject(Field field) {
+        if (field.isAnnotationPresent(Inject.class)) {
+            return true;
+        }
+        for (Class<? extends Annotation> tag : injectTagRegistry) {
+            if (field.isAnnotationPresent(tag)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     public static Genie create(InjectListener listener, Object... modules) {
         return new Genie(listener, modules);
