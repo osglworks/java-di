@@ -2,29 +2,17 @@ package org.osgl.inject;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.osgl.$;
-import org.osgl.exception.NotAppliedException;
 import org.osgl.inject.ScopedObjects.*;
 import org.osgl.inject.annotation.LoadValue;
 import org.osgl.inject.annotation.PostConstructProcess;
-import org.osgl.inject.annotation.Provided;
-import org.osgl.inject.annotation.TypeOf;
 import org.osgl.inject.loader.TypedElementLoader;
-import org.osgl.util.C;
-import org.osgl.util.S;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
 import javax.validation.ValidationException;
 import javax.validation.constraints.AssertTrue;
 import java.lang.annotation.*;
 import java.lang.annotation.ElementType;
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Test Genie DI solution

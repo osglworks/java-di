@@ -11,6 +11,7 @@ public abstract class Module {
 
     private List<Binder> binders = new ArrayList<Binder>();
     private Set<Class<? extends Annotation>> qualifiers = new HashSet<Class<? extends Annotation>>();
+    private Map<Class<?>, GenericTypedBeanLoader<?>> genericTypedBeanLoaders = new HashMap<Class<?>, GenericTypedBeanLoader<?>>();
     private boolean configured;
 
     protected final <T> Binder<T> bind(Class<T> type) {
@@ -22,6 +23,10 @@ public abstract class Module {
     protected final Module registerQualifiers(Class<? extends Annotation> ... qualifiers) {
         this.qualifiers.addAll(C.listOf(qualifiers));
         return this;
+    }
+
+    protected final <T> void registerGenericTypedBeanLoader(Class<T> type, GenericTypedBeanLoader<T> loader) {
+        genericTypedBeanLoaders.put(type, loader);
     }
 
     protected abstract void configure();
@@ -36,6 +41,9 @@ public abstract class Module {
             binder.register(genie);
         }
         genie.registerQualifiers(qualifiers);
+        for (Map.Entry<Class<?>, GenericTypedBeanLoader<?>> entry : genericTypedBeanLoaders.entrySet()) {
+            genie.registerGenericTypedBeanLoader(entry.getKey(), (GenericTypedBeanLoader) entry.getValue());
+        }
     }
 
     private void validate(Genie genie) {

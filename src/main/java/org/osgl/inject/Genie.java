@@ -208,6 +208,7 @@ public final class Genie implements Injector {
     private Map<Class<? extends Annotation>, ScopeCache> scopeProviders = new HashMap<Class<? extends Annotation>, ScopeCache>();
     private ConcurrentMap<Class<? extends Annotation>, PostConstructProcessor<?>> postConstructProcessors = new ConcurrentHashMap<Class<? extends Annotation>, PostConstructProcessor<?>>();
     private ConcurrentMap<Class, BeanSpec> beanSpecLookup = new ConcurrentHashMap<Class, BeanSpec>();
+    private ConcurrentMap<Class, GenericTypedBeanLoader> genericTypedBeanLoaders = new ConcurrentHashMap<Class, GenericTypedBeanLoader>();
     private List<InjectListener> listeners = new ArrayList<InjectListener>();
 
     Genie(Object... modules) {
@@ -314,6 +315,10 @@ public final class Genie implements Injector {
             PostConstructProcessor<?> processor
     ) {
         postConstructProcessors.put(annoClass, processor);
+    }
+
+    public <T> void registerGenericTypedBeanLoader(Class<T> type, GenericTypedBeanLoader<T> loader) {
+        genericTypedBeanLoaders.put(type, loader);
     }
 
     public boolean isScope(Class<? extends Annotation> annoClass) {
@@ -504,9 +509,11 @@ public final class Genie implements Injector {
             return provider;
         }
         // try without name
-        provider = registry.get(spec.withoutName());
-        if (null != provider) {
-            return provider;
+        if (null != spec.name()) {
+            provider = registry.get(spec.withoutName());
+            if (null != provider) {
+                return provider;
+            }
         }
 
         // does it want to inject a Provider?
@@ -529,15 +536,27 @@ public final class Genie implements Injector {
             if (spec.isArray()) {
                 return ArrayProvider.of(spec, this);
             }
-            // build provider from constructor, field or method
-            if (spec.notConstructable()) {
-                // does spec's bare class have provider?
-                provider = registry.get(spec.rawTypeSpec());
-                if (null == provider) {
-                    throw new InjectException("Cannot instantiate %s", spec);
+            // check if there is a generic typed bean loader
+            final GenericTypedBeanLoader loader = genericTypedBeanLoaders.get(spec.rawType());
+            if (null != loader) {
+                provider = new Provider<Object>() {
+                    @Override
+                    public Object get() {
+                        return loader.load(spec);
+                    }
+                };
+            }
+            if (null == provider) {
+                // build provider from constructor, field or method
+                if (spec.notConstructable()) {
+                    // does spec's bare class have provider?
+                    provider = registry.get(spec.rawTypeSpec());
+                    if (null == provider) {
+                        throw new InjectException("Cannot instantiate %s", spec);
+                    }
+                } else {
+                    provider = buildProvider(spec, chain);
                 }
-            } else {
-                provider = buildProvider(spec, chain);
             }
         }
         Provider<?> decorated = decorate(spec, provider);
