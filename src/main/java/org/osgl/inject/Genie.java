@@ -521,7 +521,20 @@ public final class Genie implements Injector {
             provider = new Provider<Provider<?>>() {
                 @Override
                 public Provider<?> get() {
-                    return findProvider(spec.toProvidee(), C.<BeanSpec>empty());
+                    return new Provider() {
+                        private volatile Provider realProvider;
+                        @Override
+                        public Object get() {
+                            if (null == realProvider) {
+                                synchronized (this) {
+                                    if (null == realProvider) {
+                                        realProvider = findProvider(spec.toProvidee(), C.<BeanSpec>empty());
+                                    }
+                                }
+                            }
+                            return realProvider.get();
+                        }
+                    };
                 }
             };
             registry.putIfAbsent(spec, provider);
