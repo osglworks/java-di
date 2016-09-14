@@ -7,8 +7,6 @@ import org.osgl.inject.ValueLoader;
 import org.osgl.util.S;
 import org.osgl.util.StringValueResolver;
 
-import java.util.Map;
-
 /**
  * Load value from configuration source
  */

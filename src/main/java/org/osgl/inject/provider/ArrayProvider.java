@@ -5,8 +5,8 @@ import org.osgl.inject.Genie;
 import org.osgl.inject.util.ArrayLoader;
 
 import javax.inject.Provider;
-import java.lang.reflect.Array;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ArrayProvider implements Provider {
     protected final Class elementType;

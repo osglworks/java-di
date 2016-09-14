@@ -2,6 +2,7 @@ package org.osgl.inject;
 
 import org.osgl.$;
 import org.osgl.inject.annotation.*;
+import org.osgl.util.AnnotationAware;
 import org.osgl.util.C;
 import org.osgl.util.E;
 import org.osgl.util.S;
@@ -18,7 +19,7 @@ import java.util.*;
 /**
  * Specification of a bean to be injected
  */
-public class BeanSpec {
+public class BeanSpec implements AnnotationAware {
     private final Injector injector;
     private final int hc;
     private final Type type;
