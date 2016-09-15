@@ -395,4 +395,11 @@ public class GenieTest extends TestBase {
         eq(orderService.dao.modelType(), Order.class);
     }
 
+    @Test
+    public void testMultipleConstructors() {
+        MultipleConstructors mc = genie.get(MultipleConstructors.class);
+        yes(mc.hasOrder());
+        no(mc.hasId());
+    }
+
 }
