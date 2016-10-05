@@ -23,13 +23,13 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
 
     private static class FilterInfo extends $.Predicate {
         final ElementFilter filter;
-        final Map<String, Object> options = C.newMap();
+        final Map<String, Object> options;
         final $.Function<Object, Boolean> predicate;
         final BeanSpec containerSpec;
 
         FilterInfo(ElementFilter filter, Annotation anno, Class<? extends Annotation> annoClass, BeanSpec container) {
             this.filter = filter;
-            evaluate(anno, options);
+            options = $.evaluate(anno);
             predicate = filter.filter(options, container);
             this.containerSpec = container;
         }
@@ -157,21 +157,5 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
         return list;
     }
 
-    private static Set<String> standards = C.newSet(C.list("equals", "hashCode", "toString", "annotationType", "getClass"));
-
-    private static boolean isStandardAnnotationMethod(Method m) {
-        return standards.contains(m.getName());
-    }
-
-    static void evaluate(Annotation anno, Map<String, Object> values) {
-        Class<? extends Annotation> annoClass = anno.annotationType();
-        Method[] ma = annoClass.getMethods();
-        for (Method m : ma) {
-            if (isStandardAnnotationMethod(m)) {
-                continue;
-            }
-            values.put(m.getName(), $.invokeVirtual(anno, m));
-        }
-    }
 }
 
