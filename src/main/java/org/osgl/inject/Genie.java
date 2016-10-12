@@ -782,36 +782,17 @@ public final class Genie implements Injector {
         }
     }
 
-    private boolean subjectToInject(Constructor constructor) {
-        if (constructor.isAnnotationPresent(Inject.class)) {
+    private boolean subjectToInject(AccessibleObject ao) {
+        if (ao.isAnnotationPresent(Inject.class)) {
             return true;
         }
         for (Class<? extends Annotation> tag : injectTagRegistry) {
-            if (constructor.isAnnotationPresent(tag)) {
+            if (ao.isAnnotationPresent(tag)) {
                 return true;
             }
         }
-        return false;
-    }
-
-    private boolean subjectToInject(Method method) {
-        if (method.isAnnotationPresent(Inject.class)) {
-            return true;
-        }
-        for (Class<? extends Annotation> tag : injectTagRegistry) {
-            if (method.isAnnotationPresent(tag)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean subjectToInject(Field field) {
-        if (field.isAnnotationPresent(Inject.class)) {
-            return true;
-        }
-        for (Class<? extends Annotation> tag : injectTagRegistry) {
-            if (field.isAnnotationPresent(tag)) {
+        for (Annotation tag : ao.getDeclaredAnnotations()) {
+            if (tag.annotationType().isAnnotationPresent(InjectTag.class)) {
                 return true;
             }
         }

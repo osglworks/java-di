@@ -27,7 +27,7 @@ public class AnnotationUtil {
      * @param <T>        the generic type of the expected annotation
      * @return the annotation tagged on annotation of type `tagClass`
      */
-    public static <T extends Annotation> T annotation(Annotation annotation, Class<T> tagClass) {
+    public static <T extends Annotation> T tagAnnotation(Annotation annotation, Class<T> tagClass) {
         Class<?> c = annotation.annotationType();
         for (Annotation a : c.getAnnotations()) {
             if (tagClass.isInstance(a)) {

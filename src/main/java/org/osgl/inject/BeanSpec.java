@@ -298,7 +298,6 @@ public class BeanSpec implements AnnotationAware {
         boolean isMap = Map.class.isAssignableFrom(rawType);
         boolean isContainer = isMap || Collection.class.isAssignableFrom(rawType) || rawType.isArray();
         MapKey mapKey = null;
-        Annotation named = null;
         List<Annotation> loadValueIncompatibles = new ArrayList<Annotation>();
         // Note only qualifiers and bean loaders annotation are considered
         // effective annotation. Scope annotations is not effective here
@@ -330,7 +329,6 @@ public class BeanSpec implements AnnotationAware {
                     Genie.logger.warn("LoadCollection annotation[%s] ignored as target type is neither Collection nor Map", cls.getSimpleName());
                 }
             } else if (Named.class == cls) {
-                named = anno;
                 name = ((Named)anno).value();
             } else if (injector.isQualifier(cls)) {
                 qualifiers.add(anno);
