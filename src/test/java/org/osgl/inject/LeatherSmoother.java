@@ -30,6 +30,17 @@ public interface LeatherSmoother {
         }
     }
 
+    class DynamicModule {
+        @Provides
+        public static LeatherSmoother find(BeanSpec spec) {
+            Leather leather = spec.getAnnotation(Leather.class);
+            if (null != leather) {
+                return leather.color().smoother();
+            }
+            return null;
+        }
+    }
+
     class Host {
         LeatherSmoother smoother;
 

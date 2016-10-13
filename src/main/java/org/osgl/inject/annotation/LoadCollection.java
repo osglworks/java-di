@@ -1,8 +1,10 @@
 package org.osgl.inject.annotation;
 
+import org.osgl.inject.BeanSpec;
 import org.osgl.inject.ElementLoader;
 
 import java.lang.annotation.*;
+import java.util.Map;
 
 /**
  * Used to tag an annotation with {@link ElementLoader collection element loader}
@@ -21,4 +23,10 @@ public @interface LoadCollection {
      * @return the `ElementLoader` implementation
      */
     Class<? extends ElementLoader> value();
+
+    /**
+     * Indicate it shall reverse the {@link org.osgl.inject.ElementFilter#filter(Map, BeanSpec) filter function}
+     * when loading element from collection
+     */
+    boolean reverseFilter() default false;
 }

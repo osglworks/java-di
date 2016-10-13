@@ -8,7 +8,6 @@ import java.util.List;
 
 public class EvenFibonacciSeriesHolder {
 
-    @Inject
     @FibonacciSeries
     @EvenNumber
     List<Integer> series;

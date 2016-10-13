@@ -8,7 +8,6 @@ import org.osgl.util.C;
 
 import javax.inject.Provider;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -27,10 +26,11 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
         final $.Function<Object, Boolean> predicate;
         final BeanSpec containerSpec;
 
-        FilterInfo(ElementFilter filter, Annotation anno, Class<? extends Annotation> annoClass, BeanSpec container) {
+        FilterInfo(ElementFilter filter, boolean reverse, Annotation anno, BeanSpec container) {
             this.filter = filter;
-            options = $.evaluate(anno);
-            predicate = filter.filter(options, container);
+            this.options = $.evaluate(anno);
+            $.Function<Object, Boolean> filterFunction = filter.filter(options, container);
+            this.predicate = reverse ? $.F.negate(filterFunction) : filterFunction;
             this.containerSpec = container;
         }
 
@@ -41,8 +41,8 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
 
     private static class LoaderInfo extends FilterInfo implements Comparable<LoaderInfo> {
 
-        LoaderInfo(ElementLoader loader, Annotation anno, Class<? extends Annotation> annoClass, BeanSpec container) {
-            super(loader, anno, annoClass, container);
+        LoaderInfo(ElementLoader loader, boolean reverse, Annotation anno, BeanSpec container) {
+            super(loader, reverse, anno, container);
         }
 
         ElementLoader loader() {
@@ -140,7 +140,7 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
             Class<? extends Annotation> annoClass = anno.annotationType();
             LoadCollection loaderTag = annoClass.getAnnotation(LoadCollection.class);
             ElementLoader loader = genie.get(loaderTag.value());
-            list.add(new LoaderInfo(loader, anno, annoClass, spec));
+            list.add(new LoaderInfo(loader, loaderTag.reverseFilter(), anno, spec));
         }
         return list;
     }
@@ -150,9 +150,9 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
         Set<Annotation> annotations = spec.filters();
         for (Annotation anno : annotations) {
             Class<? extends Annotation> annoClass = anno.annotationType();
-            Filter filterTag = annoClass.getAnnotation(Filter.class);
+            Filter filterTag = (Filter.class == annoClass) ? (Filter) anno : annoClass.getAnnotation(Filter.class);
             ElementFilter loader = genie.get(filterTag.value());
-            list.add(new FilterInfo(loader, anno, annoClass, spec));
+            list.add(new FilterInfo(loader, filterTag.reverse(), anno, spec));
         }
         return list;
     }

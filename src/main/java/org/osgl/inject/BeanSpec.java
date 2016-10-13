@@ -26,6 +26,7 @@ public class BeanSpec implements AnnotationAware {
     private final boolean isArray;
     private final Set<Annotation> elementLoaders = C.newSet();
     private final Set<Annotation> filters = C.newSet();
+    private final Set<Annotation> transformers = C.newSet();
     private final Set<Annotation> qualifiers = C.newSet();
     private final Set<Annotation> postProcessors = C.newSet();
     /**
@@ -84,6 +85,7 @@ public class BeanSpec implements AnnotationAware {
         this.qualifiers.addAll(source.qualifiers);
         this.elementLoaders.addAll(source.elementLoaders);
         this.filters.addAll(source.filters);
+        this.transformers.addAll(source.transformers);
         this.valueLoader = source.valueLoader;
         this.annotations.putAll(source.annotations);
         this.allAnnotations.putAll(source.allAnnotations);
@@ -98,6 +100,7 @@ public class BeanSpec implements AnnotationAware {
         this.qualifiers.addAll(source.qualifiers);
         this.elementLoaders.addAll(source.elementLoaders);
         this.filters.addAll(source.filters);
+        this.transformers.addAll(source.transformers);
         this.valueLoader = source.valueLoader;
         this.annotations.putAll(source.annotations);
         this.allAnnotations.putAll(source.allAnnotations);
@@ -232,6 +235,15 @@ public class BeanSpec implements AnnotationAware {
         return new BeanSpec(this, (String) null);
     }
 
+    BeanSpec withoutQualifiers() {
+        if (qualifiers.isEmpty()) {
+            return this;
+        }
+        BeanSpec spec = withoutName();
+        spec.qualifiers.clear();
+        return spec;
+    }
+
     public List<Type> typeParams() {
         if (null == typeParams) {
             if (type instanceof ParameterizedType) {
@@ -259,6 +271,10 @@ public class BeanSpec implements AnnotationAware {
 
     Set<Annotation> filters() {
         return filters;
+    }
+
+    Set<Annotation> transformers() {
+        return transformers;
     }
 
     Set<Annotation> postProcessors() {
@@ -333,18 +349,22 @@ public class BeanSpec implements AnnotationAware {
             } else if (injector.isQualifier(cls)) {
                 qualifiers.add(anno);
                 loadValueIncompatibles.add(anno);
-            } else if (cls.isAnnotationPresent(Filter.class)) {
+            } else if (Filter.class == cls || cls.isAnnotationPresent(Filter.class)) {
                 if (isContainer) {
                     filters.add(anno);
                     loadValueIncompatibles.add(anno);
                 } else {
                     Genie.logger.warn("Filter annotation[%s] ignored as target type is neither Collection nor Map", cls.getSimpleName());
                 }
-            } else if (injector.isPostConstructProcessor(cls)) {
-                postProcessors.add(anno);
-                annotations.put(cls, anno);
+            } else if (Transform.class == cls || cls.isAnnotationPresent(Transform.class)) {
+                transformers.add(anno);
             } else {
-                resolveScope(anno);
+                if (injector.isPostConstructProcessor(cls)) {
+                    postProcessors.add(anno);
+                    annotations.put(cls, anno);
+                } else {
+                    resolveScope(anno);
+                }
             }
         }
         if (isMap && hasElementLoader() && null == mapKey) {

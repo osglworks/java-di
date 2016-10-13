@@ -85,6 +85,12 @@ public class GenieTest extends TestBase {
         eq("2,8,34", bean.toString());
     }
 
+    @Test
+    public void testElementLoaderAndReverseFilterAnnotation() {
+        OddFibonacciSeriesHolder bean = genie.get(OddFibonacciSeriesHolder.class);
+        eq("1,1,3,5,13,21,55,89", bean.toString());
+    }
+
     private <T> T testSimple(Class<T> c) {
         T o = genie.get(c);
         eq(c.getSimpleName(), o.toString());
@@ -130,6 +136,14 @@ public class GenieTest extends TestBase {
     @Test
     public void testGeneralQualifier() {
         genie = new Genie(LeatherSmoother.Module.class);
+        LeatherSmoother.Host bean = genie.get(LeatherSmoother.Host.class);
+        yes(bean.smoother instanceof LeatherSmoother.RedLeatherSmoother);
+    }
+
+    @Test
+    public void testDynamicProvider() {
+        genie = new Genie(LeatherSmoother.DynamicModule.class);
+        genie.supportInjectionPoint(true);
         LeatherSmoother.Host bean = genie.get(LeatherSmoother.Host.class);
         yes(bean.smoother instanceof LeatherSmoother.RedLeatherSmoother);
     }

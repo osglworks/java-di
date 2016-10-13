@@ -22,7 +22,14 @@ public final class Genie implements Injector {
 
     static final Logger logger = LogManager.get(Genie.class);
 
+    private static final ThreadLocal<BeanSpec> TGT_SPEC = new ThreadLocal<BeanSpec>();
     private static final ThreadLocal<Integer> AFFINITY = new ThreadLocal<Integer>();
+    private static final Provider<BeanSpec> BEAN_SPEC_PROVIDER = new Provider<BeanSpec>() {
+        @Override
+        public BeanSpec get() {
+            return TGT_SPEC.get();
+        }
+    };
 
     public static class Binder<T> {
         private Class<T> type;
@@ -107,7 +114,7 @@ public final class Genie implements Injector {
             }
             this.genie = genie;
             BeanSpec spec = beanSpec(genie);
-            genie.addIntoRegistry(spec, genie.decorate(spec, provider), annotations.isEmpty() && S.blank(name));
+            genie.addIntoRegistry(spec, genie.decorate(spec, provider, true), annotations.isEmpty() && S.blank(name));
             if (fireEvent || forceFireEvent) {
                 genie.fireProviderRegisteredEvent(type);
             }
@@ -149,10 +156,12 @@ public final class Genie implements Injector {
 
     private static class FieldInjector {
         private final Field field;
+        private final BeanSpec fieldSpec;
         private final Provider provider;
 
-        FieldInjector(Field field, Provider provider) {
+        FieldInjector(Field field, BeanSpec fieldSpec, Provider provider) {
             this.field = field;
+            this.fieldSpec = fieldSpec;
             this.provider = provider;
         }
 
@@ -210,6 +219,7 @@ public final class Genie implements Injector {
     private ConcurrentMap<Class, BeanSpec> beanSpecLookup = new ConcurrentHashMap<Class, BeanSpec>();
     private ConcurrentMap<Class, GenericTypedBeanLoader> genericTypedBeanLoaders = new ConcurrentHashMap<Class, GenericTypedBeanLoader>();
     private List<InjectListener> listeners = new ArrayList<InjectListener>();
+    private boolean supportInjectionPoint = false;
 
     Genie(Object... modules) {
         init(false, modules);
@@ -234,13 +244,10 @@ public final class Genie implements Injector {
             for (Object module : modules) {
                 if (module instanceof InjectListener) {
                     listeners.add((InjectListener) module);
-                    continue;
-                }
-                if (module instanceof Class) {
+                } else if (module instanceof Class) {
                     Class moduleClass = (Class) module;
                     if (InjectListener.class.isAssignableFrom(moduleClass)) {
                         listeners.add((InjectListener) $.newInstance(moduleClass));
-                        continue;
                     }
                 }
                 list.add(module);
@@ -250,6 +257,10 @@ public final class Genie implements Injector {
                 registerModule(module);
             }
         }
+    }
+
+    public void supportInjectionPoint(boolean enabled) {
+        this.supportInjectionPoint = enabled;
     }
 
     public <T> T get(Class<T> type) {
@@ -498,16 +509,18 @@ public final class Genie implements Injector {
             public String toString() {
                 return S.fmt("%s::%s", instance.getClass().getName(), methodInjector.method.getName());
             }
-        }), factoryAnnotations.length == 0);
+        }, true), factoryAnnotations.length == 0);
         fireProviderRegisteredEvent(spec.rawType());
     }
 
     private Provider<?> findProvider(final BeanSpec spec, final Set<BeanSpec> chain) {
+
         // try registry
         Provider<?> provider = registry.get(spec);
         if (null != provider) {
             return provider;
         }
+
         // try without name
         if (null != spec.name()) {
             provider = registry.get(spec.withoutName());
@@ -568,16 +581,23 @@ public final class Genie implements Injector {
                         throw new InjectException("Cannot instantiate %s", spec);
                     }
                 } else {
+                    if (BeanSpec.class == spec.rawType()) {
+                        return BEAN_SPEC_PROVIDER;
+                    }
                     provider = buildProvider(spec, chain);
                 }
             }
         }
-        Provider<?> decorated = decorate(spec, provider);
+        Provider<?> decorated = decorate(spec, provider, false);
         registry.putIfAbsent(spec, decorated);
         return decorated;
     }
 
-    private Provider<?> decorate(final BeanSpec spec, Provider provider) {
+
+    private Provider<?> decorate(final BeanSpec spec, Provider provider, final boolean isFactory) {
+        if (BEAN_SPEC_PROVIDER == provider) {
+            return provider;
+        }
         final Provider postConstructed = PostConstructProcessorInvoker.decorate(spec,
                 PostConstructorInvoker.decorate(spec,
                         ElementLoaderProvider.decorate(spec, provider, this)
@@ -586,9 +606,18 @@ public final class Genie implements Injector {
         Provider eventFired = new Provider() {
             @Override
             public Object get() {
-                Object bean = postConstructed.get();
-                fireInjectEvent(bean, spec);
-                return bean;
+                if (supportInjectionPoint && !isFactory) {
+                    TGT_SPEC.set(spec);
+                }
+                try {
+                    Object bean = postConstructed.get();
+                    fireInjectEvent(bean, spec);
+                    return bean;
+                } finally {
+                    if (supportInjectionPoint && !isFactory) {
+                        TGT_SPEC.remove();
+                    }
+                }
             }
         };
         return ScopedProvider.decorate(spec, eventFired, this);
@@ -631,7 +660,16 @@ public final class Genie implements Injector {
                     try {
                         Object bean = constructor.newInstance();
                         for (FieldInjector fj : fieldInjectors) {
-                            fj.applyTo(bean);
+                            if (supportInjectionPoint) {
+                                TGT_SPEC.set(fj.fieldSpec);
+                            }
+                            try {
+                                fj.applyTo(bean);
+                            } finally {
+                                if (supportInjectionPoint) {
+                                    TGT_SPEC.remove();
+                                }
+                            }
                         }
                         for (MethodInjector mj : methodInjectors) {
                             mj.applyTo(bean);
@@ -681,7 +719,7 @@ public final class Genie implements Injector {
         if (chain.contains(fieldSpec)) {
             foundCircularDependency(chain, fieldSpec);
         }
-        return new FieldInjector(field, findProvider(fieldSpec, chain(chain, fieldSpec)));
+        return new FieldInjector(field, fieldSpec, findProvider(fieldSpec, chain(chain, fieldSpec)));
     }
 
     private List<MethodInjector> methodInjectors(Class type, Set<BeanSpec> chain) {
@@ -713,18 +751,6 @@ public final class Genie implements Injector {
             paramProviders[i] = findProvider(paramSpec, chain(chain, paramSpec));
         }
         return new MethodInjector(method, paramProviders);
-    }
-
-    private Provider[] buildParamValueProviders(Method method, $.Func2<BeanSpec, Injector, Provider> ctxParamProviderLookup) {
-        Type[] ta = method.getGenericParameterTypes();
-        int len = ta.length;
-        if (0 == len) {
-            return NO_PROVIDER;
-        }
-        Annotation[][] aaa = method.getParameterAnnotations();
-        Set<BeanSpec> chain = new HashSet<BeanSpec>();
-        chain.add(beanSpecOf(method.getDeclaringClass()));
-        return paramProviders(ta, aaa, chain, ctxParamProviderLookup);
     }
 
     private static <T extends Annotation> T filterAnnotation(Annotation[] aa, Class<T> ac) {

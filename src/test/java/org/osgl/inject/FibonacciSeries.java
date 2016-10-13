@@ -1,5 +1,6 @@
 package org.osgl.inject;
 
+import org.osgl.inject.annotation.InjectTag;
 import org.osgl.inject.annotation.LoadCollection;
 
 import java.lang.annotation.Documented;
@@ -8,6 +9,7 @@ import java.lang.annotation.RetentionPolicy;
 
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
+@InjectTag
 @LoadCollection(FibonacciSeriesLoader.class)
 public @interface FibonacciSeries {
     /**
