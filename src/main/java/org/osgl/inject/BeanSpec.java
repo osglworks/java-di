@@ -11,6 +11,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -420,6 +421,11 @@ public class BeanSpec implements AnnotationAware {
 
     public static BeanSpec of(Type type, Annotation[] paramAnnotations, String name, Injector injector) {
         return new BeanSpec(type, paramAnnotations, name, injector);
+    }
+
+    public static BeanSpec of(Field field, Injector injector) {
+        Annotation[] annotations = field.getDeclaredAnnotations();
+        return BeanSpec.of(field.getGenericType(), annotations, field.getName(), injector);
     }
 
     public static Class<?> rawTypeOf(Type type) {

@@ -714,8 +714,7 @@ public final class Genie implements Injector {
     }
 
     private FieldInjector fieldInjector(Field field, Set<BeanSpec> chain) {
-        Annotation[] annotations = field.getDeclaredAnnotations();
-        BeanSpec fieldSpec = BeanSpec.of(field.getGenericType(), annotations, field.getName(), this);
+        BeanSpec fieldSpec = BeanSpec.of(field, this);
         if (chain.contains(fieldSpec)) {
             foundCircularDependency(chain, fieldSpec);
         }
