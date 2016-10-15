@@ -40,6 +40,7 @@ public final class Genie implements Injector {
         private Class<? extends Annotation> scope;
         private boolean forceFireEvent;
         private boolean fireEvent;
+        private Constructor<? extends T> constructor;
 
         Binder(Class<T> type) {
             this.type = type;
@@ -78,21 +79,7 @@ public final class Genie implements Injector {
         }
 
         public Binder<T> to(final Constructor<? extends T> constructor) {
-            this.provider = new Provider<T>() {
-                private Provider<T> constructorProvider;
-
-                @Override
-                public T get() {
-                    return getConstructorProvider().get();
-                }
-
-                private synchronized Provider<T> getConstructorProvider() {
-                    if (null == constructorProvider) {
-                        constructorProvider = genie.buildConstructor(constructor, BeanSpec.of(constructor.getDeclaringClass(), null, genie), new HashSet<BeanSpec>());
-                    }
-                    return constructorProvider;
-                }
-            };
+            this.constructor = constructor;
             return this;
         }
 
@@ -136,6 +123,9 @@ public final class Genie implements Injector {
         }
 
         void register(Genie genie) {
+            if (null == provider && null != constructor) {
+                provider = genie.buildConstructor(constructor, BeanSpec.of(constructor.getDeclaringClass(), null, genie), new HashSet<BeanSpec>());
+            }
             if (!bound()) {
                 return;
             }
@@ -154,6 +144,7 @@ public final class Genie implements Injector {
             }
             return spec;
         }
+
     }
 
     private static class WeightedProvider<T> implements Provider<T>, Comparable<WeightedProvider<T>> {
