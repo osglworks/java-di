@@ -13,6 +13,7 @@ import javax.validation.ValidationException;
 import javax.validation.constraints.AssertTrue;
 import java.lang.annotation.*;
 import java.lang.annotation.ElementType;
+import java.util.Collection;
 
 /**
  * Test Genie DI solution
@@ -30,6 +31,14 @@ public class GenieTest extends TestBase {
     public void teardown() {
         BaseWithPostConstructor.reset();
         Context.reset();
+    }
+
+    @Test
+    public void testInitCollection() {
+        Collection col = genie.get(Collection.class);
+        yes(col instanceof Collection);
+        col.add(new Object());
+        same(1, col.size());
     }
 
     @Test

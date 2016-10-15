@@ -257,7 +257,7 @@ public class BeanSpec implements AnnotationAware {
         }
         return typeParams;
     }
-    
+
     public boolean isInstanceOf(Class c) {
         return c.isAssignableFrom(rawType());
     }
