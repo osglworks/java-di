@@ -135,6 +135,13 @@ public class GenieTest extends TestBase {
     }
 
     @Test
+    public void testConstructorBinding() {
+        genie = new Genie(ModuleWithConstructorBinding.class);
+        Person person = genie.get(Person.class);
+        yes(person.gender().isFemale());
+    }
+
+    @Test
     public void testNamedInjection() {
         genie = new Genie(new ModuleWithNamedBindings());
         TomAndJen tj = genie.get(TomAndJen.class);

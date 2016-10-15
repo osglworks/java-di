@@ -1,6 +1,7 @@
 package org.osgl.inject;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.inject.Qualifier;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -35,6 +36,20 @@ public interface Person {
         @Override
         public Gender gender() {
             return F;
+        }
+    }
+
+    class Flexible implements Person {
+
+        private Gender gender;
+
+        public Flexible(Provider<Gender> gender) {
+            this.gender = gender.get();
+        }
+
+        @Override
+        public Gender gender() {
+            return gender;
         }
     }
 

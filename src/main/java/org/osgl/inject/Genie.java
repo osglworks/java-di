@@ -77,6 +77,33 @@ public final class Genie implements Injector {
             return this;
         }
 
+        public Binder<T> to(final Constructor<? extends T> constructor) {
+            this.provider = new Provider<T>() {
+                private Provider<T> constructorProvider;
+
+                @Override
+                public T get() {
+                    return getConstructorProvider().get();
+                }
+
+                private synchronized Provider<T> getConstructorProvider() {
+                    if (null == constructorProvider) {
+                        constructorProvider = genie.buildConstructor(constructor, BeanSpec.of(constructor.getDeclaringClass(), null, genie), new HashSet<BeanSpec>());
+                    }
+                    return constructorProvider;
+                }
+            };
+            return this;
+        }
+
+        public Binder<T> toConstructor(Class<? extends T> implement, Class<?> ... args) {
+            try {
+                return to(implement.getConstructor(args));
+            } catch (NoSuchMethodException e) {
+                throw new InjectException(e, "cannot find constructor for %s with arguments: %s", implement.getName(), $.toString2(args));
+            }
+        }
+
         public Binder<T> in(Class<? extends Annotation> scope) {
             if (!scope.isAnnotationPresent(Scope.class)) {
                 throw new InjectException("Annotation class passed to \"in\" method must have @Scope annotation presented");
