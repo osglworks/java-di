@@ -11,10 +11,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.*;
 
 /**
@@ -48,6 +45,8 @@ public class BeanSpec implements AnnotationAware {
      * @see #annotations
      */
     private final Map<Class<? extends Annotation>, Annotation> allAnnotations = new HashMap<Class<? extends Annotation>, Annotation>();
+
+    private final Set<AnnoData> annoData = new HashSet<AnnoData>();
     /**
      * Store the name value of Named annotation if presented
      */
@@ -89,6 +88,7 @@ public class BeanSpec implements AnnotationAware {
         this.transformers.addAll(source.transformers);
         this.valueLoader = source.valueLoader;
         this.annotations.putAll(source.annotations);
+        this.annoData.addAll(source.annoData);
         this.allAnnotations.putAll(source.allAnnotations);
         this.hc = calcHashCode();
     }
@@ -104,6 +104,7 @@ public class BeanSpec implements AnnotationAware {
         this.transformers.addAll(source.transformers);
         this.valueLoader = source.valueLoader;
         this.annotations.putAll(source.annotations);
+        this.annoData.addAll(source.annoData);
         this.allAnnotations.putAll(source.allAnnotations);
         this.hc = calcHashCode();
     }
@@ -139,7 +140,7 @@ public class BeanSpec implements AnnotationAware {
             return that.hc == hc
                     && $.eq(type, that.type)
                     && $.eq(name, that.name)
-                    && $.eq(annotations, that.annotations);
+                    && $.eq(annoData, that.annoData);
         }
         return false;
     }
@@ -367,6 +368,7 @@ public class BeanSpec implements AnnotationAware {
                 if (injector.isPostConstructProcessor(cls)) {
                     postProcessors.add(anno);
                     annotations.put(cls, anno);
+                    annoData.add(new AnnoData(anno));
                 } else {
                     resolveScope(anno);
                 }
@@ -380,14 +382,17 @@ public class BeanSpec implements AnnotationAware {
                 throw new InjectException("ValueLoader annotation cannot be used with ElementLoader and Filter annotations: %s", annotations);
             }
             annotations.put(valueLoader.annotationType(), valueLoader);
+            annoData.add(new AnnoData(valueLoader));
         } else {
             for (Annotation anno: loadValueIncompatibles) {
                 annotations.put(anno.annotationType(), anno);
+                annoData.add(new AnnoData(anno));
             }
             if (null != mapKey) {
                 if (hasElementLoader()) {
                     this.mapKey = mapKey;
                     annotations.put(mapKey.annotationType(), mapKey);
+                    annoData.add(new AnnoData(mapKey));
                 } else {
                     Genie.logger.warn("MapKey annotation ignored on target without ElementLoader annotation presented");
                 }
@@ -412,7 +417,7 @@ public class BeanSpec implements AnnotationAware {
      * @see #equals(Object)
      */
     private int calcHashCode() {
-        return $.hc(type, name, annotations);
+        return $.hc(type, name, annoData);
     }
 
     public static BeanSpec of(Class<?> clazz, Injector injector) {
@@ -439,6 +444,68 @@ public class BeanSpec implements AnnotationAware {
             return (Class) ((ParameterizedType) type).getRawType();
         } else {
             throw E.unexpected("type not recognized: %s", type);
+        }
+    }
+
+    // keep the effective annotation data
+    // - the property annotated with NonBinding is ignored
+    private static class AnnoData {
+        private Class<? extends Annotation> annoClass;
+        private Map<String, Object> data;
+
+        AnnoData(Annotation annotation) {
+            annoClass = annotation.annotationType();
+            data = evaluate(annotation);
+        }
+
+        @Override
+        public int hashCode() {
+            return $.hc(annoClass, data);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (obj instanceof AnnoData) {
+                AnnoData that = (AnnoData) obj;
+                return $.eq(annoClass, that.annoClass) && $.eq(data, that.data);
+            }
+            return false;
+        }
+
+        private static Map<String, Object> evaluate(Annotation anno) {
+            Map<String, Object> properties = new HashMap<String, Object>();
+            Class<? extends Annotation> annoClass = anno.annotationType();
+            Method[] ma = annoClass.getMethods();
+            for (Method m : ma) {
+                if (isStandardAnnotationMethod(m) || shouldIgnore(m)) {
+                    continue;
+                }
+                properties.put(m.getName(), $.invokeVirtual(anno, m));
+            }
+            return properties;
+        }
+
+        private static Set<String> standardsAnnotationMethods = C.newSet(C.list("equals", "hashCode", "toString", "annotationType", "getClass"));
+
+        private static boolean isStandardAnnotationMethod(Method m) {
+            return standardsAnnotationMethods.contains(m.getName());
+        }
+
+        private static boolean shouldIgnore(Method method) {
+            Annotation[] aa = method.getDeclaredAnnotations();
+            for (Annotation a: aa) {
+                if (shouldIgnore(a)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static boolean shouldIgnore(Annotation annotation) {
+            return annotation.annotationType().getName().endsWith("Nonbinding");
         }
     }
 
