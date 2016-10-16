@@ -32,7 +32,7 @@ Genie is a JSR330 Dependency Injection solution inspired by [Feather](https://gi
 * Support inject array type bean
 * Support generic value loader and more specific configuration value loader
 * Support `@javax.annotations.PostConstruct` semantic
-* High performance. See [this benchmark](https://github.com/greenlaw110/di-benchmark)
+* High performance (Much faster than Guice and Spring). See [this benchmark](https://github.com/greenlaw110/di-benchmark)
 
 ## Documents
 
