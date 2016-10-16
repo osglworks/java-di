@@ -9,7 +9,6 @@ import java.util.List;
 
 public class FibonacciSeriesHolder2 {
 
-    @Inject
     @FibonacciSeries(max = 20)
     private int[] series;
 

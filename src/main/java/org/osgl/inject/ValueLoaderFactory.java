@@ -6,7 +6,6 @@ import org.osgl.util.E;
 
 import javax.inject.Provider;
 import java.lang.annotation.Annotation;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -20,7 +19,13 @@ class ValueLoaderFactory {
         Annotation anno = spec.valueLoader();
         E.illegalArgumentIf(null == anno);
         Map<String, Object> options = $.evaluate(anno);
-        LoadValue loadValue = anno.annotationType().getAnnotation(LoadValue.class);
+        Class<? extends Annotation> annoType = anno.annotationType();
+        LoadValue loadValue;
+        if (LoadValue.class == annoType) {
+            loadValue = (LoadValue) anno;
+        } else {
+            loadValue = annoType.getAnnotation(LoadValue.class);
+        }
         ValueLoader<T> valueLoader = genie.get(loadValue.value());
         valueLoader.init(options, spec);
         return valueLoader;

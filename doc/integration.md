@@ -1,3 +1,6 @@
 # Integrate Genie with IoC container
 
-TBD
+**The content of this secion is WIP**
+
+Genie could be integrated into IOC container. At the moment Genie is used as 
+

@@ -341,9 +341,9 @@ public class BeanSpec implements AnnotationAware {
                     mapKey = $.cast(anno);
                 }
             }
-            if (cls.isAnnotationPresent(LoadValue.class)) {
+            if (LoadValue.class == cls || cls.isAnnotationPresent(LoadValue.class)) {
                 valueLoader = anno;
-            } else if (cls.isAnnotationPresent(LoadCollection.class)) {
+            } else if (LoadCollection.class == cls || cls.isAnnotationPresent(LoadCollection.class)) {
                 if (isContainer) {
                     elementLoaders.add(anno);
                     loadValueIncompatibles.add(anno);

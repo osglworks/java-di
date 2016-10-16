@@ -1,14 +1,15 @@
 package org.osgl.inject;
 
 
+import org.osgl.inject.annotation.LoadCollection;
 import org.osgl.util.S;
 
 import javax.inject.Inject;
 import java.util.List;
 
-public class FibonacciSeriesHolder {
+public class FibonacciSeriesHolder3 {
 
-    @FibonacciSeries(max = 20)
+    @LoadCollection(FibonacciSeriesLoader.class)
     private List<Integer> series;
 
     @Override

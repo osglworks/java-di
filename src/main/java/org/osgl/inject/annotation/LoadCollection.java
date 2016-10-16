@@ -6,6 +6,10 @@ import org.osgl.inject.ElementLoader;
 import java.lang.annotation.*;
 import java.util.Map;
 
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.PARAMETER;
+
 /**
  * Used to tag an annotation with {@link ElementLoader collection element loader}
  * specification. Annotations tagged with `LoadCollection` is used to mark
@@ -13,8 +17,9 @@ import java.util.Map;
  * inject target needs additional logic to load element data
  */
 @Documented
+@InjectTag
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.ANNOTATION_TYPE)
+@Target({ANNOTATION_TYPE, FIELD, PARAMETER})
 public @interface LoadCollection {
     /**
      * Specify the {@link ElementLoader} implementation used to

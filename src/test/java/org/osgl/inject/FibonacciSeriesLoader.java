@@ -11,6 +11,8 @@ import java.util.Map;
 
 class FibonacciSeriesLoader extends ElementLoaderBase<Integer> {
 
+    private static final int DEF_MAX = 10;
+
     @Override
     public List<Integer> load(Map<String, Object> options, BeanSpec container, Genie genie) {
         int max = toInt(options.get("max"));
@@ -48,6 +50,9 @@ class FibonacciSeriesLoader extends ElementLoaderBase<Integer> {
     }
 
     private static int toInt(Object max) {
+        if (null == max) {
+            return DEF_MAX;
+        }
         int n;
         if (max instanceof Number) {
             n = Math.abs(((Number) max).intValue());

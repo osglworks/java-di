@@ -138,7 +138,7 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
         Set<Annotation> loaders = spec.loaders();
         for (Annotation anno : loaders) {
             Class<? extends Annotation> annoClass = anno.annotationType();
-            LoadCollection loaderTag = annoClass.getAnnotation(LoadCollection.class);
+            LoadCollection loaderTag = LoadCollection.class == annoClass ? ((LoadCollection) anno) : annoClass.getAnnotation(LoadCollection.class);
             ElementLoader loader = genie.get(loaderTag.value());
             list.add(new LoaderInfo(loader, loaderTag.reverseFilter(), anno, spec));
         }

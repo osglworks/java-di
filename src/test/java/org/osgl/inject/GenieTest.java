@@ -89,6 +89,12 @@ public class GenieTest extends TestBase {
     }
 
     @Test
+    public void testDirectElementLoaderAnnotation() {
+        FibonacciSeriesHolder3 bean = genie.get(FibonacciSeriesHolder3.class);
+        eq("1,1,2,3,5,8", bean.toString());
+    }
+
+    @Test
     public void testElementLoaderAndFilterAnnotation() {
         EvenFibonacciSeriesHolder bean = genie.get(EvenFibonacciSeriesHolder.class);
         eq("2,8,34", bean.toString());
@@ -432,4 +438,25 @@ public class GenieTest extends TestBase {
         no(mc.hasId());
     }
 
+    static class LuckyNumberValueLoader extends ValueLoader.Base<Integer> {
+        @Override
+        public Integer get() {
+            return 666666;
+        }
+    }
+
+    static class DirectLoadValueTestBed {
+        @LoadValue(LuckyNumberValueLoader.class)
+        int luckyNumber;
+
+        public int getLuckyNumber() {
+            return luckyNumber;
+        }
+    }
+
+    @Test
+    public void testDirectLoadValue() {
+        DirectLoadValueTestBed target = genie.get(DirectLoadValueTestBed.class);
+        eq(666666, target.getLuckyNumber());
+    }
 }
