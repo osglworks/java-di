@@ -14,7 +14,7 @@ public abstract class ConfigurationValueLoader<T> extends ValueLoader.Base<T> {
 
     @Override
     public T get() {
-        String confKey = (String) options.get("value");
+        String confKey = value();
         if (S.isBlank(confKey)) {
             throw new InjectException(("Missing configuration key"));
         }

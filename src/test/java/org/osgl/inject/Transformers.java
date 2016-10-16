@@ -6,13 +6,13 @@ public class Transformers {
     public static class ToUpperCase extends ValueLoader.Base<String>  {
         @Override
         public String get() {
-            return S.string(options.get("value")).toUpperCase();
+            return S.string(this.value()).toUpperCase();
         }
     }
     public static class ToLowerCase extends ValueLoader.Base<String> {
         @Override
         public String get() {
-            return S.string(options.get("value")).toLowerCase();
+            return S.string(this.value()).toLowerCase();
         }
     }
 }

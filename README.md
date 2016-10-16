@@ -42,3 +42,7 @@ Genie is a JSR330 Dependency Injection solution inspired by [Feather](https://gi
 * [Scoping](scope.md) - TBD
 * [IoC container integration](integration.md) - TBD
 
+## Demos
+
+* [Implement Spring 4.3 style InjectionPoint style binding](https://github.com/greenlaw110/hello-genie-injectionPoint)
+* [Implement Spring 4.3 style customized annotation](https://github.com/greenlaw110/genie-custom-annotation-demo)

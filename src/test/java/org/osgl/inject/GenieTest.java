@@ -347,7 +347,7 @@ public class GenieTest extends TestBase {
 
         @Override
         public Boolean get() {
-            return (Boolean) options.get("value");
+            return value();
         }
 
     }

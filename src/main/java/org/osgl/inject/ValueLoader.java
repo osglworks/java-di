@@ -47,6 +47,15 @@ public interface ValueLoader<T> extends Provider<T> {
          * all information of options and bean spec has been set
          */
         protected void initialized() {}
+
+        /**
+         * Return the `value` of the annotation from {@link #options} map
+         * @param <V> the generic type of value
+         * @return the value or `null` if not found
+         */
+        protected <V> V value() {
+            return (V) options.get("value");
+        }
     }
 
 }
