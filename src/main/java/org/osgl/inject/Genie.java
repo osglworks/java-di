@@ -48,12 +48,14 @@ public final class Genie implements Injector {
         }
 
         public Binder<T> named(String name) {
+            E.illegalStateIf(null != this.name, "name has already been specified");
             this.name = name;
             this.fireEvent = false;
             return this;
         }
 
         public Binder<T> to(final Class<? extends T> impl) {
+            ensureNoBinding();
             this.provider = new Provider<T>() {
                 @Override
                 public T get() {
@@ -64,6 +66,7 @@ public final class Genie implements Injector {
         }
 
         public Binder<T> to(final T instance) {
+            ensureNoBinding();
             this.provider = new Provider<T>() {
                 @Override
                 public T get() {
@@ -74,16 +77,19 @@ public final class Genie implements Injector {
         }
 
         public Binder<T> to(Provider<? extends T> provider) {
+            ensureNoBinding();
             this.provider = provider;
             return this;
         }
 
         public Binder<T> to(final Constructor<? extends T> constructor) {
+            ensureNoBinding();
             this.constructor = constructor;
             return this;
         }
 
         public Binder<T> toConstructor(Class<? extends T> implement, Class<?> ... args) {
+            ensureNoBinding();
             try {
                 return to(implement.getConstructor(args));
             } catch (NoSuchMethodException e) {
@@ -91,17 +97,37 @@ public final class Genie implements Injector {
             }
         }
 
+        private void ensureNoBinding() {
+            E.illegalStateIf(bound(), "binding has already been specified");
+        }
+
+        /**
+         * Specify the bind belongs to a certain scope
+         * @param scope the scope annotation class
+         * @return this binder instance
+         */
         public Binder<T> in(Class<? extends Annotation> scope) {
             if (!scope.isAnnotationPresent(Scope.class)) {
                 throw new InjectException("Annotation class passed to \"in\" method must have @Scope annotation presented");
             }
+            E.illegalStateIf(null != this.scope, "Scope has already been specified");
             this.scope = scope;
             this.fireEvent = false;
             return this;
         }
 
-        public Binder<T> withAnnotation(Class<? extends Annotation> annotation) {
-            annotations.add(AnnotationUtil.createAnnotation(annotation));
+        /**
+         * Specify the bind that should attach to bean that has been annotated with annotation(s). Usually
+         * the annotation specified in the parameter should be {@link Qualifier qualifiers}
+         *
+         * @param annotations an array of annotation classes
+         * @return this binder instance
+         * @see Qualifier
+         */
+        public Binder<T> withAnnotation(Class<? extends Annotation> ... annotations) {
+            for (Class<? extends Annotation> annotation : annotations) {
+                this.annotations.add(AnnotationUtil.createAnnotation(annotation));
+            }
             this.fireEvent = false;
             return this;
         }
@@ -119,7 +145,7 @@ public final class Genie implements Injector {
         }
 
         boolean bound() {
-            return null != provider;
+            return null != provider || null != constructor;
         }
 
         void register(Genie genie) {
