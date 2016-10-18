@@ -870,6 +870,25 @@ public final class Genie implements Injector {
         return false;
     }
 
+    public boolean subjectToInject(BeanSpec beanSpec) {
+        if (beanSpec.hasAnnotation(Inject.class)) {
+            return true;
+        }
+        for (Class<? extends Annotation> tag : injectTagRegistry) {
+            if (beanSpec.hasAnnotation(tag)) {
+                return true;
+            }
+        }
+        for (Annotation tag : beanSpec.allAnnotations()) {
+            Class<? extends Annotation> tagType = tag.annotationType();
+            if (tagType.isAnnotationPresent(InjectTag.class)) {
+                injectTagRegistry.add(tagType);
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     public static Genie create(InjectListener listener, Object... modules) {
         return new Genie(listener, modules);
