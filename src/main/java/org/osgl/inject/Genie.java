@@ -851,7 +851,7 @@ public final class Genie implements Injector {
         }
     }
 
-    private boolean subjectToInject(AccessibleObject ao) {
+    public boolean subjectToInject(AccessibleObject ao) {
         if (ao.isAnnotationPresent(Inject.class)) {
             return true;
         }
@@ -861,7 +861,9 @@ public final class Genie implements Injector {
             }
         }
         for (Annotation tag : ao.getDeclaredAnnotations()) {
-            if (tag.annotationType().isAnnotationPresent(InjectTag.class)) {
+            Class<? extends Annotation> tagType = tag.annotationType();
+            if (tagType.isAnnotationPresent(InjectTag.class)) {
+                injectTagRegistry.add(tagType);
                 return true;
             }
         }
