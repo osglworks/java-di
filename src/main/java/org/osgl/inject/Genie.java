@@ -41,6 +41,7 @@ public final class Genie implements Injector {
         private boolean forceFireEvent;
         private boolean fireEvent;
         private Constructor<? extends T> constructor;
+        private Class<? extends T> impl;
 
         Binder(Class<T> type) {
             this.type = type;
@@ -56,12 +57,7 @@ public final class Genie implements Injector {
 
         public Binder<T> to(final Class<? extends T> impl) {
             ensureNoBinding();
-            this.provider = new Provider<T>() {
-                @Override
-                public T get() {
-                    return genie.get(impl);
-                }
-            };
+            this.impl = $.notNull(impl);
             return this;
         }
 
@@ -149,13 +145,17 @@ public final class Genie implements Injector {
         }
 
         void register(Genie genie) {
-            if (null == provider && null != constructor) {
-                provider = genie.buildConstructor(constructor, BeanSpec.of(constructor.getDeclaringClass(), null, genie), new HashSet<BeanSpec>());
+            this.genie = genie;
+            if (null == provider) {
+                if (null != constructor) {
+                    provider = genie.buildConstructor(constructor, BeanSpec.of(constructor.getDeclaringClass(), null, genie), new HashSet<BeanSpec>());
+                } else if (null != impl) {
+                    provider = new LazyProvider<T>(impl, genie);
+                }
             }
             if (!bound()) {
-                return;
+                throw new InjectException("Cannot register without binding specified");
             }
-            this.genie = genie;
             BeanSpec spec = beanSpec(genie);
             genie.addIntoRegistry(spec, genie.decorate(spec, provider, true), annotations.isEmpty() && S.blank(name));
             if (fireEvent || forceFireEvent) {
@@ -309,6 +309,15 @@ public final class Genie implements Injector {
 
     public <T> T get(Class<T> type) {
         return getProvider(type).get();
+    }
+
+    /**
+     * Check if a type has already been registered with a binding already
+     * @param type the class
+     * @return `true` if the type has already been registered to Genie with a binding
+     */
+    public boolean hasProvider(Class<?> type) {
+        return expressRegistry.containsKey(type);
     }
 
     @Override
