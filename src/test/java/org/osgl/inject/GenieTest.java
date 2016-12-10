@@ -180,6 +180,7 @@ public class GenieTest extends TestBase {
         });
         ErrorDispatcher errorDispatcher = genie.get(ErrorDispatcher.class);
         eq(NotFoundHandler.class.getSimpleName(), errorDispatcher.handle(404));
+        eq(NotFoundHandler.class.getSimpleName(), errorDispatcher.handle2(404));
     }
 
     @Test

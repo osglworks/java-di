@@ -2,6 +2,7 @@ package org.osgl.inject;
 
 import org.osgl.$;
 import org.osgl.inject.annotation.*;
+import org.osgl.inject.util.AnnotationUtil;
 import org.osgl.util.AnnotationAware;
 import org.osgl.util.C;
 import org.osgl.util.E;
@@ -376,6 +377,17 @@ public class BeanSpec implements AnnotationAware {
         }
         if (isMap && hasElementLoader() && null == mapKey) {
             throw new InjectException("No MapKey annotation found on Map type target with ElementLoader annotation presented");
+        }
+        if (isContainer && elementLoaders.isEmpty()) {
+            // assume we want to inject typed elements
+            List<Type> typeParams = typeParams();
+            Type theType = typeParams.get(isMap ? 1 : 0);
+            Class<?> rawType0 = rawTypeOf(theType);
+            if (!$.isSimpleType(rawType0)) {
+                TypeOf typeOfAnno = AnnotationUtil.createAnnotation(TypeOf.class);
+                elementLoaders.add(typeOfAnno);
+                loadValueIncompatibles.add(typeOfAnno);
+            }
         }
         if (null != valueLoader) {
             if (!loadValueIncompatibles.isEmpty()) {
