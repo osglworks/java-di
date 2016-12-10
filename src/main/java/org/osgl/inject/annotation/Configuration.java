@@ -9,6 +9,7 @@ import java.lang.annotation.*;
  * {@link org.osgl.inject.loader.ConfigurationValueLoader}
  */
 @Documented
+@InjectTag
 @LoadValue(ConfigurationValueLoader.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.PARAMETER})

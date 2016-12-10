@@ -12,6 +12,7 @@ import java.lang.annotation.Target;
  * Mark the type of elements of a field or method parameter should
  * be annotated with specified annotation
  */
+@InjectTag
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @LoadCollection(AnnotatedElementLoader.class)

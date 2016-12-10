@@ -14,6 +14,7 @@ import java.lang.annotation.Target;
  *
  * @see LoadCollection
  */
+@InjectTag
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @LoadCollection(TypedElementLoader.class)
