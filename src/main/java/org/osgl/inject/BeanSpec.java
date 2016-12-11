@@ -380,9 +380,14 @@ public class BeanSpec implements AnnotationAware {
         }
         if (isContainer && elementLoaders.isEmpty()) {
             // assume we want to inject typed elements
-            List<Type> typeParams = typeParams();
-            Type theType = typeParams.get(isMap ? 1 : 0);
-            Class<?> rawType0 = rawTypeOf(theType);
+            Class<?> rawType0;
+            if (rawType.isArray()) {
+                rawType0 = rawType.getComponentType();
+            } else {
+                List<Type> typeParams = typeParams();
+                Type theType = typeParams.get(isMap ? 1 : 0);
+                rawType0 = rawTypeOf(theType);
+            }
             if (!$.isSimpleType(rawType0)) {
                 TypeOf typeOfAnno = AnnotationUtil.createAnnotation(TypeOf.class);
                 elementLoaders.add(typeOfAnno);
