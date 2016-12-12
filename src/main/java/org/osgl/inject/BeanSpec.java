@@ -505,7 +505,7 @@ public class BeanSpec implements AnnotationAware {
             return properties;
         }
 
-        private static Set<String> standardsAnnotationMethods = C.newSet(C.list("equals", "hashCode", "toString", "annotationType", "getClass"));
+        private static Set<String> standardsAnnotationMethods = C.set(C.list("equals", "hashCode", "toString", "annotationType", "getClass"));
 
         private static boolean isStandardAnnotationMethod(Method m) {
             return standardsAnnotationMethods.contains(m.getName());
