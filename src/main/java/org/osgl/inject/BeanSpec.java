@@ -385,8 +385,12 @@ public class BeanSpec implements AnnotationAware {
                 rawType0 = rawType.getComponentType();
             } else {
                 List<Type> typeParams = typeParams();
-                Type theType = typeParams.get(isMap ? 1 : 0);
-                rawType0 = rawTypeOf(theType);
+                if (typeParams.isEmpty()) {
+                    rawType0 = Object.class;
+                } else {
+                    Type theType = typeParams.get(isMap ? 1 : 0);
+                    rawType0 = rawTypeOf(theType);
+                }
             }
             if (!$.isSimpleType(rawType0)) {
                 TypeOf typeOfAnno = AnnotationUtil.createAnnotation(TypeOf.class);
