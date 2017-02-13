@@ -28,6 +28,8 @@ public class BeanSpec implements AnnotationAware {
     private final Set<Annotation> transformers = C.newSet();
     private final Set<Annotation> qualifiers = C.newSet();
     private final Set<Annotation> postProcessors = C.newSet();
+    // only applied when bean spec constructed from Field
+    private final int modifiers;
     /**
      * The annotations will be used for calculating the hashCode and do
      * equality test. The following annotations will added into
@@ -67,8 +69,9 @@ public class BeanSpec implements AnnotationAware {
      *                    request
      * @param name        optional, the name coming from the Named qualifier
      * @param injector    the injector instance
+     * @param modifiers    the modifiers
      */
-    private BeanSpec(Type type, Annotation[] annotations, String name, Injector injector) {
+    private BeanSpec(Type type, Annotation[] annotations, String name, Injector injector, int modifiers) {
         this.injector = injector;
         this.type = type;
         this.name = name;
@@ -76,6 +79,7 @@ public class BeanSpec implements AnnotationAware {
         this.resolveTypeAnnotations();
         this.resolveAnnotations(annotations);
         this.hc = calcHashCode();
+        this.modifiers = modifiers;
     }
 
     private BeanSpec(BeanSpec source, Type convertTo) {
@@ -92,6 +96,7 @@ public class BeanSpec implements AnnotationAware {
         this.annoData.addAll(source.annoData);
         this.allAnnotations.putAll(source.allAnnotations);
         this.hc = calcHashCode();
+        this.modifiers = source.modifiers;
     }
 
     private BeanSpec(BeanSpec source, String name) {
@@ -108,6 +113,7 @@ public class BeanSpec implements AnnotationAware {
         this.annoData.addAll(source.annoData);
         this.allAnnotations.putAll(source.allAnnotations);
         this.hc = calcHashCode();
+        this.modifiers = source.modifiers;
     }
 
     @Override
@@ -212,6 +218,34 @@ public class BeanSpec implements AnnotationAware {
 
     public boolean hasAnnotation() {
         return !allAnnotations.isEmpty();
+    }
+
+    public int getModifiers() {
+        return modifiers;
+    }
+
+    public boolean isTransient() {
+        return Modifier.isTransient(modifiers);
+    }
+
+    public boolean isStatic() {
+        return Modifier.isStatic(modifiers);
+    }
+
+    public boolean isPrivate() {
+        return Modifier.isPrivate(modifiers);
+    }
+
+    public boolean isPublic() {
+        return Modifier.isPublic(modifiers);
+    }
+
+    public boolean isProtected() {
+        return Modifier.isProtected(modifiers);
+    }
+
+    public boolean isFinal() {
+        return Modifier.isFinal(modifiers);
     }
 
     BeanSpec rawTypeSpec() {
@@ -442,20 +476,28 @@ public class BeanSpec implements AnnotationAware {
     }
 
     public static BeanSpec of(Class<?> clazz, Injector injector) {
-        return new BeanSpec(clazz, null, null, injector);
+        return new BeanSpec(clazz, null, null, injector, 0);
     }
 
     public static BeanSpec of(Type type, Annotation[] paramAnnotations, Injector injector) {
-        return new BeanSpec(type, paramAnnotations, null, injector);
+        return new BeanSpec(type, paramAnnotations, null, injector, 0);
+    }
+
+    public static BeanSpec of(Type type, Annotation[] paramAnnotations, Injector injector, int modifiers) {
+        return new BeanSpec(type, paramAnnotations, null, injector, modifiers);
     }
 
     public static BeanSpec of(Type type, Annotation[] paramAnnotations, String name, Injector injector) {
-        return new BeanSpec(type, paramAnnotations, name, injector);
+        return new BeanSpec(type, paramAnnotations, name, injector, 0);
+    }
+
+    public static BeanSpec of(Type type, Annotation[] paramAnnotations, String name, Injector injector, int modifiers) {
+        return new BeanSpec(type, paramAnnotations, name, injector, modifiers);
     }
 
     public static BeanSpec of(Field field, Injector injector) {
         Annotation[] annotations = field.getDeclaredAnnotations();
-        return BeanSpec.of(field.getGenericType(), annotations, field.getName(), injector);
+        return BeanSpec.of(field.getGenericType(), annotations, field.getName(), injector, field.getModifiers());
     }
 
     public static Class<?> rawTypeOf(Type type) {

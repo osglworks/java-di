@@ -15,6 +15,8 @@
   ~ under the License.
   -->
 <!-- history
+0.4.0-SNAPSHOT
+- BeanSpec: API to test field modifiers (only applied to bean spec constructed from a field
 0.3.0-SNAPSHOT
 - update tool to 0.10.0
 0.2.0-SNAPSHOT
@@ -31,7 +33,7 @@
   <groupId>org.osgl</groupId>
   <artifactId>genie</artifactId>
   <packaging>jar</packaging>
-  <version>0.3.0-SNAPSHOT</version>
+  <version>0.4.0-SNAPSHOT</version>
 
   <name>OSGL Genie</name>
   <description>A JSR330 style dependency injection solution</description>
