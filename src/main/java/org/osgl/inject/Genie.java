@@ -938,8 +938,8 @@ public final class Genie implements Injector {
         return newChain;
     }
 
-    private static StringBuilder debugChain(Set<BeanSpec> chain, BeanSpec last) {
-        StringBuilder sb = S.builder();
+    private static S.Buffer debugChain(Set<BeanSpec> chain, BeanSpec last) {
+        S.Buffer sb = S.buffer();
         for (BeanSpec spec : chain) {
             sb.append(spec).append(" -> ");
         }
