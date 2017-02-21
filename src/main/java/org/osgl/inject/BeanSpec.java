@@ -298,6 +298,10 @@ public class BeanSpec implements AnnotationAware {
         return c.isAssignableFrom(rawType());
     }
 
+    public boolean isInstance(Object o) {
+        return rawType().isInstance(o);
+    }
+
     boolean hasElementLoader() {
         return !elementLoaders.isEmpty();
     }
