@@ -42,7 +42,7 @@ public final class Genie implements Injector {
         private Constructor<? extends T> constructor;
         private Class<? extends T> impl;
 
-        Binder(Class<T> type) {
+        public Binder(Class<T> type) {
             this.type = type;
             this.fireEvent = true;
         }
@@ -143,7 +143,7 @@ public final class Genie implements Injector {
             return null != provider || null != constructor;
         }
 
-        void register(Genie genie) {
+        public void register(Genie genie) {
             if (null == provider) {
                 if (null != constructor) {
                     provider = genie.buildConstructor(constructor, BeanSpec.of(constructor.getDeclaringClass(), null, genie), new HashSet<BeanSpec>());

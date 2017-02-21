@@ -18,6 +18,7 @@
 0.5.0-SNAPSHOT
 - BeanSpec: add isInstance(Object) API
 - BeanSpec: add Set<Annotation> qualifiers() API
+- Genie.Binder: public constructor and register method so that Binder can be used independently
 0.4.0-SNAPSHOT
 - BeanSpec: API to test field modifiers (only applied to bean spec constructed from a field
 0.3.0-SNAPSHOT
