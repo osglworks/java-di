@@ -351,6 +351,12 @@ public class BeanSpec implements AnnotationAware {
     private void resolveTypeAnnotations() {
         for (Annotation annotation : rawType().getAnnotations()) {
             resolveScope(annotation);
+            Class<? extends Annotation> annoType = annotation.annotationType();
+            if (annoType == Named.class) {
+                name = ((Named)annotation).value();
+            } else if (injector.isQualifier(annoType)) {
+                qualifiers.add(annotation);
+            }
             allAnnotations.put(annotation.annotationType(), annotation);
         }
     }

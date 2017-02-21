@@ -884,6 +884,9 @@ public final class Genie implements Injector {
     }
 
     public boolean subjectToInject(BeanSpec beanSpec) {
+        if (registry.containsKey(beanSpec)) {
+            return true;
+        }
         if (beanSpec.hasAnnotation(Inject.class)) {
             return true;
         }
