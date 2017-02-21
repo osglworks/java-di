@@ -302,6 +302,10 @@ public class BeanSpec implements AnnotationAware {
         return rawType().isInstance(o);
     }
 
+    public Set<Annotation> qualifiers() {
+        return new HashSet<>(qualifiers);
+    }
+
     boolean hasElementLoader() {
         return !elementLoaders.isEmpty();
     }

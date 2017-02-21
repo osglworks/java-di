@@ -36,7 +36,6 @@ public final class Genie implements Injector {
         private String name;
         private Provider<? extends T> provider;
         private List<Annotation> annotations = C.newList();
-        private Genie genie;
         private Class<? extends Annotation> scope;
         private boolean forceFireEvent;
         private boolean fireEvent;
@@ -145,12 +144,11 @@ public final class Genie implements Injector {
         }
 
         void register(Genie genie) {
-            this.genie = genie;
             if (null == provider) {
                 if (null != constructor) {
                     provider = genie.buildConstructor(constructor, BeanSpec.of(constructor.getDeclaringClass(), null, genie), new HashSet<BeanSpec>());
                 } else if (null != impl) {
-                    provider = new LazyProvider<T>(impl, genie);
+                    provider = new LazyProvider<>(impl, genie);
                 }
             }
             if (!bound()) {
