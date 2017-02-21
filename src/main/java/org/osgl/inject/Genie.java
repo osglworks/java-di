@@ -127,6 +127,12 @@ public final class Genie implements Injector {
             return this;
         }
 
+        public Binder<T> withAnnotation(Annotation ... annotations) {
+            this.annotations.addAll(C.listOf(annotations));
+            this.fireEvent = false;
+            return this;
+        }
+
         public Binder<T> forceFireEvent() {
             this.forceFireEvent = true;
             this.fireEvent = true;
