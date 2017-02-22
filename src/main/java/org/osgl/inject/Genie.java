@@ -477,15 +477,15 @@ public final class Genie implements Injector {
                 if (addIntoExpressRegistry) {
                     expressRegistry.put(spec.rawType(), current);
                 }
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Provider %s \n\tfor [%s] \n\tis replaced with: %s", oldName, spec, newName);
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Provider %s \n\tfor [%s] \n\tis replaced with: %s", oldName, spec, newName);
                 }
             } else {
                 if (weightedOld.affinity == 0 && current.affinity == 0) {
                     throw new InjectException("Provider has already registered for spec: %s", spec);
                 } else {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Provider %s \n\t for [%s] \n\t cannot be replaced with: %s", oldName, spec, newName);
+                    if (logger.isTraceEnabled()) {
+                        logger.trace("Provider %s \n\t for [%s] \n\t cannot be replaced with: %s", oldName, spec, newName);
                     }
                 }
             }
