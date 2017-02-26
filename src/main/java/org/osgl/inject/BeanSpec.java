@@ -299,7 +299,19 @@ public class BeanSpec implements AnnotationAware {
     }
 
     public boolean isInstance(Object o) {
-        return rawType().isInstance(o);
+        Class c = rawType();
+        if(c.isInstance(o))  {
+            return true;
+        }
+        Class p = $.primitiveTypeOf(c);
+        if (null != p && p.isInstance(o)) {
+            return true;
+        }
+        Class w = $.wrapperClassOf(c);
+        if (null != w && w.isInstance(o)) {
+            return true;
+        }
+        return false;
     }
 
     public Set<Annotation> qualifiers() {
