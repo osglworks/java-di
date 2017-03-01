@@ -1,4 +1,4 @@
-# Container injection
+# Inject into collection
 
 ## A tour of `ElementLoader` mechanism
 
