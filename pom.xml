@@ -98,6 +98,45 @@
             <includePom>true</includePom>
           </configuration>
         </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>2.9</version>
+          <configuration>
+            <stylesheetfile>src/etc/javadoc.css</stylesheetfile>
+            <quiet />
+            <additionalparam>-Xdoclint:none</additionalparam>
+            <doclet>ch.raffael.doclets.pegdown.PegdownDoclet</doclet>
+            <docletArtifact>
+              <groupId>ch.raffael.pegdown-doclet</groupId>
+              <artifactId>pegdown-doclet</artifactId>
+              <version>1.1</version>
+            </docletArtifact>
+            <useStandardDocletOptions>true</useStandardDocletOptions>
+          </configuration>
+          <executions>
+            <execution>
+              <id>gen-javadoc</id>
+              <phase>prepare-package</phase>
+              <goals>
+                <goal>javadoc</goal>
+              </goals>
+              <configuration>
+                <failOnError>false</failOnError>
+              </configuration>
+            </execution>
+            <execution>
+              <id>attach-javadocs</id>
+              <goals>
+                <goal>jar</goal>
+              </goals>
+              <configuration> <!-- add this to disable checking -->
+                <failOnError>false</failOnError>
+                <additionalparam>-Xdoclint:none</additionalparam>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
@@ -204,45 +243,6 @@
                   <descriptors>
                     <descriptor>${basedir}/assembly-dist.xml</descriptor>
                   </descriptors>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <version>2.9</version>
-            <configuration>
-              <stylesheetfile>src/etc/javadoc.css</stylesheetfile>
-              <quiet />
-              <additionalparam>-Xdoclint:none</additionalparam>
-              <doclet>ch.raffael.doclets.pegdown.PegdownDoclet</doclet>
-              <docletArtifact>
-                <groupId>ch.raffael.pegdown-doclet</groupId>
-                <artifactId>pegdown-doclet</artifactId>
-                <version>1.1</version>
-              </docletArtifact>
-              <useStandardDocletOptions>true</useStandardDocletOptions>
-            </configuration>
-            <executions>
-              <execution>
-                <id>gen-javadoc</id>
-                <phase>prepare-package</phase>
-                <goals>
-                  <goal>javadoc</goal>
-                </goals>
-                <configuration>
-                  <failOnError>false</failOnError>
-                </configuration>
-              </execution>
-              <execution>
-                <id>attach-javadocs</id>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-                <configuration> <!-- add this to disable checking -->
-                  <failOnError>false</failOnError>
-                  <additionalparam>-Xdoclint:none</additionalparam>
                 </configuration>
               </execution>
             </executions>
