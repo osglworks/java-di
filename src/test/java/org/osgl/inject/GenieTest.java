@@ -6,9 +6,11 @@ import org.junit.Test;
 import org.osgl.inject.ScopedObjects.*;
 import org.osgl.inject.annotation.LoadValue;
 import org.osgl.inject.annotation.PostConstructProcess;
+import org.osgl.inject.annotation.StopInheritedScope;
 import org.osgl.inject.loader.TypedElementLoader;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.validation.ValidationException;
 import javax.validation.constraints.AssertTrue;
 import java.lang.annotation.*;
@@ -212,6 +214,28 @@ public class GenieTest extends TestBase {
         SingletonBoundObject bound = genie.get(SingletonBoundObject.class);
         SingletonBoundObject bound2 = genie.get(SingletonBoundObject.class);
         same(bound, bound2);
+    }
+
+    @Test
+    public void testInheritedScopeStopper() {
+        genie = Genie.create(ScopedFactory.class);
+        genie.registerScopeAlias(Singleton.class, InheritedStateless.class);
+        genie.registerScopeAlias(StopInheritedScope.class, Stateful.class);
+
+        // Test inherited scope
+        StatelessBar bar = genie.get(StatelessBar.class);
+        StatelessBar bar2 = genie.get(StatelessBar.class);
+        same(bar, bar2);
+
+        // Test direct stop inherited scope
+        StatefulZee zee = genie.get(StatefulZee.class);
+        StatefulZee zee2 = genie.get(StatefulZee.class);
+        assertNotSame(zee, zee2);
+
+        // Test indirect stop inherited scope
+        StatefulFoo foo = genie.get(StatefulFoo.class);
+        StatefulFoo foo2 = genie.get(StatefulFoo.class);
+        assertNotSame(foo, foo2);
     }
 
     @Test

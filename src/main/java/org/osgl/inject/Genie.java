@@ -393,7 +393,17 @@ public final class Genie implements Injector {
         if (Singleton.class == annoClass || SessionScoped.class == annoClass || RequestScoped.class == annoClass) {
             return true;
         }
-        return scopeAliases.containsKey(annoClass) || scopeProviders.containsKey(annoClass);
+        Class<? extends Annotation> mapped = scopeAliases.get(annoClass);
+        return ((null != mapped && StopInheritedScope.class != mapped)) || scopeProviders.containsKey(annoClass);
+    }
+
+    @Override
+    public boolean isInheritedScopeStopper(Class<? extends Annotation> annoClass) {
+        if (StopInheritedScope.class == annoClass) {
+            return true;
+        }
+        Class<? extends Annotation> mapped = scopeAliases.get(annoClass);
+        return StopInheritedScope.class == mapped;
     }
 
     public boolean isQualifier(Class<? extends Annotation> annoClass) {

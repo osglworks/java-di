@@ -2,6 +2,7 @@ package org.osgl.inject;
 
 import org.osgl.inject.annotation.RequestScoped;
 import org.osgl.inject.annotation.SessionScoped;
+import org.osgl.inject.annotation.StopInheritedScope;
 import org.osgl.util.S;
 
 import javax.inject.Singleton;
@@ -49,6 +50,17 @@ public abstract class ScopedObjects {
 
     @SessionScoped
     public static class SessionObject extends ScopedObjects implements SessionProduct {}
+
+    @InheritedStateless
+    public static class StatelessBase extends ScopedObjects {}
+
+    public static class StatelessBar extends StatelessBase {}
+
+    @StopInheritedScope
+    public static class StatefulZee extends StatelessBase {}
+
+    @Stateful
+    public static class StatefulFoo extends StatelessBase {}
 
     public static interface SingletonProduct {}
 

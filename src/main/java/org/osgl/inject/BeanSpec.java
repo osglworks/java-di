@@ -56,6 +56,7 @@ public class BeanSpec implements AnnotationAware {
     private String name;
     private MapKey mapKey;
     private Class<? extends Annotation> scope;
+    private boolean stopInheritedScope;
     private Annotation valueLoader;
     private List<Type> typeParams;
 
@@ -482,8 +483,14 @@ public class BeanSpec implements AnnotationAware {
     }
 
     private void resolveScope(Annotation annotation) {
+        if (stopInheritedScope) {
+            return;
+        }
         Class<? extends Annotation> annoClass = annotation.annotationType();
-        if (injector.isScope(annoClass)) {
+        if (injector.isInheritedScopeStopper(annoClass)) {
+            stopInheritedScope = true;
+            scope = null;
+        } else if (injector.isScope(annoClass)) {
             if (null != scope) {
                 throw new InjectException("Multiple Scope annotation found: %s", this);
             }

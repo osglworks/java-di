@@ -45,4 +45,11 @@ public interface Injector {
      * @return `true` if the annotation type indicate a scope
      */
     boolean isScope(Class<? extends Annotation> annoClass);
+
+    /**
+     * Check if a supplied annotation class is a {@link org.osgl.inject.annotation.StopInheritedScope} annotation or alias of that annotation
+     * @param annoClass the annotation type
+     * @return `true` if the annotation type is inherited scope stopper
+     */
+    boolean isInheritedScopeStopper(Class<? extends Annotation> annoClass);
 }

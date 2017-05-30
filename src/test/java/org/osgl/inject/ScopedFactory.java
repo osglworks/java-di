@@ -52,7 +52,6 @@ class ScopedFactory extends Module {
             }
         });
         bind(ScopeCache.SessionScope.class).to(SESSION_SCOPE_PROVIDER);
-
         bind(SingletonBoundObject.class).to(SingletonBean.class).in(Singleton.class);
     }
 
