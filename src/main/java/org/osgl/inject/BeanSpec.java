@@ -486,19 +486,18 @@ public class BeanSpec implements AnnotationAware {
         if (stopInheritedScope) {
             return;
         }
-        Genie genie = (Genie) injector;
         Class<? extends Annotation> annoClass = annotation.annotationType();
         if (injector.isInheritedScopeStopper(annoClass)) {
             stopInheritedScope = true;
             scope = null;
         } else if (injector.isScope(annoClass)) {
             if (null != scope) {
-                Class<? extends Annotation> newScope = genie.scopeByAlias(annoClass);
+                Class<? extends Annotation> newScope = injector.scopeByAlias(annoClass);
                 if (newScope != scope) {
                     throw new InjectException("Incompatible scope annotation found: %s", this);
                 }
             } else {
-                scope = genie.scopeByAlias(annoClass);
+                scope = injector.scopeByAlias(annoClass);
             }
         }
     }

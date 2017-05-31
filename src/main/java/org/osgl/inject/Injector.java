@@ -19,14 +19,16 @@ public interface Injector {
 
     /**
      * Returns a provider of given type
+     *
      * @param type the class of the bean that provider provides
-     * @param <T> the generic type of the bean
+     * @param <T>  the generic type of the bean
      * @return the provider that provides the bean
      */
     <T> Provider<T> getProvider(Class<T> type);
 
     /**
      * Check if a supplied annotation class is a {@link javax.inject.Qualifier}
+     *
      * @param annoClass
      * @return `true` if the annotation type is a qualifier or `false` otherwise
      */
@@ -34,6 +36,7 @@ public interface Injector {
 
     /**
      * Check if a supplied annotation class specifies a {@link PostConstructProcessor}
+     *
      * @param annoClass the annotation type
      * @return `true` if the annotation type specifies post construct processor
      */
@@ -41,6 +44,7 @@ public interface Injector {
 
     /**
      * Check if a supplied annotation class is a {@link javax.inject.Scope} annotation
+     *
      * @param annoClass the annotation type
      * @return `true` if the annotation type indicate a scope
      */
@@ -48,8 +52,16 @@ public interface Injector {
 
     /**
      * Check if a supplied annotation class is a {@link org.osgl.inject.annotation.StopInheritedScope} annotation or alias of that annotation
+     *
      * @param annoClass the annotation type
      * @return `true` if the annotation type is inherited scope stopper
      */
     boolean isInheritedScopeStopper(Class<? extends Annotation> annoClass);
+
+    /**
+     * Returns the scope annotation type from an alias annotation type
+     * @param alias the alias of the scope annotation
+     * @return the scope annotation type if found
+     */
+    Class<? extends Annotation> scopeByAlias(Class<? extends Annotation> alias);
 }

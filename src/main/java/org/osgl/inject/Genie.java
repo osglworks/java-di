@@ -305,6 +305,7 @@ public final class Genie implements Injector {
                 registerModule(module);
             }
         }
+        initScopeAliases();
     }
 
     public void supportInjectionPoint(boolean enabled) {
@@ -414,7 +415,8 @@ public final class Genie implements Injector {
         return postConstructProcessors.containsKey(annoClass) || annoClass.isAnnotationPresent(PostConstructProcess.class);
     }
 
-    Class<? extends Annotation> scopeByAlias(Class<? extends Annotation> alias) {
+    @Override
+    public Class<? extends Annotation> scopeByAlias(Class<? extends Annotation> alias) {
         Class<? extends Annotation> annoType = scopeAliases.get(alias);
         return null == annoType ? alias : annoType;
     }
@@ -536,6 +538,12 @@ public final class Genie implements Injector {
         } catch (NoClassDefFoundError e) {
             // plugin dependency not provided, ignore it
         }
+    }
+
+    private void initScopeAliases() {
+        scopeAliases.put(Singleton.class, Singleton.class);
+        scopeAliases.put(SessionScoped.class, SessionScoped.class);
+        scopeAliases.put(RequestScoped.class, RequestScoped.class);
     }
 
     private void registerModule(Object module) {
