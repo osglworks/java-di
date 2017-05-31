@@ -62,6 +62,12 @@ public abstract class ScopedObjects {
     @Stateful
     public static class StatefulFoo extends StatelessBase {}
 
+    @SessionScoped
+    public static class ConflictedScope extends StatelessBase {}
+
+    @Singleton
+    public static class CompatibleScope extends StatelessBase {}
+
     public static interface SingletonProduct {}
 
     public static interface RequestProduct {}

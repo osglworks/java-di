@@ -49,7 +49,7 @@ class ScopedProvider<T> implements Provider<T> {
             return cache;
         }
         Class<? extends Annotation> alias = genie.scopeByAlias(annoClass);
-        if (null != alias) {
+        if (annoClass == alias) {
             cache = resolveBuiltIn(alias, genie);
         }
         if (null == cache) {

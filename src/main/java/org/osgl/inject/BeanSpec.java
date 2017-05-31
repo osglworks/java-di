@@ -77,8 +77,8 @@ public class BeanSpec implements AnnotationAware {
         this.type = type;
         this.name = name;
         this.isArray = rawType().isArray();
-        this.resolveTypeAnnotations();
-        this.resolveAnnotations(annotations);
+        this.resolveTypeAnnotations(injector);
+        this.resolveAnnotations(annotations, injector);
         this.hc = calcHashCode();
         this.modifiers = modifiers;
     }
@@ -361,9 +361,9 @@ public class BeanSpec implements AnnotationAware {
         return c.isInterface() || c.isArray() || Modifier.isAbstract(c.getModifiers());
     }
 
-    private void resolveTypeAnnotations() {
+    private void resolveTypeAnnotations(Injector injector) {
         for (Annotation annotation : rawType().getAnnotations()) {
-            resolveScope(annotation);
+            resolveScope(annotation, injector);
             Class<? extends Annotation> annoType = annotation.annotationType();
             if (annoType == Named.class) {
                 name = ((Named)annotation).value();
@@ -374,7 +374,7 @@ public class BeanSpec implements AnnotationAware {
         }
     }
 
-    private void resolveAnnotations(Annotation[] aa) {
+    private void resolveAnnotations(Annotation[] aa, Injector injector) {
         if (null == aa || aa.length == 0) {
             return;
         }
@@ -432,7 +432,7 @@ public class BeanSpec implements AnnotationAware {
                     annotations.put(cls, anno);
                     annoData.add(new AnnoData(anno));
                 } else {
-                    resolveScope(anno);
+                    resolveScope(anno, injector);
                 }
             }
         }
@@ -482,19 +482,24 @@ public class BeanSpec implements AnnotationAware {
         }
     }
 
-    private void resolveScope(Annotation annotation) {
+    private void resolveScope(Annotation annotation, Injector injector) {
         if (stopInheritedScope) {
             return;
         }
+        Genie genie = (Genie) injector;
         Class<? extends Annotation> annoClass = annotation.annotationType();
         if (injector.isInheritedScopeStopper(annoClass)) {
             stopInheritedScope = true;
             scope = null;
         } else if (injector.isScope(annoClass)) {
             if (null != scope) {
-                throw new InjectException("Multiple Scope annotation found: %s", this);
+                Class<? extends Annotation> newScope = genie.scopeByAlias(annoClass);
+                if (newScope != scope) {
+                    throw new InjectException("Incompatible scope annotation found: %s", this);
+                }
+            } else {
+                scope = genie.scopeByAlias(annoClass);
             }
-            scope = annoClass;
         }
     }
 

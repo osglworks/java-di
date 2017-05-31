@@ -216,6 +216,14 @@ public class GenieTest extends TestBase {
         same(bound, bound2);
     }
 
+    @Test(expected = InjectException.class)
+    public void testConflictScope() {
+        genie = Genie.create(ScopedFactory.class);
+        genie.registerScopeAlias(Singleton.class, InheritedStateless.class);
+        ConflictedScope conflictedScope = genie.get(ConflictedScope.class);
+    }
+
+
     @Test
     public void testInheritedScopeStopper() {
         genie = Genie.create(ScopedFactory.class);
@@ -236,6 +244,11 @@ public class GenieTest extends TestBase {
         StatefulFoo foo = genie.get(StatefulFoo.class);
         StatefulFoo foo2 = genie.get(StatefulFoo.class);
         assertNotSame(foo, foo2);
+
+        // Test compatible multiple scope annotation
+        CompatibleScope compatibleScope = genie.get(CompatibleScope.class);
+        CompatibleScope compatibleScope2 = genie.get(CompatibleScope.class);
+        same(compatibleScope, compatibleScope2);
     }
 
     @Test

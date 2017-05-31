@@ -415,7 +415,8 @@ public final class Genie implements Injector {
     }
 
     Class<? extends Annotation> scopeByAlias(Class<? extends Annotation> alias) {
-        return scopeAliases.get(alias);
+        Class<? extends Annotation> annoType = scopeAliases.get(alias);
+        return null == annoType ? alias : annoType;
     }
 
     ScopeCache scopeCache(Class<? extends Annotation> scope) {
