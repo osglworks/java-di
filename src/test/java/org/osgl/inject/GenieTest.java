@@ -173,7 +173,7 @@ public class GenieTest extends TestBase {
     }
 
     @Test
-    public void testMapInjection() {
+    public void testTypeOfListAndMapInjection() {
         genie = new Genie(new Module() {
             @Override
             protected void configure() {
