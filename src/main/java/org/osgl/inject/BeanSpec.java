@@ -438,7 +438,7 @@ public class BeanSpec implements AnnotationAware {
         if (isMap && hasElementLoader() && null == mapKey) {
             throw new InjectException("No MapKey annotation found on Map type target with ElementLoader annotation presented");
         }
-        if (isContainer && elementLoaders.isEmpty()) {
+        if (isContainer && elementLoaders.isEmpty() && null == valueLoader) {
             // assume we want to inject typed elements
             Class<?> rawType0;
             if (rawType.isArray()) {
