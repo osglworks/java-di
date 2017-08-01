@@ -12,18 +12,8 @@ Genie is a core component of [ActFramework](https://github.com/actframework/actf
 <dependency>
     <groupId>org.osgl</groupId>
     <artifactId>genie</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>1.1.3</version>
 </dependency>
-```
-
-**Note** Please add the following section to your `pom.xml` file to get the SNAPSHOT version software:
-
-```xml
-<parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
-</parent>
 ```
 
 ## Features:
