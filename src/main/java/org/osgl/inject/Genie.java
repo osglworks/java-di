@@ -1,5 +1,25 @@
 package org.osgl.inject;
 
+/*-
+ * #%L
+ * OSGL Genie
+ * %%
+ * Copyright (C) 2017 OSGL (Open Source General Library)
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
 import org.osgl.$;
 import org.osgl.exception.UnexpectedException;
 import org.osgl.inject.annotation.*;
@@ -11,12 +31,12 @@ import org.osgl.util.C;
 import org.osgl.util.E;
 import org.osgl.util.S;
 
-import javax.inject.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import javax.inject.*;
 
 public final class Genie implements Injector {
 
@@ -88,7 +108,8 @@ public final class Genie implements Injector {
             try {
                 return to(implement.getConstructor(args));
             } catch (NoSuchMethodException e) {
-                throw new InjectException(e, "cannot find constructor for %s with arguments: %s", implement.getName(), $.toString2(args));
+                throw new InjectException(e,
+                        "cannot find constructor for %s with arguments: %s", implement.getName(), $.toString2(args));
             }
         }
 
@@ -97,7 +118,8 @@ public final class Genie implements Injector {
         }
 
         /**
-         * Specify the bind belongs to a certain scope
+         * Specify the bind belongs to a certain scope.
+         *
          * @param scope the scope annotation class
          * @return this binder instance
          */
@@ -152,7 +174,10 @@ public final class Genie implements Injector {
         public void register(Genie genie) {
             if (null == provider) {
                 if (null != constructor) {
-                    provider = genie.buildConstructor(constructor, BeanSpec.of(constructor.getDeclaringClass(), null, genie), new HashSet<BeanSpec>());
+                    provider = genie.buildConstructor(
+                            constructor,
+                            BeanSpec.of(constructor.getDeclaringClass(), null, genie),
+                            new HashSet<BeanSpec>());
                 } else if (null != impl) {
                     provider = new LazyProvider<>(impl, genie);
                 }
@@ -263,7 +288,8 @@ public final class Genie implements Injector {
     private Set<Class<? extends Annotation>> injectTagRegistry = new HashSet<Class<? extends Annotation>>();
     private Map<Class<? extends Annotation>, Class<? extends Annotation>> scopeAliases = new HashMap<Class<? extends Annotation>, Class<? extends Annotation>>();
     private Map<Class<? extends Annotation>, ScopeCache> scopeProviders = new HashMap<Class<? extends Annotation>, ScopeCache>();
-    private ConcurrentMap<Class<? extends Annotation>, PostConstructProcessor<?>> postConstructProcessors = new ConcurrentHashMap<Class<? extends Annotation>, PostConstructProcessor<?>>();
+    private ConcurrentMap<Class<? extends Annotation>, PostConstructProcessor<?>> postConstructProcessors =
+            new ConcurrentHashMap<Class<? extends Annotation>, PostConstructProcessor<?>>();
     private ConcurrentMap<Class, BeanSpec> beanSpecLookup = new ConcurrentHashMap<Class, BeanSpec>();
     private ConcurrentMap<Class, GenericTypedBeanLoader> genericTypedBeanLoaders = new ConcurrentHashMap<Class, GenericTypedBeanLoader>();
     private List<InjectListener> listeners = new ArrayList<InjectListener>();
@@ -316,6 +342,11 @@ public final class Genie implements Injector {
         return getProvider(type).get();
     }
 
+    public <T> T get(BeanSpec beanSpec) {
+        Provider provider = findProvider(beanSpec, C.<BeanSpec>empty());
+        return (T) provider.get();
+    }
+
     /**
      * Check if a type has already been registered with a binding already
      * @param type the class
@@ -341,11 +372,6 @@ public final class Genie implements Injector {
         return (Provider<T>) provider;
     }
 
-    public <T> T get(BeanSpec beanSpec) {
-        Provider provider = findProvider(beanSpec, C.<BeanSpec>empty());
-        return (T) provider.get();
-    }
-
     public <T> void registerProvider(Class<T> type, Provider<? extends T> provider) {
         registerProvider(type, provider, true);
     }
@@ -359,12 +385,12 @@ public final class Genie implements Injector {
         this.qualifierRegistry.addAll(C.listOf(qualifiers));
     }
 
-    public void registerInjectTag(Class<? extends Annotation>... injectTags) {
-        this.injectTagRegistry.addAll(C.listOf(injectTags));
-    }
-
     public void registerQualifiers(Collection<Class<? extends Annotation>> qualifiers) {
         this.qualifierRegistry.addAll(qualifiers);
+    }
+
+    public void registerInjectTag(Class<? extends Annotation>... injectTags) {
+        this.injectTagRegistry.addAll(C.listOf(injectTags));
     }
 
     public void registerScopeAlias(Class<? extends Annotation> scopeAnnotation, Class<? extends Annotation> scopeAlias) {
@@ -676,9 +702,9 @@ public final class Genie implements Injector {
         }
         final Provider postConstructed = PostConstructProcessorInvoker.decorate(spec,
                 PostConstructorInvoker.decorate(spec,
-                        ElementLoaderProvider.decorate(spec, provider, this)
-                        , this)
-                , this);
+                        ElementLoaderProvider.decorate(spec, provider, this),
+                        this),
+                this);
         Provider eventFired = new Provider() {
             @Override
             public Object get() {

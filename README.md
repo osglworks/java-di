@@ -1,5 +1,11 @@
 # Genie
 
+[![APL v2](https://img.shields.io/badge/license-Apache%202-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html) 
+[![Maven Central](https://img.shields.io/maven-central/v/org.osgl/genie.svg)](http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22genie%22)
+[![Build Status](https://travis-ci.org/osglworks/java-di.svg?branch=master)](https://travis-ci.org/osglworks/java-di)
+[![codecov](https://codecov.io/gh/osglworks/java-di/branch/master/graph/badge.svg)](https://codecov.io/gh/osglworks/java-unit)
+[![Javadocs](http://www.javadoc.io/badge/org.osgl/genie.svg?color=red)](http://www.javadoc.io/doc/org.osgl/osgl-ut)
+
 Genie is a JSR330 Dependency Injection solution inspired by [Feather](https://github.com/zsoltherpai/feather). 
 Genie is designed to provide richer feature set than Feather while remaining much lightweight 
 in comparing to [Google Guice](https://github.com/google/guice).
@@ -12,7 +18,7 @@ Genie is a core component of [ActFramework](https://github.com/actframework/actf
 <dependency>
     <groupId>org.osgl</groupId>
     <artifactId>genie</artifactId>
-    <version>1.1.3</version>
+    <version>${genie.version}</version>
 </dependency>
 ```
 

@@ -1,5 +1,25 @@
 package org.osgl.inject;
 
+/*-
+ * #%L
+ * OSGL Genie
+ * %%
+ * Copyright (C) 2017 OSGL (Open Source General Library)
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
 import org.osgl.$;
 import org.osgl.inject.annotation.*;
 import org.osgl.inject.util.AnnotationUtil;
@@ -11,7 +31,7 @@ import org.osgl.util.S;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
-import java.lang.annotation.Annotation;
+import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.util.*;
 
@@ -19,6 +39,7 @@ import java.util.*;
  * Specification of a bean to be injected
  */
 public class BeanSpec implements AnnotationAware {
+
     private final Injector injector;
     private final int hc;
     private final Type type;
@@ -30,6 +51,7 @@ public class BeanSpec implements AnnotationAware {
     private final Set<Annotation> postProcessors = C.newSet();
     // only applied when bean spec constructed from Field
     private final int modifiers;
+
     /**
      * The annotations will be used for calculating the hashCode and do
      * equality test. The following annotations will added into
@@ -40,14 +62,21 @@ public class BeanSpec implements AnnotationAware {
      * * {@link #valueLoader}
      * * {@link #postProcessors}
      */
-    private final Map<Class<? extends Annotation>, Annotation> annotations = new HashMap<Class<? extends Annotation>, Annotation>();
+    private final Map<Class<? extends Annotation>, Annotation> annotations = new HashMap<>();
     /**
      * Stores all annotations including the ones that participating hashCode calculating and
      * those who don't
      * equality test
      * @see #annotations
      */
-    private final Map<Class<? extends Annotation>, Annotation> allAnnotations = new HashMap<Class<? extends Annotation>, Annotation>();
+    private final Map<Class<? extends Annotation>, Annotation> allAnnotations = new HashMap<>();
+
+    /**
+     * Stores all annotations that are tagged with another annotation mapped to the tag annotation class.
+     * E.g. for all annotation that are marked with `@Qualifier` will be stored in a set mapped to
+     * `Qualifier.class`
+     */
+    private final Map<Class<? extends Annotation>, Set<Annotation>> tagAnnotations = new HashMap<>();
 
     private final Set<AnnoData> annoData = new HashSet<AnnoData>();
     /**
@@ -96,6 +125,7 @@ public class BeanSpec implements AnnotationAware {
         this.annotations.putAll(source.annotations);
         this.annoData.addAll(source.annoData);
         this.allAnnotations.putAll(source.allAnnotations);
+        this.tagAnnotations.putAll(source.tagAnnotations);
         this.hc = calcHashCode();
         this.modifiers = source.modifiers;
     }
@@ -113,6 +143,7 @@ public class BeanSpec implements AnnotationAware {
         this.annotations.putAll(source.annotations);
         this.annoData.addAll(source.annoData);
         this.allAnnotations.putAll(source.allAnnotations);
+        this.tagAnnotations.putAll(source.tagAnnotations);
         this.hc = calcHashCode();
         this.modifiers = source.modifiers;
     }
@@ -199,6 +230,11 @@ public class BeanSpec implements AnnotationAware {
 
     public Annotation[] allAnnotations() {
         return allAnnotations.values().toArray(new Annotation[allAnnotations.size()]);
+    }
+
+    public Annotation[] taggedAnnotations(Class<? extends Annotation> tagType) {
+        Set<Annotation> tagged = tagAnnotations.get(tagType);
+        return null == tagged ? new Annotation[0] : tagged.toArray(new Annotation[tagged.size()]);
     }
 
     /**
@@ -371,6 +407,7 @@ public class BeanSpec implements AnnotationAware {
                 qualifiers.add(annotation);
             }
             allAnnotations.put(annotation.annotationType(), annotation);
+            storeTagAnnotation(annotation);
         }
     }
 
@@ -389,7 +426,10 @@ public class BeanSpec implements AnnotationAware {
         // parameter
         for (Annotation anno : aa) {
             Class<? extends Annotation> cls = anno.annotationType();
-            allAnnotations.put(cls, anno);
+            Annotation prev = allAnnotations.put(cls, anno);
+            if (null == prev || anno != prev) {
+                storeTagAnnotation(anno);
+            }
             if (Inject.class == cls || Provides.class == cls) {
                 continue;
             }
@@ -482,6 +522,26 @@ public class BeanSpec implements AnnotationAware {
         }
     }
 
+    private static Set<Class<? extends Annotation>> WAIVE_TAG_TYPES = C.set(
+            Documented.class, Retention.class, Target.class, Inherited.class
+    );
+    private void storeTagAnnotation(Annotation anno) {
+        Class<? extends Annotation> annoType = anno.annotationType();
+        Annotation[] tags = annoType.getAnnotations();
+        for (Annotation tag : tags) {
+            Class<? extends Annotation> tagType = tag.annotationType();
+            if (WAIVE_TAG_TYPES.contains(tagType)) {
+                continue;
+            }
+            Set<Annotation> tagged = tagAnnotations.get(tagType);
+            if (null == tagged) {
+                tagged = new HashSet<>();
+                tagAnnotations.put(tagType, tagged);
+            }
+            tagged.add(anno);
+        }
+    }
+
     private void resolveScope(Annotation annotation, Injector injector) {
         if (stopInheritedScope) {
             return;
@@ -514,6 +574,10 @@ public class BeanSpec implements AnnotationAware {
 
     public static BeanSpec of(Class<?> clazz, Injector injector) {
         return new BeanSpec(clazz, null, null, injector, 0);
+    }
+
+    public static BeanSpec of(Type type, Injector injector) {
+        return new BeanSpec(type, null, null, injector, 0);
     }
 
     public static BeanSpec of(Type type, Annotation[] paramAnnotations, Injector injector) {
