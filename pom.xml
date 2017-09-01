@@ -26,7 +26,7 @@
   <name>OSGL Genie</name>
   <description>A JSR330 style dependency injection solution</description>
   <url>http://genie.osgl.org/</url>
-  <inceptionYear>2017</inceptionYear>
+  <inceptionYear>2016</inceptionYear>
 
   <organization>
     <name>OSGL (Open Source General Library)</name>
