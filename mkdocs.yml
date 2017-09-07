@@ -9,11 +9,11 @@ theme: readthedocs
 
 pages:
 - 'Home' : 'index.md'
-
 - 'Getting Started' : 'getting_start.md'
 - 'Binding' : 'binding.md'
-- 'Inject collection and map' : 'container.md'
-- 'Inject value' : 'value.md'
 - 'Scoping' : 'scope.md'
+- 'Genie Bonus`
+  - 'Inject collection and map' : 'container.md'
+  - 'Inject value' : 'value.md'
 - 'Sample projects' : 'sample.md'
 - 'Performance Benchmark' : 'performance.md'

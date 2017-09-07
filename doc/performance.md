@@ -15,15 +15,11 @@ The result shows Genie is a very fast library:
 ```
 Split Starting up DI containers & instantiating a dependency graph 4999 times:
 -------------------------------------------------------------------------------
-                     Vanilla| start:     3ms   fetch:     5ms
-                       Guice| start:   458ms   fetch:   800ms
                      Feather| start:     8ms   fetch:    73ms
+                       Genie| start:   478ms   fetch:    98ms (*)
                       Dagger| start:    46ms   fetch:   130ms
                         Pico| start:   166ms   fetch:   161ms
-                       Genie| start:   478ms   fetch:    98ms
-              jBeanBoxNormal| start:     7ms   fetch:   339ms
-            jBeanBoxTypeSafe| start:     3ms   fetch:   162ms
-          jBeanBoxAnnotation| start:     4ms   fetch:   597ms
+                       Guice| start:   458ms   fetch:   800ms
      SpringJavaConfiguration| start: 13956ms   fetch:  1149ms
      SpringAnnotationScanned| start: 22302ms   fetch:  2738ms
 ```
@@ -33,8 +29,8 @@ Split Starting up DI containers & instantiating a dependency graph 4999 times:
 ```
 Runtime benchmark, fetch new bean for 50K times:
 ---------------------------------------------------------
-                      Dagger|    28ms (*)
-                       Genie|    45ms
+                      Dagger|    28ms
+                       Genie|    45ms (*)
                      Feather|    68ms
                        Guice|   188ms
                         Pico|   353ms
@@ -45,8 +41,8 @@ Runtime benchmark, fetch new bean for 50K times:
 ```
 Runtime benchmark, fetch new bean for 5M times:
 ---------------------------------------------------------
-                      Dagger|   842ms (*)
-                       Genie|  1043ms
+                      Dagger|   842ms
+                       Genie|  1043ms (*)
                      Feather|  1748ms
                        Guice|  3022ms
                         Pico| 13185ms
