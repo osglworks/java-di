@@ -1,4 +1,7 @@
-package org.osgl.inject.annotation;
+/**
+ * Define utility classes used by {@link org.osgl.inject.Genie}
+ */
+package org.osgl.inject.util;
 
 /*-
  * #%L
@@ -19,21 +22,3 @@ package org.osgl.inject.annotation;
  * limitations under the License.
  * #L%
  */
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-/**
- * Mark a factory method of a module (any class) that can be used to
- * create a bean instance injection.
- *
- * The factory method could be annotated with
- * {@link javax.inject.Qualifier} annotations like {@link javax.inject.Named} to provide
- * some differentiation on injection
- */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface Provides {
-}

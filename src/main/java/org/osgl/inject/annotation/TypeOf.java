@@ -50,7 +50,7 @@ public @interface TypeOf {
      */
     Class<?> value() default PlaceHolder.class;
 
-    public static final class PlaceHolder {
+    final class PlaceHolder {
     }
 
     /**

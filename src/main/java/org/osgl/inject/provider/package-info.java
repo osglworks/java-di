@@ -1,6 +1,11 @@
 /**
- * This package includes a set of Genie built-in {@link javax.inject.Provider providers}
- * for common used interfaces
+ * Define Genie built-in {@link javax.inject.Provider providers}
+ * for commonly used interfaces including and not limited
+ * to the following:
+ *
+ * * {@link java.util.List}
+ * * {@link java.util.Set}
+ * * {@link java.util.Map}
  */
 package org.osgl.inject.provider;
 

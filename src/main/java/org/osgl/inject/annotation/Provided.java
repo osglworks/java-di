@@ -23,10 +23,17 @@ package org.osgl.inject.annotation;
 import java.lang.annotation.*;
 
 /**
- * Used to mark a parameter should be injected from {@link org.osgl.inject.Injector}.
+ * Mark a method parameter value should be provided by
+ * {@link org.osgl.inject.Injector}.
  *
- * The whole reason for this annotation to be exists is because {@link javax.inject.Inject}
- * annotation does not apply to parameters
+ * This annotation is created because {@link javax.inject.Inject}
+ * annotation cannot be applied on method parameters
+ *
+ * **Note** Genie does not know how to inject method parameters
+ * and this annotation is provided to support framework author
+ * on implementing method parameter injection. For example
+ * [ActFramework](http://www.actframework.org) favor this annotation
+ * on controller action handler parameter injection implementation
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
