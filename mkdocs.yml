@@ -12,14 +12,9 @@ pages:
 
 - 'Getting Started' : 'getting_start.md'
 - 'Binding' : 'binding.md'
+- 'Inject collection and map' : 'container.md'
+- 'Inject value' : 'value.md'
 - 'Scoping' : 'scope.md'
-
-- Features:
-  - 'Inject collection' : 'container.md#inject-into-collection'
-  - 'Filter collection elements' : 'container.md#filtering'
-  - 'Inject map' : 'container.md#inject-map-type-bean'
-  - 'Built-in element loaders' : 'container.md#built-in-elementloaders'
-  - 'Inject value' : 'value.md'
 
 - Samples:
   - 'Implement Spring 4.3 style InjectionPoint style binding' : 'https://github.com/greenlaw110/hello-genie-injectionPoint'
