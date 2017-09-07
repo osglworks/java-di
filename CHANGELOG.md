@@ -6,7 +6,7 @@
 * Add factory to construct `BeanSpec` with generic type #7 
 * Introduce osgl-ut and osgl-bootstrap #15
 * Improve maven build #14
-* 
+* Add factory to construct `BeanSpec` with generic type #7
 
 ## 1.1.3
 
