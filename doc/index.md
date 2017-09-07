@@ -7,7 +7,7 @@ Genie is a core component of [ActFramework](https://github.com/actframework/actf
 
 ## Install
 
-Genie is provided as a standard Java library through maven repository [![Maven Central](https://img.shields.io/maven-central/v/org.osgl/genie.svg)](http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22genie%22)
+Genie is provided through [![Maven Central](https://img.shields.io/maven-central/v/org.osgl/genie.svg)](http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22genie%22)
 
 ```xml
 <dependency>
