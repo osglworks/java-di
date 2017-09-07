@@ -21,7 +21,7 @@
   <groupId>org.osgl</groupId>
   <artifactId>genie</artifactId>
   <packaging>jar</packaging>
-  <version>1.2.0-BETA-1</version>
+  <version>1.2.0-BETA-1-SNAPSHOT</version>
 
   <name>OSGL Genie</name>
   <description>A JSR330 style dependency injection solution</description>
@@ -56,7 +56,7 @@
     <osgl-bootstrap.version>1.0.0-BETA-7</osgl-bootstrap.version>
     <osgl-ut.version>1.0.0-BETA-4</osgl-ut.version>
     <osgl-logging.version>1.0.3</osgl-logging.version>
-    <scm.url>git://github.com/osglworks/java-di.git</scm.url>
+    <scm.url>git@github.com:osglworks/java-di.git</scm.url>
   </properties>
 
   <scm>
