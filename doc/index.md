@@ -23,6 +23,9 @@ If you are new to [Dependency Injection](https://en.wikipedia.org/wiki/Dependenc
 
 If you are a veteran [Guice](https://github.com/google/guice) user, go straight to [Binding](binding.md) and walk through into Genie specific features including
 
+* [Inject Collection and Map](doc/container.md)
+* [Load bean from other sources](doc/value.md)
+
 If you are curious about Genie's performance, please checkout [performance benchmark](performance.md)
 
 * [Inject collection and map](container.md)

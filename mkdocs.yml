@@ -14,6 +14,6 @@ pages:
 - 'Scoping' : 'scope.md'
 - 'Genie Bonus' :
   - 'Inject collection and map' : 'container.md'
-  - 'Inject value' : 'value.md'
+  - 'Load bean from other sources' : 'value.md'
 - 'Sample projects' : 'sample.md'
 - 'Performance Benchmark' : 'performance.md'
