@@ -41,7 +41,7 @@ Genie genie = Genie.create();
 Bar bar = genie.get(Bar.class);
 ```
 
-An important thing is the application developer doesn't need to touch `Foo`, the dependency of `Bar`. Genie manage to instantiate the instance of `Foo` when it need it to construct the `Bar` instance. This abstraction leaves the space for application developer to centralize the configuration of dependency management and they doesn't need to get distracted from that when programming the business logic. It also makes it flexible to replace implementations if needed. See [Type binding](type_binding.md) for more details.
+An important thing is the application developer doesn't need to touch `Foo`, the dependency of `Bar`. Genie manage to instantiate the instance of `Foo` when it need it to construct the `Bar` instance. This abstraction leaves the space for application developer to centralize the configuration of dependency management and they doesn't need to get distracted from that when programming the business logic. It also makes it flexible to replace implementations if needed. See [Type binding](binding.md) for more details.
 
 In the above `Bar` code we have implemented one of three kind of injections: Constructor injection. Genie also support the other two injection types:
 
@@ -74,5 +74,5 @@ Here are some points about the three injection types:
 
 Whatever injection type you are using in your application, use it consistently. 
 
-Now that you have some basic idea of dependency injection with Genie, you can move to the [next chapter](type_binding.md) to see how to use Genie to bind your interface to a concrete implementation.
+Now that you have some basic idea of dependency injection with Genie, you can move to the [next chapter](binding.md) to see how to use Genie to bind your interface to a concrete implementation.
 

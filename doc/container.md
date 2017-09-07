@@ -105,7 +105,6 @@ Finally modify our demo app by adding the `@FibonacciSeries` annotation:
  * Print out a Fibonacci number series injected
  */
 public class FibonacciDemo {
-    @Inject
     @FibonacciSeries(max = 1000)
     private List<Integer> series;
     
@@ -156,7 +155,6 @@ Now update your `FibonacciDemo` app by adding the `EvenNumber` annotation:
  * Print out a Fibonacci number series injected
  */
 public class FibonacciDemo {
-    @Inject
     @FibonacciSeries(max = 1000)
     @EvenNumber
     private List<Integer> series;
@@ -182,7 +180,6 @@ Things is a little bit different if we need to populate a `Map` type bean. In ad
  * Dispatch error to proper handlers
  */
 class ErrorDispatcher {
-    @Inject
     @TypeOf
     @MapKey("errorCode")
     Map<Integer, ErrorHandler> registry;

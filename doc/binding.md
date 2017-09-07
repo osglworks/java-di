@@ -1,4 +1,4 @@
-# Type binding
+# Binding
 
 Now let's say you have the following Java code:
 

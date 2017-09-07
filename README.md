@@ -40,11 +40,10 @@ Genie has very high runtime performance when comparing to Guice and Spring. See 
 ## Documents
 
 * [Getting started](doc/getting_start.md)
-* [Type binding](doc/type_binding.md)
+* [Type binding](doc/binding.md)
 * [Inject Collection and Map](doc/container.md)
 * [Load bean from other sources](doc/value.md)
-* [Scoping](scope.md)
-* [IoC container integration](integration.md)
+* [Scoping](doc/scope.md)
 
 ## Demos
 
