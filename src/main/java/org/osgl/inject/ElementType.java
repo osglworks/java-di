@@ -30,13 +30,13 @@ import java.util.List;
  * {@link org.osgl.inject.annotation.TypeOf} annotation to specify
  * the type of the element should be returned by
  * {@link org.osgl.inject.loader.TypedElementLoader} and
- * {@link org.osgl.inject.loader.AnnotatedElementLoader} respectively
+ * {@link org.osgl.inject.loader.AnnotatedElementLoader} respectively.
  */
 public enum ElementType {
     /**
-     * Specify the element loader shall return the Class found
+     * Specify the element loader shall return the Class found.
      */
-    CLASS () {
+    CLASS() {
         @Override
         public List<Object> transform(List<Class<?>> classes, Genie genie) {
             return (List)classes;
@@ -44,22 +44,44 @@ public enum ElementType {
     },
 
     /**
-     * Specify the element loader shall return the bean instantiated
+     * Specify the element loader shall return the bean instantiated.
      */
-    BEAN () {
+    BEAN() {
         @Override
         public List<Object> transform(List<Class<?>> classes, final Genie genie) {
             return C.list(classes).map(new $.Transformer<Class, Object>() {
                 @Override
-                public Object transform(Class aClass) {
-                    return genie.get(aClass);
+                public Object transform(Class clazz) {
+                    return genie.get(clazz);
                 }
             });
         }
     };
 
+    /**
+     * Transform a list of classes into required elements.
+     *
+     * It will always return the passed in class list for
+     * {@link #CLASS} element type
+     *
+     * For {@link #BEAN} it will return list of the instantiated
+     * instance from the class list using genie the dependency
+     * injector passed in
+     *
+     * @param classes
+     *      the class list
+     * @param genie
+     *      the injector
+     * @return
+     *      transformed list
+     */
     public abstract List<Object> transform(List<Class<?>> classes, Genie genie);
 
+    /**
+     * Specify whether it should load abstract class.
+     * @return
+     *      `true` if this element type is not {@link #BEAN}
+     */
     public boolean loadAbstract() {
         return this != BEAN;
     }

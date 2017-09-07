@@ -40,9 +40,12 @@ package org.osgl.inject;
  */
 public interface GenericTypedBeanLoader<T> {
     /**
-     * Returns an instance matches the spec
-     * @param spec the bean spec
-     * @return the bean instance
+     * Returns an instance matches the spec.
+     *
+     * @param spec
+     *      the bean spec
+     * @return
+     *      the bean instance
      */
     T load(BeanSpec spec);
 }

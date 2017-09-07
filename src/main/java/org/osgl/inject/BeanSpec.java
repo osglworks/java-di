@@ -28,22 +28,44 @@ import org.osgl.util.C;
 import org.osgl.util.E;
 import org.osgl.util.S;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
 import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.util.*;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Provider;
 
 /**
- * Specification of a bean to be injected
+ * Specification of a bean to be injected.
  */
 public class BeanSpec implements AnnotationAware {
 
+    /**
+     * The dependency injector.
+     *
+     * The injector can be used to do some check including
+     * the following:
+     *
+     * * {@link Injector#isQualifier(Class)}
+     * * {@link Injector#scopeByAlias(Class)}
+     */
     private final Injector injector;
+
+    /**
+     * Pre-calculated {@link Object#hashCode()} of this bean spec.
+     */
     private final int hc;
+
+    /**
+     * The {@link Type} of the bean.
+     */
     private final Type type;
+
+    /**
+     * Is the bean an array type or not.
+     */
     private final boolean isArray;
+
     private final Set<Annotation> elementLoaders = C.newSet();
     private final Set<Annotation> filters = C.newSet();
     private final Set<Annotation> transformers = C.newSet();
@@ -63,10 +85,11 @@ public class BeanSpec implements AnnotationAware {
      * * {@link #postProcessors}
      */
     private final Map<Class<? extends Annotation>, Annotation> annotations = new HashMap<>();
+
     /**
-     * Stores all annotations including the ones that participating hashCode calculating and
-     * those who don't
-     * equality test
+     * Stores all annotations including the ones that participating
+     * hashCode calculating and those who don't equality test.
+     *
      * @see #annotations
      */
     private final Map<Class<? extends Annotation>, Annotation> allAnnotations = new HashMap<>();
@@ -79,8 +102,9 @@ public class BeanSpec implements AnnotationAware {
     private final Map<Class<? extends Annotation>, Set<Annotation>> tagAnnotations = new HashMap<>();
 
     private final Set<AnnoData> annoData = new HashSet<AnnoData>();
+
     /**
-     * Store the name value of Named annotation if presented
+     * Store the name value of Named annotation if presented.
      */
     private String name;
     private MapKey mapKey;
@@ -91,15 +115,20 @@ public class BeanSpec implements AnnotationAware {
 
     /**
      * Construct the `BeanSpec` with bean type and field or parameter
-     * annotations
+     * annotations.
      *
-     * @param type        the type of the bean to be instantiated
-     * @param annotations the annotation tagged on field or parameter,
-     *                    or `null` if this is a direct API injection
-     *                    request
-     * @param name        optional, the name coming from the Named qualifier
-     * @param injector    the injector instance
-     * @param modifiers    the modifiers
+     * @param type
+     *      the type of the bean to be instantiated
+     * @param annotations
+     *      the annotation tagged on field or parameter,
+     *      or `null` if this is a direct API injection
+     *      request
+     * @param name
+     *      optional, the name coming from the Named qualifier
+     * @param injector
+     *      the injector instance
+     * @param modifiers
+     *      the modifiers
      */
     private BeanSpec(Type type, Annotation[] annotations, String name, Injector injector, int modifiers) {
         this.injector = injector;
@@ -238,8 +267,10 @@ public class BeanSpec implements AnnotationAware {
     }
 
     /**
-     * Convert an array bean spec to a list bean spec
-     * @return the array bean spec with component type derived from this bean spec
+     * Convert an array bean spec to a list bean spec.
+     *
+     * @return
+     *      the array bean spec with component type derived from this bean spec
      */
     public BeanSpec toList() {
         return new BeanSpec(this, ArrayList.class);
@@ -318,6 +349,23 @@ public class BeanSpec implements AnnotationAware {
         return spec;
     }
 
+    /**
+     * Returns a list of type parameters if the
+     * {@link #type()} of the bean is instance of
+     * {@link ParameterizedType}.
+     *
+     * For example the bean spec of a field declared
+     * as
+     *
+     * ```java
+     * private Map<String, Integer> scores;
+     * ```
+     *
+     * The `typeParams()` method will return a list
+     * of `String` and `Integer`
+     *
+     * @return type parameter list
+     */
     public List<Type> typeParams() {
         if (null == typeParams) {
             if (type instanceof ParameterizedType) {
@@ -331,13 +379,29 @@ public class BeanSpec implements AnnotationAware {
         return typeParams;
     }
 
+    /**
+     * Return if the bean is instance of give class.
+     *
+     * @param c
+     *      the class
+     * @return
+     *      `true` if the underline bean is an instance of `c`
+     */
     public boolean isInstanceOf(Class c) {
         return c.isAssignableFrom(rawType());
     }
 
+    /**
+     * Check if a given object is instance of the type of this bean spec.
+     *
+     * @param o
+     *      the object instance
+     * @return
+     *      `true` if the object is an instance of type of this bean spec
+     */
     public boolean isInstance(Object o) {
         Class c = rawType();
-        if(c.isInstance(o))  {
+        if (c.isInstance(o))  {
             return true;
         }
         Class p = $.primitiveTypeOf(c);
@@ -351,6 +415,12 @@ public class BeanSpec implements AnnotationAware {
         return false;
     }
 
+    /**
+     * Returns all qualifier annotation of this bean spec.
+     *
+     * @return
+     *      all qualifier annotations of this bean spec
+     */
     public Set<Annotation> qualifiers() {
         return new HashSet<>(qualifiers);
     }
@@ -525,6 +595,7 @@ public class BeanSpec implements AnnotationAware {
     private static Set<Class<? extends Annotation>> WAIVE_TAG_TYPES = C.set(
             Documented.class, Retention.class, Target.class, Inherited.class
     );
+
     private void storeTagAnnotation(Annotation anno) {
         Class<? extends Annotation> annoType = anno.annotationType();
         Annotation[] tags = annoType.getAnnotations();
@@ -601,6 +672,17 @@ public class BeanSpec implements AnnotationAware {
         return BeanSpec.of(field.getGenericType(), annotations, field.getName(), injector, field.getModifiers());
     }
 
+    /**
+     * A utility method to return raw type (the class) of a given
+     * type.
+     *
+     * @param type
+     *      a {@link Type}
+     * @return
+     *      a {@link Class} of the type
+     * @throws org.osgl.exception.UnexpectedException
+     *      if class cannot be determined
+     */
     public static Class<?> rawTypeOf(Type type) {
         if (type instanceof Class) {
             return (Class) type;

@@ -23,10 +23,10 @@ package org.osgl.inject;
 import org.osgl.$;
 
 /**
- * `KeyExtractor` can be used to extract or derive "key" from
+ * A `KeyExtractor` can be used to extract or derive "key" from
  * a value data. The result "key" can be used to index the value
  * in a {@link java.util.Map} data structure.
- * <p>
+ *
  * A general contract implementation must obey is
  * different value must generate different key
  *
@@ -35,14 +35,22 @@ import org.osgl.$;
  */
 public interface KeyExtractor<K, V> {
     /**
-     * Get the key of data
+     * Get the key of data.
      *
-     * @param hint optional, a string value provides hint to extract key
-     * @param data the value data
-     * @return the key of the data
+     * @param hint
+     *      optional, a string value provides hint to extract key
+     * @param data
+     *      the value data
+     * @return
+     *      the key of the data
      */
     K keyOf(String hint, V data);
 
+    /**
+     * An implementation of {@link KeyExtractor} that extract
+     * property (specified through `hint` parameter) from a
+     * java bean (data).
+     */
     class PropertyExtractor implements KeyExtractor {
         @Override
         public Object keyOf(String hint, Object data) {

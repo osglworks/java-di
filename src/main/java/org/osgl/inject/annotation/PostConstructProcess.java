@@ -28,11 +28,18 @@ import java.lang.annotation.*;
  * When a field or parameter is annotated with a `PostConstructProcess`
  * tagged annotation, it tells Genie to load specified {@link org.osgl.inject.PostConstructProcessor} to apply on the bean
  * after bean is constructed and, if the bean has {@link javax.annotation.PostConstruct}
- * method, after that method is called
+ * method, after that method is called.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.ANNOTATION_TYPE)
 @Documented
 public @interface PostConstructProcess {
+
+    /**
+     * Specify the {@link PostConstructProcessor} implementation to
+     * be called after bean has been constructed
+     *
+     * @return a {@link PostConstructProcessor} type
+     */
     Class<? extends PostConstructProcessor> value();
 }

@@ -21,13 +21,34 @@ package org.osgl.inject.util;
  */
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
 
+/**
+ * Provides utility methods to deal with annotations.
+ */
 public class AnnotationUtil {
-    public static <T extends Annotation> T declaredAnnotation(Class c, Class<T> annoClass) {
-        Annotation[] aa = c.getDeclaredAnnotations();
+
+    /**
+     * Return declared annotation with type `annoClass` from
+     * an {@link AnnotatedElement}.
+     *
+     * @param annotatedElement
+     *      the annotated element (could be class, method or field)
+     * @param annoClass
+     *      the annotation class
+     * @param <T>
+     *      the generic type of the annotation class
+     * @return
+     *      the annotation instance or `null` if not found
+     */
+    public static <T extends Annotation> T declaredAnnotation(
+            AnnotatedElement annotatedElement,
+            Class<T> annoClass
+    ) {
+        Annotation[] aa = annotatedElement.getDeclaredAnnotations();
         if (null == aa) {
             return null;
         }
@@ -40,12 +61,16 @@ public class AnnotationUtil {
     }
 
     /**
-     * Returns the {@link Annotation} tagged on another annotation instance
+     * Returns the {@link Annotation} tagged on another annotation instance.
      *
-     * @param annotation the annotation instance
-     * @param tagClass   the expected annotation class
-     * @param <T>        the generic type of the expected annotation
-     * @return the annotation tagged on annotation of type `tagClass`
+     * @param annotation
+     *      the annotation instance
+     * @param tagClass
+     *      the expected annotation class
+     * @param <T>
+     *      the generic type of the expected annotation
+     * @return
+     *      the annotation tagged on annotation of type `tagClass`
      */
     public static <T extends Annotation> T tagAnnotation(Annotation annotation, Class<T> tagClass) {
         Class<?> c = annotation.annotationType();
@@ -57,22 +82,34 @@ public class AnnotationUtil {
         return null;
     }
 
+    /**
+     * Create an annotation instance from annotation class.
+     *
+     * @param clazz
+     *      the annotation class
+     * @param <T>
+     *      the generic type of the annoation
+     * @return
+     *      the annotation instance
+     */
     @SuppressWarnings("unchecked")
     public static <T extends Annotation> T createAnnotation(final Class<T> clazz) {
         return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]{clazz, Annotation.class}, new SimpleAnnoInvocationHandler(clazz));
     }
 
     /**
-     * <p>Generate a hash code for the given annotation using the algorithm
-     * presented in the {@link Annotation#hashCode()} API docs.</p>
+     * Generate a hash code for the given annotation using the algorithm
+     * presented in the {@link Annotation#hashCode()} API docs.
      *
-     * @param a the Annotation for a hash code calculation is desired, not
-     *          {@code null}
-     * @return the calculated hash code
-     * @throws RuntimeException      if an {@code Exception} is encountered during
-     *                               annotation member access
-     * @throws IllegalStateException if an annotation method invocation returns
-     *                               {@code null}
+     * @param a
+     *      the Annotation for a hash code calculation is desired, not `null`
+     * @return
+     *      the calculated hash code
+     * @throws RuntimeException
+     *      if an {@code Exception} is encountered during annotation member access
+     *
+     * @throws IllegalStateException
+     *      if an annotation method invocation returns `null`
      */
     public static int hashCode(Annotation a) {
         int result = 0;
@@ -97,9 +134,12 @@ public class AnnotationUtil {
     /**
      * Helper method for generating a hash code for a member of an annotation.
      *
-     * @param name  the name of the member
-     * @param value the value of the member
-     * @return a hash code for this member
+     * @param name
+     *      the name of the member
+     * @param value
+     *      the value of the member
+     * @return
+     *      a hash code for this member
      */
     public static int hashMember(String name, Object value) {
         int part1 = name.hashCode() * 127;
@@ -115,9 +155,12 @@ public class AnnotationUtil {
     /**
      * Helper method for generating a hash code for an array.
      *
-     * @param componentType the component type of the array
-     * @param o             the array
-     * @return a hash code for the specified array
+     * @param componentType
+     *      the component type of the array
+     * @param o
+     *      the array
+     * @return
+     *      a hash code for the specified array
      */
     private static int arrayMemberHash(Class<?> componentType, Object o) {
         if (componentType.equals(Byte.TYPE)) {

@@ -21,31 +21,37 @@ package org.osgl.inject;
  */
 
 /**
- * Provide function to retrieve bean from scoped cache
+ * Provide function to retrieve bean from scoped cache.
  */
 public interface ScopeCache {
     /**
-     * Get a bean from the cache defined in the scope
+     * Get a bean from the cache defined in the scope.
      *
-     * @param clazz the key to retrieve the bean
-     * @param <T>   generic type of the bean
-     * @return the bean instance
+     * @param clazz
+     *      the key to retrieve the bean
+     * @param <T>
+     *      generic type of the bean
+     * @return
+     *      the bean instance
      */
     <T> T get(Class<T> clazz);
 
     /**
      * Put a bean instance into the cache associated with the class key
-     * specified
+     * specified.
      *
-     * @param clazz the key to store the bean instance
-     * @param bean  the bean instance to be stored
-     * @param <T>   generic type of the bean
+     * @param clazz
+     *      the key to store the bean instance
+     * @param bean
+     *      the bean instance to be stored
+     * @param <T>
+*           generic type of the bean
      */
     <T> void put(Class<T> clazz, T bean);
 
     /**
      * Implementation of `ScopeCache.SingletonScope` provide access
-     * to bean instances stored in a singleton registry
+     * to bean instances stored in a singleton registry.
      */
     interface SingletonScope extends ScopeCache {
     }

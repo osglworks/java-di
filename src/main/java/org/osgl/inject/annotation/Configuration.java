@@ -26,7 +26,7 @@ import java.lang.annotation.*;
 
 /**
  * Used to specify a field or parameter shall be load by
- * {@link org.osgl.inject.loader.ConfigurationValueLoader}
+ * {@link org.osgl.inject.loader.ConfigurationValueLoader}.
  */
 @Documented
 @InjectTag
@@ -36,7 +36,7 @@ import java.lang.annotation.*;
 public @interface Configuration {
 
     /**
-     * Specify the configuration key
+     * Specify the configuration key.
      *
      * @return the configuration key
      */

@@ -22,13 +22,13 @@ package org.osgl.inject;
 
 import org.osgl.$;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Provider;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import javax.annotation.PostConstruct;
+import javax.inject.Provider;
 
 /**
- * Invoke bean's {@link javax.annotation.PostConstruct post construct methods}
+ * Invoke bean's {@link javax.annotation.PostConstruct post construct methods}.
  */
 class PostConstructorInvoker<T> implements Provider<T> {
 

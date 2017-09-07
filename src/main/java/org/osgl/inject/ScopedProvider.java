@@ -23,13 +23,13 @@ package org.osgl.inject;
 import org.osgl.inject.annotation.RequestScoped;
 import org.osgl.inject.annotation.SessionScoped;
 
+import java.lang.annotation.Annotation;
 import javax.inject.Provider;
 import javax.inject.Singleton;
-import java.lang.annotation.Annotation;
 
 /**
  * Decorate on a {@link javax.inject.Provider} with scope cache
- * checking function
+ * checking function.
  */
 class ScopedProvider<T> implements Provider<T> {
 

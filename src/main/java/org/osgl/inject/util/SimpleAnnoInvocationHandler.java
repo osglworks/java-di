@@ -32,7 +32,7 @@ import java.lang.reflect.Proxy;
 
 /**
  * The class is designed to create {@link java.lang.annotation.Annotation}
- * proxy instance for given annotation type and without member values
+ * proxy instance for given annotation type and without member values.
  */
 class SimpleAnnoInvocationHandler implements InvocationHandler {
     private final Class<? extends Annotation> type;

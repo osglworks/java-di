@@ -21,6 +21,7 @@ package org.osgl.inject;
  */
 
 import org.osgl.$;
+import org.osgl.bootstrap.Version;
 import org.osgl.exception.UnexpectedException;
 import org.osgl.inject.annotation.*;
 import org.osgl.inject.provider.*;
@@ -40,6 +41,14 @@ import javax.inject.*;
 
 public final class Genie implements Injector {
 
+    /**
+     * Describe the version of genie library.
+     */
+    public static final Version VERSION = Version.of(Genie.class);
+
+    /**
+     * The logger used by genie library.
+     */
     static final Logger logger = LogManager.get(Genie.class);
 
     private static final ThreadLocal<BeanSpec> TGT_SPEC = new ThreadLocal<BeanSpec>();
@@ -51,6 +60,13 @@ public final class Genie implements Injector {
         }
     };
 
+    /**
+     * A `Binder` is used in {@link Module#configure() module configure method}
+     * to define a custom binding.
+     *
+     * @param <T>
+     *           A generic type of binding object
+     */
     public static class Binder<T> {
         private Class<T> type;
         private String name;
@@ -62,24 +78,47 @@ public final class Genie implements Injector {
         private Constructor<? extends T> constructor;
         private Class<? extends T> impl;
 
+        /**
+         * Create a `Binder` for specified class
+         * @param type the type to be bound
+         */
         public Binder(Class<T> type) {
             this.type = type;
             this.fireEvent = true;
         }
 
-        public Binder<T> named(String name) {
-            E.illegalStateIf(null != this.name, "name has already been specified");
-            this.name = name;
-            this.fireEvent = false;
-            return this;
-        }
-
+        /**
+         * Bind this `Binder` to a specific implementation.
+         *
+         * If there is another binding already specified then it
+         * will throw out an {@link IllegalStateException}
+         *
+         * @param impl
+         *      the implementation class
+         * @return
+         *      this binder instance
+         * @throws IllegalStateException
+         *      if another binding exists
+         */
         public Binder<T> to(final Class<? extends T> impl) {
             ensureNoBinding();
             this.impl = $.notNull(impl);
             return this;
         }
 
+        /**
+         * Bind this `Binder` to a specific instance
+         *
+         * If there is another binding already specified then it
+         * will throw out an {@link IllegalStateException}
+         *
+         * @param instance
+         *      the instance to which the Binder is bound
+         * @return
+         *      this binder instance
+         * @throws IllegalStateException
+         *      if another binding exists
+         */
         public Binder<T> to(final T instance) {
             ensureNoBinding();
             this.provider = new Provider<T>() {
@@ -91,18 +130,67 @@ public final class Genie implements Injector {
             return this;
         }
 
+        /**
+         * Bind this `Binder` to a provider.
+         *
+         * If there is another binding already specified then it
+         * will throw out an {@link IllegalStateException}
+         *
+         * @param provider
+         *      the provider that provides the instance to which this binder is bound
+         * @return
+         *      this binder instance
+         * @throws IllegalStateException
+         *      if another binding exists
+         */
         public Binder<T> to(Provider<? extends T> provider) {
             ensureNoBinding();
             this.provider = provider;
             return this;
         }
 
+        /**
+         * Bind this binder to a constructor
+         *
+         * If there is another binding already specified then it
+         * will throw out an {@link IllegalStateException}
+         *
+         * @param constructor
+         *      the constructor that generate the instance to which this binder is bound
+         * @return
+         *      this binder instance
+         * @throws IllegalStateException
+         *      if another binding exists
+         */
         public Binder<T> to(final Constructor<? extends T> constructor) {
             ensureNoBinding();
             this.constructor = constructor;
             return this;
         }
 
+        /**
+         * Bind this instance to a constructor specified by class and constructor arguments.
+         *
+         * This is a convenient method for {@link #to(Constructor) constructor binding} as
+         * the developer does not need to provides a {@link Constructor} instance
+         *
+         * If no constructor found with the class and argument types then an
+         * {@link InjectException} will be thrown out
+         *
+         * If there is another binding already specified then it
+         * will throw out an {@link IllegalStateException}
+         *
+         * @param implement
+         *      the class of the target instance
+         * @param args
+         *      the constructor argument types
+         * @return
+         *      this binder instance
+         * @throws
+         *      InjectException if no constructor found by the spec
+         * @throws IllegalStateException
+         *      if another binding exists
+         */
         public Binder<T> toConstructor(Class<? extends T> implement, Class<?> ... args) {
             ensureNoBinding();
             try {
@@ -118,14 +206,52 @@ public final class Genie implements Injector {
         }
 
         /**
-         * Specify the bind belongs to a certain scope.
+         * Constraint the binding with a name.
          *
-         * @param scope the scope annotation class
-         * @return this binder instance
+         * A name is usually specified via {@link Named} annotation when declaring
+         * an injection. When genie looking for a provider for a named injection,
+         * it will check if the supplied binding matches the name specified.
+         *
+         * If there is a name already registered it will throw out an
+         * {@link IllegalArgumentException}
+         *
+         * @param name
+         *      the name of the binding
+         * @return
+         *      this `Binder` instance
+         * @throws IllegalArgumentException
+         *      if there is name already registered
+         */
+        public Binder<T> named(String name) {
+            E.illegalStateIf(null != this.name, "name has already been specified");
+            this.name = name;
+            this.fireEvent = false;
+            return this;
+        }
+
+        /**
+         * Constraint the binder with a scope annotation class.
+         *
+         * Once the constraint is added to this binder the binding will search
+         * for candidates within the scope constraint only
+         *
+         * The scope annotation class must be tagged with {@link Scope} annotation.
+         * Otherwise a {@link InjectException} will be thrown out.
+         *
+         * @param scope
+         *      the scope annotation class
+         * @return
+         *      this binder instance
+         * @throws InjectException
+         *      if the scope class is not annotated with {@link Scope}
+         * @throws IllegalStateException
+         *      if there is already a scope annotation constraint put on this binder
+         * @see Scope
          */
         public Binder<T> in(Class<? extends Annotation> scope) {
             if (!scope.isAnnotationPresent(Scope.class)) {
-                throw new InjectException("Annotation class passed to \"in\" method must have @Scope annotation presented");
+                throw new InjectException(
+                        "the scope annotation type must have @Scope annotation presented: " + scope.getName());
             }
             E.illegalStateIf(null != this.scope, "Scope has already been specified");
             this.scope = scope;
@@ -134,13 +260,19 @@ public final class Genie implements Injector {
         }
 
         /**
-         * Specify the bind that should attach to bean that has been annotated with annotation(s). Usually
-         * the annotation specified in the parameter should be {@link Qualifier qualifiers}
+         * Add annotation constraints to this binder.
          *
-         * @param annotations an array of annotation classes
-         * @return this binder instance
+         * Usually the annotation specified in the parameter should be a valid {@link Qualifier qualifiers}
+         *
+         * This method is deprecated. Please use {@link #qualifiedWith(Class[])} instead
+         *
+         * @param annotations
+         *      an array of annotation classes
+         * @return
+         *      this binder instance
          * @see Qualifier
          */
+        @Deprecated
         public Binder<T> withAnnotation(Class<? extends Annotation> ... annotations) {
             for (Class<? extends Annotation> annotation : annotations) {
                 this.annotations.add(AnnotationUtil.createAnnotation(annotation));
@@ -149,28 +281,126 @@ public final class Genie implements Injector {
             return this;
         }
 
+        /**
+         * Add annotation constraints to this binder.
+         *
+         * Usually the type of the annotation specified in the parameter should be
+         * a valid {@link Qualifier qualifiers}
+         *
+         * This method is deprecated. Please use {@link #qualifiedWith(Annotation...)} instead
+         *
+         * @param annotations
+         *      an array of annotation classes
+         * @return
+         *      this binder instance
+         * @see Qualifier
+         */
+        @Deprecated
         public Binder<T> withAnnotation(Annotation ... annotations) {
             this.annotations.addAll(C.listOf(annotations));
             this.fireEvent = false;
             return this;
         }
 
+        /**
+         * Add qualifier annotation constraints to this binder
+         *
+         * Each qualifier annotation type must be tagged with {@link Qualifier} annotation.
+         * Otherwise an {@link InjectException} will be thrown out
+         *
+         * @param qualifiers
+         *      an array of qualifier annotation types
+         * @return
+         *      this binder instance
+         * @throws InjectException
+         *      if the any qualifier class is not tagged with {@link Qualifier}
+         * @see Qualifier
+         */
+        public Binder<T> qualifiedWith(Class<? extends Annotation> ... qualifiers) {
+            for (Class<? extends Annotation> qualifier : qualifiers) {
+                if (!qualifier.isAnnotationPresent(Qualifier.class)) {
+                    throw new InjectException(
+                            "Qualifier annotation type must have \"@Qualifier\" annotation presented: " +
+                                    qualifier.getName());
+                }
+                this.annotations.add(AnnotationUtil.createAnnotation(qualifier));
+            }
+            this.fireEvent = false;
+            return this;
+        }
+
+        /**
+         * Add qualifier annotation constraints to this binder
+         *
+         * The type of each qualifier annotation must be tagged with {@link Qualifier}
+         * annotation. Otherwise an {@link InjectException} will be thrown out
+         *
+         * @param qualifiers
+         *      an array of qualifier annotations
+         * @return
+         *      this binder instance
+         * @throws InjectException
+         *      if the any qualifier's class is not tagged with {@link Qualifier}
+         * @see Qualifier
+         */
+        public Binder<T> qualifiedWith(Annotation... qualifiers) {
+            for (Annotation qualifier : qualifiers) {
+                Class<? extends Annotation> qulifierType = qualifier.annotationType();
+                if (!qulifierType.isAnnotationPresent(Qualifier.class)) {
+                    throw new InjectException(
+                            "Qualifier annotation type must have \"@Qualifier\" annotation presented: " +
+                                    qulifierType.getName());
+                }
+                this.annotations.add(AnnotationUtil.createAnnotation(qulifierType));
+            }
+            this.fireEvent = false;
+            return this;
+        }
+
+        /**
+         * Turn on `forceFireEvent` flag.
+         *
+         * Once force fire event flag is turned on, when it calls
+         * {@link #register(Genie)} method the
+         * {@link Genie#fireProviderRegisteredEvent(Class)} method
+         * will be called
+         *
+         * @return this binder instance
+         */
         public Binder<T> forceFireEvent() {
             this.forceFireEvent = true;
             this.fireEvent = true;
             return this;
         }
 
+        /**
+         * Turn off the `forceFireEvent` flag.
+         *
+         * If this flag is turned off, no {@link Genie#fireProviderRegisteredEvent(Class)}
+         * call will happen upon {@link #register(Genie)} method is called
+         *
+         * @return this binder instance
+         */
         public Binder<T> doNotFireEvent() {
             this.forceFireEvent = false;
             this.fireEvent = false;
             return this;
         }
 
+        /**
+         * Check if binding is setup
+         *
+         * @return `true` if binding is setup
+         */
         boolean bound() {
             return null != provider || null != constructor;
         }
 
+        /**
+         * Register this binder to `Genie`
+         *
+         * @param genie the dependency injector
+         */
         public void register(Genie genie) {
             if (null == provider) {
                 if (null != constructor) {
@@ -958,7 +1188,7 @@ public final class Genie implements Injector {
     /**
      * Create a Genie instance with modules specified
      *
-     * @param modules modules that provides binding or {@literal@}Provides methods
+     * @param modules modules that provides binding or @Provides methods
      * @return an new Genie instance with modules
      */
     public static Genie create(Object... modules) {
@@ -968,7 +1198,7 @@ public final class Genie implements Injector {
     /**
      * Create a Genie instance with modules specified
      *
-     * @param modules modules that provides binding or {@literal@}Provides methods
+     * @param modules modules that provides binding or @Provides methods
      * @return an new Genie instance with modules
      */
     public static Genie createWithoutPlugins(Object... modules) {

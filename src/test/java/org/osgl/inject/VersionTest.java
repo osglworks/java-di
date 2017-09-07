@@ -26,20 +26,8 @@ import org.osgl.ut.TestBase;
 public class VersionTest extends TestBase {
 
     @Test
-    public void itShallLoadVersionFromVersionFile() {
-        notNull(Version.version());
-        ne(Version.UNKNOWN, Version.version());
-    }
-
-    @Test
-    public void itShallLoadBuildNumberFromVersionFile() {
-        notNull(Version.buildNumber());
-        ne(Version.UNKNOWN, Version.buildNumber());
-    }
-
-    @Test
-    public void versionTagTest() {
-        eq(Version.version() + "-" + Version.buildNumber(), Version.versionTag());
+    public void itShallReportGenieVersion() {
+        yes(Genie.VERSION.toString().contains("genie"));
     }
 
 }

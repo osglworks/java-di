@@ -26,7 +26,7 @@ import java.lang.annotation.*;
 
 /**
  * Used to specify how to extract {@link java.util.Map} key
- * from a value
+ * from a value.
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
@@ -35,7 +35,7 @@ public @interface MapKey {
 
     /**
      * Specify the `hint` to be passed into {@link KeyExtractor#keyOf(String, Object)}
-     * function call
+     * function call.
      *
      * @return the `hint` used to extract the key. Default value is ""
      */
@@ -43,7 +43,7 @@ public @interface MapKey {
 
     /**
      * Specify a {@link KeyExtractor key extractor}. Default value is
-     * {@link org.osgl.inject.KeyExtractor.PropertyExtractor}
+     * {@link org.osgl.inject.KeyExtractor.PropertyExtractor}.
      */
     Class<? extends KeyExtractor> extractor() default KeyExtractor.PropertyExtractor.class;
 }

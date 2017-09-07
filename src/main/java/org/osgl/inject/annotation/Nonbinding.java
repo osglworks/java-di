@@ -20,18 +20,18 @@ package org.osgl.inject.annotation;
  * #L%
  */
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
 /**
- * Note this annotation class is borrowed from cdi-api
+ * Note this annotation class is borrowed from cdi-api.
  *
  * <p>
- * Excludes a member of an annotation type (such as a {@linkplain javax.inject.Qualifier qualifier type} or
- * {@linkplain javax.interceptor interceptor binding type}) from consideration when the container compares two annotation
+ * Excludes a member of an annotation type (such as a {@link javax.inject.Qualifier qualifier type} or
+ * {@link javax.interceptor interceptor binding type}) from consideration when the container compares two annotation
  * instances.
  * </p>
  *

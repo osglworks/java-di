@@ -20,11 +20,11 @@ package org.osgl.inject.annotation;
  * #L%
  */
 
-import javax.inject.Scope;
 import java.lang.annotation.*;
+import javax.inject.Scope;
 
 /**
- * Stop a scope specification inherited from super class
+ * Stop a scope specification inherited from super class.
  *
  * @see Scope
  */
