@@ -12,7 +12,7 @@ pages:
 - 'Getting Started' : 'getting_start.md'
 - 'Binding' : 'binding.md'
 - 'Scoping' : 'scope.md'
-- 'Genie Bonus`
+- 'Genie Bonus' :
   - 'Inject collection and map' : 'container.md'
   - 'Inject value' : 'value.md'
 - 'Sample projects' : 'sample.md'
