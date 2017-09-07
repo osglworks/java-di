@@ -27,6 +27,3 @@ If you are a veteran [Guice](https://github.com/google/guice) user, go straight 
 * [Load bean from other sources](doc/value.md)
 
 If you are curious about Genie's performance, please checkout [performance benchmark](performance.md)
-
-* [Inject collection and map](container.md)
-* [Inject value object](value.md)
