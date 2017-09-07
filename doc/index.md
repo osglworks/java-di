@@ -1,12 +1,13 @@
 # Introduction
 
+
 Genie is a JSR330 Dependency Injection solution inspired by [Feather](https://github.com/zsoltherpai/feather). Genie is designed to provide richer feature set than Feather while remaining much lightweight in comparing to [Google Guice](https://github.com/google/guice).
 
 Genie is a core component of [ActFramework](https://github.com/actframework/actframework). However Genie can be used in any Java application independently.
 
 ## Install
 
-Genie is provided as a standard Java library through maven repository:
+Genie is provided as a standard Java library through maven repository [![Maven Central](https://img.shields.io/maven-central/v/org.osgl/genie.svg)](http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22genie%22)
 
 ```xml
 <dependency>
