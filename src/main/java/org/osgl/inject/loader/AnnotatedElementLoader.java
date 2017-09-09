@@ -99,7 +99,7 @@ public abstract class AnnotatedElementLoader extends ElementLoaderBase<Object> {
                         Class c = (Class) o;
                         int modifiers = c.getModifiers();
                         boolean yes = loadNonPublic || Modifier.isPublic(modifiers);
-                        yes = yes && loadAbstract || !Modifier.isAbstract(modifiers);
+                        yes = yes && (loadAbstract || !Modifier.isAbstract(modifiers));
                         yes = yes && c.isAnnotationPresent(annoClass);
                         return yes;
                     }

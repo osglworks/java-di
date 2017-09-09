@@ -276,10 +276,12 @@ public class BeanSpec implements AnnotationAware {
         return new BeanSpec(this, ArrayList.class);
     }
 
+    @Override
     public <T extends Annotation> T getAnnotation(Class<T> annoClass) {
         return (T)allAnnotations.get(annoClass);
     }
 
+    @Override
     public boolean hasAnnotation(Class<? extends Annotation> annoClass) {
         return allAnnotations.containsKey(annoClass);
     }

@@ -26,10 +26,10 @@ import org.osgl.inject.loader.AnnotatedElementLoader;
 import org.osgl.util.C;
 import org.osgl.util.E;
 
-import javax.inject.Inject;
-import javax.xml.ws.BindingType;
 import java.lang.annotation.Annotation;
 import java.util.List;
+import javax.inject.Inject;
+import javax.xml.ws.BindingType;
 
 class AnnotatedClasses {
 
@@ -105,6 +105,7 @@ class AnnotatedClasses {
 
     @BindingType
     public abstract static class AbstractAnnotated {
+        @Override
         public String toString() {
             throw E.unsupport();
         }

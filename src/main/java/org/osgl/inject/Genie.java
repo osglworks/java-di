@@ -568,6 +568,7 @@ public final class Genie implements Injector {
         this.supportInjectionPoint = enabled;
     }
 
+    @Override
     public <T> T get(Class<T> type) {
         return getProvider(type).get();
     }
@@ -646,6 +647,7 @@ public final class Genie implements Injector {
         genericTypedBeanLoaders.put(type, loader);
     }
 
+    @Override
     public boolean isScope(Class<? extends Annotation> annoClass) {
         if (Singleton.class == annoClass || SessionScoped.class == annoClass || RequestScoped.class == annoClass) {
             return true;
@@ -663,10 +665,12 @@ public final class Genie implements Injector {
         return StopInheritedScope.class == mapped;
     }
 
+    @Override
     public boolean isQualifier(Class<? extends Annotation> annoClass) {
         return qualifierRegistry.contains(annoClass) || annoClass.isAnnotationPresent(Qualifier.class);
     }
 
+    @Override
     public boolean isPostConstructProcessor(Class<? extends Annotation> annoClass) {
         return postConstructProcessors.containsKey(annoClass) || annoClass.isAnnotationPresent(PostConstructProcess.class);
     }

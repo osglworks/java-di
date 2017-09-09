@@ -90,7 +90,7 @@ public abstract class TypedElementLoader<T> extends ElementLoaderBase<T> {
                         Class c = (Class) o;
                         int modifiers = c.getModifiers();
                         boolean yes = loadNonPublic || Modifier.isPublic(modifiers);
-                        yes = yes && loadAbstract || !Modifier.isAbstract(modifiers);
+                        yes = yes && (loadAbstract || !Modifier.isAbstract(modifiers));
                         yes = yes && baseClass.isAssignableFrom(c);
                         yes = yes && (loadRoot || baseClass != c);
                         return yes;

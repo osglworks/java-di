@@ -26,12 +26,12 @@ import org.osgl.inject.annotation.LoadCollection;
 import org.osgl.inject.annotation.MapKey;
 import org.osgl.util.C;
 
-import javax.inject.Provider;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.inject.Provider;
 
 
 /**
@@ -54,6 +54,7 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
             this.containerSpec = container;
         }
 
+        @Override
         public boolean test(Object bean) {
             return predicate.apply(bean);
         }
