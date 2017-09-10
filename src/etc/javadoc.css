@@ -9,15 +9,14 @@ body {
 }
 a:link, a:visited {
     text-decoration:none;
-    color:#D27F53;
+    color:#999;
 }
 a:hover, a:focus {
-    text-decoration:none;
-    color:#6BBB28;
+    text-decoration:underline;
 }
 a:active {
     text-decoration:none;
-    color:#D27F53;
+    color:#999;
 }
 a[name] {
     color:#D2DECA;
@@ -98,7 +97,7 @@ Document title and Copyright styles
     text-decoration:none;
 }
 .bar a:hover, .bar a:focus {
-    color:#bb7a2a;
+    color:#999;
 }
 .tab {
     background-color:#004F66;
@@ -179,7 +178,7 @@ ul.subNavList li{
 }
 .topNav a:hover, .bottomNav a:hover {
     text-decoration:none;
-    color:#bb7a2a;
+    color:#999;
     text-transform:uppercase;/*???*/
 }
 .navBarCell1Rev {
@@ -616,4 +615,8 @@ span.todoCounter {
 div.todoText {
     display: block;
     padding: 5px;
+}
+
+pre .comment, pre .annotation, pre .template_comment, pre .diff .header, pre .chunk, pre .markdown .blockquote {
+    color: #333
 }

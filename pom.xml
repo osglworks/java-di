@@ -44,6 +44,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
+    <scm.url>git@github.com:osglworks/java-di.git</scm.url>
 
     <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
     <maven-javadoc-plugin.version>3.0.0-M1</maven-javadoc-plugin.version>
@@ -63,7 +64,6 @@
     <osgl-bootstrap.version>1.0.0-BETA-7</osgl-bootstrap.version>
     <osgl-ut.version>1.0.0-BETA-4</osgl-ut.version>
     <osgl-logging.version>1.0.3</osgl-logging.version>
-    <scm.url>git@github.com:osglworks/java-di.git</scm.url>
   </properties>
 
   <scm>
