@@ -34,22 +34,22 @@ import javax.inject.Singleton;
 class ScopedProvider<T> implements Provider<T> {
 
     private Provider<T> realProvider;
-    private Class<T> targetClass;
+    private BeanSpec target;
     private ScopeCache cache;
 
-    private ScopedProvider(Class<T> targetClass, ScopeCache cache, Provider<T> realProvider) {
-        this.targetClass = targetClass;
+    private ScopedProvider(BeanSpec target, ScopeCache cache, Provider<T> realProvider) {
+        this.target = target;
         this.realProvider = realProvider;
         this.cache = cache;
     }
 
     @Override
     public T get() {
-        T bean = cache.get(targetClass);
+        T bean = cache.get(target);
         if (null == bean) {
             bean = realProvider.get();
         }
-        cache.put(targetClass, bean);
+        cache.put(target, bean);
         return bean;
     }
 
@@ -57,10 +57,9 @@ class ScopedProvider<T> implements Provider<T> {
         if (realProvider instanceof ScopedProvider) {
             return realProvider;
         }
-        Class<T> targetClass = spec.rawType();
         ScopeCache cache = resolve(spec.scope(), genie);
 
-        return null == cache ? realProvider : new ScopedProvider<T>(targetClass, cache, realProvider);
+        return null == cache ? realProvider : new ScopedProvider<T>(spec, cache, realProvider);
     }
 
     static ScopeCache resolve(Class<? extends Annotation> annoClass, Genie genie) {

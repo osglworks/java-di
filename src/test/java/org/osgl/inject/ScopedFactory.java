@@ -25,24 +25,24 @@ import org.osgl.inject.annotation.Provides;
 import org.osgl.inject.annotation.SessionScoped;
 import org.osgl.util.C;
 
+import java.util.Map;
 import javax.inject.Provider;
 import javax.inject.Singleton;
-import java.util.Map;
 
 class ScopedFactory extends Module {
-    final Map<Class, Object> registry = C.newMap();
+    final Map<BeanSpec, Object> registry = C.newMap();
 
     private static final ScopeCache.SessionScope SESSION_SCOPE = new ScopeCache.SessionScope() {
         @Override
-        public <T> T get(Class<T> clazz) {
+        public <T> T get(BeanSpec target) {
             Context context = Context.get();
-            return context.get(clazz.getName());
+            return context.get(target.toString());
         }
 
         @Override
-        public <T> void put(Class<T> clazz, T bean) {
+        public <T> void put(BeanSpec target, T bean) {
             Context context = Context.get();
-            context.put(clazz.getName(), bean);
+            context.put(target.toString(), bean);
         }
     };
 
@@ -60,13 +60,13 @@ class ScopedFactory extends Module {
             public ScopeCache.SingletonScope get() {
                 return new ScopeCache.SingletonScope() {
                     @Override
-                    public <T> T get(Class<T> clazz) {
-                        return (T) registry.get(clazz);
+                    public <T> T get(BeanSpec target) {
+                        return (T) registry.get(target);
                     }
 
                     @Override
-                    public <T> void put(Class<T> clazz, T bean) {
-                        registry.put(clazz, bean);
+                    public <T> void put(BeanSpec target, T bean) {
+                        registry.put(target, bean);
                     }
                 };
             }
