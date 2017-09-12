@@ -1,5 +1,9 @@
 # CHANGE LOG
 
+## 1.2.1
+
+* `ScopeCache` cannot handle same type with different generic type parameter case #16
+
 ## 1.2.0
 
 * Add method to `BeanSpec` to retrieve specfic annotation by type #9

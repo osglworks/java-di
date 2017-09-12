@@ -141,7 +141,7 @@ public class AnnotationUtil {
      * @return
      *      a hash code for this member
      */
-    public static int hashMember(String name, Object value) {
+    static int hashMember(String name, Object value) {
         int part1 = name.hashCode() * 127;
         if (value.getClass().isArray()) {
             return part1 ^ arrayMemberHash(value.getClass().getComponentType(), value);
