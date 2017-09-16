@@ -1,6 +1,10 @@
 # CHANGE LOG
 
-## 1.2.1
+## 1.2.1-BETA-2
+
+* Update osgl-bootstrap and osgl-ut dependency version
+
+## 1.2.1-BETA-1
 
 * `ScopeCache` cannot handle same type with different generic type parameter case #16
 

@@ -63,8 +63,8 @@
     <inject.version>1</inject.version>
     <validation-api.version>1.1.0.Final</validation-api.version>
     <guice.version>4.1.0</guice.version>
-    <osgl-bootstrap.version>1.0.0-BETA-10</osgl-bootstrap.version>
-    <osgl-ut.version>1.0.0-BETA-6</osgl-ut.version>
+    <osgl-bootstrap.version>1.0.0</osgl-bootstrap.version>
+    <osgl-ut.version>1.0.0</osgl-ut.version>
     <osgl-logging.version>1.0.3</osgl-logging.version>
   </properties>
 
