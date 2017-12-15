@@ -28,7 +28,7 @@ public abstract class ErrorHandler {
      * Returns the error code the implementation is looking for
      * @return the interested error code
      */
-    public abstract int getErrorCode();
+    public abstract int errorCode();
 
     @Override
     public String toString() {

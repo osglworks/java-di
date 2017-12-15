@@ -24,19 +24,18 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgl.inject.ScopedObjects.*;
-import org.osgl.inject.annotation.LoadValue;
-import org.osgl.inject.annotation.PostConstructProcess;
-import org.osgl.inject.annotation.StopInheritedScope;
+import org.osgl.inject.annotation.*;
+import org.osgl.inject.loader.ConfigurationValueLoader;
 import org.osgl.inject.loader.TypedElementLoader;
 import org.osgl.ut.TestBase;
 
+import java.lang.annotation.*;
+import java.lang.annotation.ElementType;
+import java.util.Collection;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.ValidationException;
 import javax.validation.constraints.AssertTrue;
-import java.lang.annotation.*;
-import java.lang.annotation.ElementType;
-import java.util.Collection;
 
 /**
  * Test Genie DI solution
@@ -247,7 +246,6 @@ public class GenieTest extends TestBase {
         ConflictedScope conflictedScope = genie.get(ConflictedScope.class);
     }
 
-
     @Test
     public void testInheritedScopeStopper() {
         genie = Genie.create(ScopedFactory.class);
@@ -392,6 +390,32 @@ public class GenieTest extends TestBase {
         eq(2, SessionPostConstruct.instances.get());
         genie.get(SessionPostConstruct.class);
         eq(2, SessionPostConstruct.instances.get());
+    }
+
+    private static class SimpleConfigurationValueLoader extends ConfigurationValueLoader {
+        @Override
+        protected Object conf(String key) {
+            return key.length();
+        }
+    }
+
+    private static class ConfigurationValueModule {
+        @Provides
+        public ConfigurationValueLoader get() {
+            return new SimpleConfigurationValueLoader();
+        }
+    }
+
+    private static class Configured {
+        @Configuration("foo.bar")
+        int n;
+    }
+
+    @Test
+    public void testLoadConfigurationValue() {
+        genie = new Genie(new ConfigurationValueModule());
+        Configured obj = genie.get(Configured.class);
+        eq(7, obj.n);
     }
 
     private static class AssertTrueHandler implements PostConstructProcessor<Boolean> {

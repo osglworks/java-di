@@ -1,5 +1,9 @@
 # CHANGE LOG
 
+## 1.3.0
+
+* Update to osgl-tool-1.5
+
 ## 1.2.1-BETA-2
 
 * Update osgl-bootstrap and osgl-ut dependency version

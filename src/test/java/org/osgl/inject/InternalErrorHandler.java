@@ -28,7 +28,7 @@ import javax.inject.Singleton;
 @Singleton
 public class InternalErrorHandler extends ErrorHandler {
     @Override
-    public int getErrorCode() {
+    public int errorCode() {
         return 500;
     }
 }

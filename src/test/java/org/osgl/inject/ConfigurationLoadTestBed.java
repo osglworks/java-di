@@ -4,7 +4,7 @@ package org.osgl.inject;
  * #%L
  * OSGL Genie
  * %%
- * Copyright (C) 2017 OSGL (Open Source General Library)
+ * Copyright (C) 2016 - 2017 OSGL (Open Source General Library)
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,15 +20,11 @@ package org.osgl.inject;
  * #L%
  */
 
-import javax.inject.Singleton;
+import org.osgl.inject.annotation.Configuration;
 
-/**
- * Handle 404
- */
-@Singleton
-public class NotFoundHandler extends ErrorHandler {
-    @Override
-    public int errorCode() {
-        return 404;
-    }
+public class ConfigurationLoadTestBed {
+
+    @Configuration("foo.bar")
+    private int n;
+
 }
