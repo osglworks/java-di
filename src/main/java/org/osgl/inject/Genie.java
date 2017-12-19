@@ -21,7 +21,6 @@ package org.osgl.inject;
  */
 
 import org.osgl.$;
-import org.osgl.bootstrap.Version;
 import org.osgl.exception.UnexpectedException;
 import org.osgl.inject.annotation.*;
 import org.osgl.inject.provider.*;
@@ -31,6 +30,7 @@ import org.osgl.logging.Logger;
 import org.osgl.util.C;
 import org.osgl.util.E;
 import org.osgl.util.S;
+import osgl.version.Version;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;

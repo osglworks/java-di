@@ -23,7 +23,7 @@ package issue;
 import org.junit.Test;
 import org.osgl.inject.Genie;
 import org.osgl.inject.Module;
-import org.osgl.ut.TestBase;
+import osgl.ut.TestBase;
 
 /**
  * [Genie shall use default constructor when possible]

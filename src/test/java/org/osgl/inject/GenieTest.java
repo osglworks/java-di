@@ -27,7 +27,7 @@ import org.osgl.inject.ScopedObjects.*;
 import org.osgl.inject.annotation.*;
 import org.osgl.inject.loader.ConfigurationValueLoader;
 import org.osgl.inject.loader.TypedElementLoader;
-import org.osgl.ut.TestBase;
+import osgl.ut.TestBase;
 
 import java.lang.annotation.*;
 import java.lang.annotation.ElementType;

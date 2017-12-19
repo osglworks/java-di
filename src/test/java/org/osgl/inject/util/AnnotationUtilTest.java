@@ -21,7 +21,7 @@ package org.osgl.inject.util;
  */
 
 import org.junit.Test;
-import org.osgl.ut.TestBase;
+import osgl.ut.TestBase;
 
 import java.lang.annotation.*;
 

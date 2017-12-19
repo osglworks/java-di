@@ -56,7 +56,7 @@ public abstract class TypedElementLoader<T> extends ElementLoaderBase<T> {
         Class<T> targetClass = targetClass(typeVar, options, container);
         boolean loadAbstract = typeVar.get().loadAbstract() && (Boolean) options.get("loadAbstract");
         List<Class<? extends T>> classes = load(targetClass, loadNonPublic, loadAbstract, loadRoot);
-        return typeVar.get().transform((List)classes, genie);
+        return (Iterable<T>)typeVar.get().transform((List)classes, genie);
     }
 
     /**

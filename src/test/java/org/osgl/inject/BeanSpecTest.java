@@ -22,12 +22,12 @@ package org.osgl.inject;
 
 import org.junit.Test;
 import org.osgl.inject.annotation.InjectTag;
-import org.osgl.ut.TestBase;
+import osgl.ut.TestBase;
 
-import javax.inject.Qualifier;
 import java.lang.annotation.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
+import javax.inject.Qualifier;
 
 public class BeanSpecTest extends TestBase {
 
