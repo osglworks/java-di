@@ -1,5 +1,9 @@
 # CHANGE LOG
 
+## 1.3.1 - 31/Dec/2017
+
+* `BeanSpec` - make it easy to get array element type #18
+
 ## 1.3.0 - 19/Dec/2017
 
 * Update to osgl-tool-1.5

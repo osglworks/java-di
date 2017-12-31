@@ -134,7 +134,8 @@ public class BeanSpec implements AnnotationAware {
         this.injector = injector;
         this.type = type;
         this.name = name;
-        this.isArray = rawType().isArray();
+        Class<?> rawType = rawType();
+        this.isArray = rawType.isArray();
         this.resolveTypeAnnotations(injector);
         this.resolveAnnotations(annotations, injector);
         this.hc = calcHashCode();
@@ -374,6 +375,8 @@ public class BeanSpec implements AnnotationAware {
                 ParameterizedType ptype = $.cast(type);
                 Type[] ta = ptype.getActualTypeArguments();
                 typeParams = C.listOf(ta);
+            } else if (isArray) {
+                typeParams = C.list((Type)rawType().getComponentType());
             } else {
                 typeParams = C.list();
             }
