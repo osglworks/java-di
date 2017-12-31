@@ -21,7 +21,7 @@
   <groupId>org.osgl</groupId>
   <artifactId>genie</artifactId>
   <packaging>jar</packaging>
-  <version>1.3.2-SNAPSHOT</version>
+  <version>1.3.2</version>
 
   <name>OSGL Genie</name>
   <description>A JSR330 style dependency injection solution</description>
