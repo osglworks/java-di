@@ -62,6 +62,11 @@ public class BeanSpec implements AnnotationAware {
     private final Type type;
 
     /**
+     * The raw type of {@link #type()}
+     */
+    private transient volatile Class<?> rawType;
+
+    /**
      * Is the bean an array type or not.
      */
     private final boolean isArray;
@@ -247,7 +252,14 @@ public class BeanSpec implements AnnotationAware {
     }
 
     public Class rawType() {
-        return rawTypeOf(type);
+        if (null == rawType) {
+            synchronized (this) {
+                if (null == rawType) {
+                    rawType = rawTypeOf(type);
+                }
+            }
+        }
+        return rawType;
     }
 
     public String name() {
@@ -317,6 +329,10 @@ public class BeanSpec implements AnnotationAware {
 
     public boolean isFinal() {
         return Modifier.isFinal(modifiers);
+    }
+
+    public boolean isInterface() {
+        return rawType().isInterface();
     }
 
     BeanSpec rawTypeSpec() {

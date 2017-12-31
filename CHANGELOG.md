@@ -1,5 +1,9 @@
 # CHANGE LOG
 
+## 1.3.2 - 31/Dec/2017
+
+* `BeanSpec` - add `isInterface()` API #19
+
 ## 1.3.1 - 31/Dec/2017
 
 * `BeanSpec` - make it easy to get array element type #18

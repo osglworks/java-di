@@ -23,13 +23,17 @@ package org.osgl.inject;
 import org.junit.Test;
 import osgl.ut.TestBase;
 
-public class Gh18 extends TestBase {
+public class Gh19 extends TestBase {
+
+    public interface IntA {}
 
     @Test
     public void test() {
         Genie genie = Genie.create();
-        BeanSpec spec = BeanSpec.of(int[].class, genie);
-        eq(int.class, spec.typeParams().get(0));
+        BeanSpec spec = BeanSpec.of(IntA.class, genie);
+        yes(spec.isInterface());
+        spec = BeanSpec.of(Gh19.class, genie);
+        no(spec.isInterface());
     }
 
 }
