@@ -1,4 +1,4 @@
-package org.osgl.inject;
+package issue;
 
 /*-
  * #%L
@@ -20,20 +20,20 @@ package org.osgl.inject;
  * #L%
  */
 
+import org.junit.Ignore;
 import org.junit.Test;
+import org.osgl.inject.BeanSpec;
+import org.osgl.inject.Genie;
 import osgl.ut.TestBase;
 
-public class Gh19 extends TestBase {
-
-    public interface IntA {}
+public class Gh18 extends TestBase {
 
     @Test
+    @Ignore
     public void test() {
         Genie genie = Genie.create();
-        BeanSpec spec = BeanSpec.of(IntA.class, genie);
-        yes(spec.isInterface());
-        spec = BeanSpec.of(Gh19.class, genie);
-        no(spec.isInterface());
+        BeanSpec spec = BeanSpec.of(int[].class, genie);
+        eq(int.class, spec.typeParams().get(0));
     }
 
 }

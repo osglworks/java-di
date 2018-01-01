@@ -1,4 +1,4 @@
-package org.osgl.inject;
+package issue;
 
 /*-
  * #%L
@@ -21,15 +21,17 @@ package org.osgl.inject;
  */
 
 import org.junit.Test;
+import org.osgl.inject.BeanSpec;
+import org.osgl.inject.Genie;
 import osgl.ut.TestBase;
 
-public class Gh18 extends TestBase {
+public class Gh20 extends TestBase {
 
     @Test
     public void test() {
         Genie genie = Genie.create();
         BeanSpec spec = BeanSpec.of(int[].class, genie);
-        eq(int.class, spec.typeParams().get(0));
+        eq(int.class, spec.componentSpec().rawType());
     }
 
 }

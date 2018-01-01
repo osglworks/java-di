@@ -1,5 +1,9 @@
 # CHANGE LOG
 
+## 1.3.3 - 1/Jan/2018
+
+* Revert changes in #18 and create new method for accessing array element type #20
+
 ## 1.3.2 - 31/Dec/2017
 
 * `BeanSpec` - add `isInterface()` API #19
