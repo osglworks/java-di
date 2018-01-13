@@ -430,6 +430,7 @@ public class GenieTest extends TestBase {
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.PARAMETER, ElementType.FIELD})
     @Documented
+    @InjectTag
     @LoadValue(BoolValueLoader.class)
     public @interface Bool {
         boolean value() default false;
@@ -478,14 +479,12 @@ public class GenieTest extends TestBase {
     }
 
     static class BarToFail {
-        @Inject
         @Bool
         @MyAssertTrue
         private boolean val;
     }
 
     static class BarToPass {
-        @Inject
         @Bool(true)
         @MyAssertTrue
         private boolean val;

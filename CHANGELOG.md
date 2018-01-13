@@ -1,5 +1,10 @@
 # CHANGE LOG
 
+## 1.4.0 - 9/Jan/2018
+
+* BeanSpec - provide a method to check if there are annotation impact inject #22
+* BeanSpec equality test shall check scope annotation #21
+
 ## 1.3.3 - 1/Jan/2018
 
 * Revert changes in #18 and create new method for accessing array element type #20

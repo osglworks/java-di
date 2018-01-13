@@ -106,7 +106,7 @@ public class BeanSpec implements AnnotationAware {
      */
     private final Map<Class<? extends Annotation>, Set<Annotation>> tagAnnotations = new HashMap<>();
 
-    private final Set<AnnoData> annoData = new HashSet<AnnoData>();
+    private final Set<AnnoData> annoData = new HashSet<>();
 
     /**
      * Store the name value of Named annotation if presented.
@@ -443,6 +443,19 @@ public class BeanSpec implements AnnotationAware {
     }
 
     /**
+     * Check if the bean spec has injector decorators. The following annotations
+     * are considered to be inject decorators:
+     * * qualifiers
+     * * post construct annotation
+     * * scope annotation
+     * * {@link Inject} or any annotation has {@link InjectTag} presented
+     * @return `true` if the beanSpec has inject decorators or `false` otherwise
+     */
+    public boolean hasInjectDecorator() {
+        return !annoData.isEmpty();
+    }
+
+    /**
      * Returns all qualifier annotation of this bean spec.
      *
      * @return
@@ -528,7 +541,12 @@ public class BeanSpec implements AnnotationAware {
                 storeTagAnnotation(anno);
             }
             if (Inject.class == cls || Provides.class == cls) {
+                annoData.add(new AnnoData(anno));
                 continue;
+            }
+            boolean isInjectTag = tagAnnotations.containsKey(InjectTag.class);
+            if (isInjectTag) {
+                annoData.add(new AnnoData(anno));
             }
             if (cls == MapKey.class) {
                 if (null != mapKey) {
@@ -623,6 +641,10 @@ public class BeanSpec implements AnnotationAware {
             Documented.class, Retention.class, Target.class, Inherited.class
     );
 
+    /**
+     * Walk through anno's tag annotations
+     * @param anno the annotation
+     */
     private void storeTagAnnotation(Annotation anno) {
         Class<? extends Annotation> annoType = anno.annotationType();
         Annotation[] tags = annoType.getAnnotations();
@@ -656,6 +678,7 @@ public class BeanSpec implements AnnotationAware {
                 }
             } else {
                 scope = injector.scopeByAlias(annoClass);
+                annoData.add(new AnnoData(annotation));
             }
         }
     }
