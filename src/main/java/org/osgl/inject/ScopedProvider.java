@@ -48,8 +48,8 @@ class ScopedProvider<T> implements Provider<T> {
         T bean = cache.get(target);
         if (null == bean) {
             bean = realProvider.get();
+            cache.put(target, bean);
         }
-        cache.put(target, bean);
         return bean;
     }
 

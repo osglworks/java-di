@@ -1,5 +1,9 @@
 # CHANGE LOG
 
+## 1.3.4 - 14/Jan/2018
+
+* performance tune: `ScopeProvider` shall not put bean into scope cache when it is retrieved from cache
+
 ## 1.3.3 - 1/Jan/2018
 
 * Revert changes in #18 and create new method for accessing array element type #20
