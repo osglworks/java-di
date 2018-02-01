@@ -228,15 +228,15 @@ public class GenieTest extends TestBase {
         SingletonObject obj2 = genie.get(SingletonObject.class);
         same(obj, obj2);
 
-        // Test Annotation on Factory method
-        SingletonProduct product = genie.get(SingletonProduct.class);
-        SingletonProduct product2 = genie.get(SingletonProduct.class);
-        same(product, product2);
-
         // Test Annotation in Binder
         SingletonBoundObject bound = genie.get(SingletonBoundObject.class);
         SingletonBoundObject bound2 = genie.get(SingletonBoundObject.class);
         same(bound, bound2);
+
+        // Test Annotation on Factory method
+        SingletonProduct product = genie.get(SingletonProduct.class);
+        SingletonProduct product2 = genie.get(SingletonProduct.class);
+        same(product, product2);
     }
 
     @Test(expected = InjectException.class)

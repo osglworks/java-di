@@ -23,10 +23,10 @@ package org.osgl.inject;
 import org.osgl.$;
 import org.osgl.util.C;
 
-import javax.inject.Provider;
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
+import javax.inject.Provider;
 
 class PostConstructProcessorInvoker<T> implements Provider<T> {
 
@@ -63,6 +63,6 @@ class PostConstructProcessorInvoker<T> implements Provider<T> {
             PostConstructProcessor<T> pcp = genie.postConstructProcessor(annotation);
             processors.add($.T2(annotation, pcp));
         }
-        return new PostConstructProcessorInvoker<T>(realProvider, processors);
+        return new PostConstructProcessorInvoker<>(realProvider, processors);
     }
 }

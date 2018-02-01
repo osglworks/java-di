@@ -25,9 +25,9 @@ import org.osgl.inject.annotation.SessionScoped;
 import org.osgl.inject.annotation.StopInheritedScope;
 import org.osgl.util.S;
 
-import javax.inject.Singleton;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
+import javax.inject.Singleton;
 
 public abstract class ScopedObjects {
 
@@ -88,11 +88,11 @@ public abstract class ScopedObjects {
     @Singleton
     public static class CompatibleScope extends StatelessBase {}
 
-    public static interface SingletonProduct {}
+    public interface SingletonProduct {}
 
-    public static interface RequestProduct {}
+    public interface RequestProduct {}
 
-    public static interface SessionProduct {}
+    public interface SessionProduct {}
 
     public static class SingletonBean extends ScopedObjects implements SingletonProduct, SingletonBoundObject {}
 

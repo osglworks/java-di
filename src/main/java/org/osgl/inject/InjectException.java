@@ -43,4 +43,5 @@ public class InjectException extends UnexpectedException {
     public static InjectException circularDependency(CharSequence dependencyChain) {
         return new InjectException("Circular dependency found: %s", dependencyChain);
     }
+
 }

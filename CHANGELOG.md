@@ -1,9 +1,12 @@
 # CHANGE LOG
 
-## 1.4.0 - 9/Jan/2018
+## 1.4.0 - 15/Jan/2018
 
 * BeanSpec - provide a method to check if there are annotation impact inject #22
-* BeanSpec equality test shall check scope annotation #21
+
+## 1.3.4 - 14/Jan/2018
+
+* performance tune: `ScopeProvider` shall not put bean into scope cache when it is retrieved from cache
 
 ## 1.3.3 - 1/Jan/2018
 

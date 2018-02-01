@@ -71,11 +71,11 @@ public class BeanSpec implements AnnotationAware {
      */
     private final boolean isArray;
 
-    private final Set<Annotation> elementLoaders = C.newSet();
-    private final Set<Annotation> filters = C.newSet();
-    private final Set<Annotation> transformers = C.newSet();
-    private final Set<Annotation> qualifiers = C.newSet();
-    private final Set<Annotation> postProcessors = C.newSet();
+    private final Set<Annotation> elementLoaders = new HashSet<>();
+    private final Set<Annotation> filters = new HashSet<>();
+    private final Set<Annotation> transformers = new HashSet<>();
+    private final Set<Annotation> qualifiers = new HashSet<>();
+    private final Set<Annotation> postProcessors = new HashSet<>();
     // only applied when bean spec constructed from Field
     private final int modifiers;
 
@@ -107,6 +107,7 @@ public class BeanSpec implements AnnotationAware {
     private final Map<Class<? extends Annotation>, Set<Annotation>> tagAnnotations = new HashMap<>();
 
     private final Set<AnnoData> annoData = new HashSet<>();
+    private final Set<AnnoData> injectTags = new HashSet<>();
 
     /**
      * Store the name value of Named annotation if presented.
@@ -452,7 +453,7 @@ public class BeanSpec implements AnnotationAware {
      * @return `true` if the beanSpec has inject decorators or `false` otherwise
      */
     public boolean hasInjectDecorator() {
-        return !annoData.isEmpty();
+        return !annoData.isEmpty() || !injectTags.isEmpty();
     }
 
     /**
@@ -541,12 +542,12 @@ public class BeanSpec implements AnnotationAware {
                 storeTagAnnotation(anno);
             }
             if (Inject.class == cls || Provides.class == cls) {
-                annoData.add(new AnnoData(anno));
+                injectTags.add(new AnnoData(anno));
                 continue;
             }
             boolean isInjectTag = tagAnnotations.containsKey(InjectTag.class);
             if (isInjectTag) {
-                annoData.add(new AnnoData(anno));
+                injectTags.add(new AnnoData(anno));
             }
             if (cls == MapKey.class) {
                 if (null != mapKey) {
@@ -585,7 +586,7 @@ public class BeanSpec implements AnnotationAware {
                 if (injector.isPostConstructProcessor(cls)) {
                     postProcessors.add(anno);
                     annotations.put(cls, anno);
-                    annoData.add(new AnnoData(anno));
+                    //annoData.add(new AnnoData(anno));
                 } else {
                     resolveScope(anno, injector);
                 }
@@ -678,7 +679,10 @@ public class BeanSpec implements AnnotationAware {
                 }
             } else {
                 scope = injector.scopeByAlias(annoClass);
-                annoData.add(new AnnoData(annotation));
+                // scope annotaton is a decorator for inject library usage, it
+                // can't add scope annotation into annoData and make it
+                // enter the equals and hashCode calculation,
+                //annoData.add(new AnnoData(annotation));
             }
         }
     }

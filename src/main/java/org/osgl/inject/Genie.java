@@ -512,17 +512,17 @@ public final class Genie implements Injector {
 
     private static final Provider[] NO_PROVIDER = new Provider[0];
 
-    private ConcurrentMap<BeanSpec, Provider<?>> registry = new ConcurrentHashMap<BeanSpec, Provider<?>>();
-    private ConcurrentMap<Class, Provider> expressRegistry = new ConcurrentHashMap<Class, Provider>();
-    private Set<Class<? extends Annotation>> qualifierRegistry = new HashSet<Class<? extends Annotation>>();
-    private Set<Class<? extends Annotation>> injectTagRegistry = new HashSet<Class<? extends Annotation>>();
-    private Map<Class<? extends Annotation>, Class<? extends Annotation>> scopeAliases = new HashMap<Class<? extends Annotation>, Class<? extends Annotation>>();
-    private Map<Class<? extends Annotation>, ScopeCache> scopeProviders = new HashMap<Class<? extends Annotation>, ScopeCache>();
+    private ConcurrentMap<BeanSpec, Provider<?>> registry = new ConcurrentHashMap<>();
+    private ConcurrentMap<Class, Provider> expressRegistry = new ConcurrentHashMap<>();
+    private Set<Class<? extends Annotation>> qualifierRegistry = new HashSet<>();
+    private Set<Class<? extends Annotation>> injectTagRegistry = new HashSet<>();
+    private Map<Class<? extends Annotation>, Class<? extends Annotation>> scopeAliases = new HashMap<>();
+    private Map<Class<? extends Annotation>, ScopeCache> scopeProviders = new HashMap<>();
     private ConcurrentMap<Class<? extends Annotation>, PostConstructProcessor<?>> postConstructProcessors =
             new ConcurrentHashMap<Class<? extends Annotation>, PostConstructProcessor<?>>();
-    private ConcurrentMap<Class, BeanSpec> beanSpecLookup = new ConcurrentHashMap<Class, BeanSpec>();
-    private ConcurrentMap<Class, GenericTypedBeanLoader> genericTypedBeanLoaders = new ConcurrentHashMap<Class, GenericTypedBeanLoader>();
-    private List<InjectListener> listeners = new ArrayList<InjectListener>();
+    private ConcurrentMap<Class, BeanSpec> beanSpecLookup = new ConcurrentHashMap<>();
+    private ConcurrentMap<Class, GenericTypedBeanLoader> genericTypedBeanLoaders = new ConcurrentHashMap<>();
+    private List<InjectListener> listeners = new ArrayList<>();
     private boolean supportInjectionPoint = false;
 
     Genie(Object... modules) {
@@ -1013,6 +1013,12 @@ public final class Genie implements Injector {
                         return bean;
                     } catch (RuntimeException e) {
                         throw e;
+                    } catch (InvocationTargetException e) {
+                        Throwable t = e.getTargetException();
+                        if (t instanceof RuntimeException) {
+                            throw (RuntimeException) t;
+                        }
+                        throw new InjectException(t, "cannot instantiate %s", spec);
                     } catch (Exception e) {
                         throw new InjectException(e, "cannot instantiate %s", spec);
                     }

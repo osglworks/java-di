@@ -48,8 +48,8 @@ class ScopedProvider<T> implements Provider<T> {
         T bean = cache.get(target);
         if (null == bean) {
             bean = realProvider.get();
+            cache.put(target, bean);
         }
-        cache.put(target, bean);
         return bean;
     }
 
@@ -59,7 +59,7 @@ class ScopedProvider<T> implements Provider<T> {
         }
         ScopeCache cache = resolve(spec.scope(), genie);
 
-        return null == cache ? realProvider : new ScopedProvider<T>(spec, cache, realProvider);
+        return null == cache ? realProvider : new ScopedProvider<>(spec, cache, realProvider);
     }
 
     static ScopeCache resolve(Class<? extends Annotation> annoClass, Genie genie) {
