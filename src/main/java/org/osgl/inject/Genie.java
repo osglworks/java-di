@@ -598,7 +598,9 @@ public final class Genie implements Injector {
             }
             BeanSpec spec = beanSpecOf(type);
             provider = findProvider(spec, C.<BeanSpec>empty());
-            expressRegistry.putIfAbsent(type, provider);
+            if (!$.isSimpleType(type)) {
+                expressRegistry.putIfAbsent(type, provider);
+            }
         }
         return (Provider<T>) provider;
     }
@@ -732,6 +734,9 @@ public final class Genie implements Injector {
     }
 
     private void addIntoRegistry(BeanSpec spec, Provider<?> val, boolean addIntoExpressRegistry) {
+        if (!spec.shouldCacheProvider()) {
+            return;
+        }
         WeightedProvider current = WeightedProvider.decorate(val);
         Provider<?> old = registry.get(spec);
         if (null == old) {
@@ -925,7 +930,9 @@ public final class Genie implements Injector {
             }
         }
         Provider<?> decorated = decorate(spec, provider, false);
-        registry.putIfAbsent(spec, decorated);
+        if (spec.shouldCacheProvider()) {
+            registry.putIfAbsent(spec, decorated);
+        }
         return decorated;
     }
 

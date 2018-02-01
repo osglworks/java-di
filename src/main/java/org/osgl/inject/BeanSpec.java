@@ -119,6 +119,8 @@ public class BeanSpec implements AnnotationAware {
     private boolean stopInheritedScope;
     private Annotation valueLoader;
     private List<Type> typeParams;
+    // simple type without injection tag
+    private volatile Boolean shouldCacheProvider;
 
     /**
      * Construct the `BeanSpec` with bean type and field or parameter
@@ -745,6 +747,18 @@ public class BeanSpec implements AnnotationAware {
         } else {
             throw E.unexpected("type not recognized: %s", type);
         }
+    }
+
+    public boolean shouldCacheProvider() {
+        if (null != shouldCacheProvider) {
+            return shouldCacheProvider;
+        }
+        synchronized (this) {
+            if (null == shouldCacheProvider) {
+                shouldCacheProvider = !($.isSimpleType(rawType()) && !hasInjectDecorator());
+            }
+        }
+        return shouldCacheProvider;
     }
 
     // keep the effective annotation data
