@@ -3,6 +3,7 @@
 ## 1.4.0 - 15/Jan/2018
 
 * BeanSpec - provide a method to check if there are annotation impact inject #22
+* Support dynamic named provider #25
 
 ## 1.3.4 - 14/Jan/2018
 

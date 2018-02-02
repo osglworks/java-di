@@ -510,9 +510,8 @@ public final class Genie implements Injector {
         }
     }
 
-    private static final Provider[] NO_PROVIDER = new Provider[0];
-
     private ConcurrentMap<BeanSpec, Provider<?>> registry = new ConcurrentHashMap<>();
+    private ConcurrentMap<Class<?>, NamedProvider<?>> namedRegistry = new ConcurrentHashMap<>();
     private ConcurrentMap<Class, Provider> expressRegistry = new ConcurrentHashMap<>();
     private Set<Class<? extends Annotation>> qualifierRegistry = new HashSet<>();
     private Set<Class<? extends Annotation>> injectTagRegistry = new HashSet<>();
@@ -609,9 +608,8 @@ public final class Genie implements Injector {
         registerProvider(type, provider, true);
     }
 
-    private <T> void registerProvider(Class<T> type, Provider<? extends T> provider, boolean fireEvent) {
-        AFFINITY.set(0);
-        bindProviderToClass(type, provider, fireEvent);
+    public <T> void registerNamedProvider(Class<T> type, NamedProvider<T> provider) {
+        namedRegistry.put(type, provider);
     }
 
     public void registerQualifiers(Class<? extends Annotation>... qualifiers) {
@@ -712,6 +710,11 @@ public final class Genie implements Injector {
             beanSpecLookup.putIfAbsent(type, spec);
         }
         return spec;
+    }
+
+    private <T> void registerProvider(Class<T> type, Provider<? extends T> provider, boolean fireEvent) {
+        AFFINITY.set(0);
+        bindProviderToClass(type, provider, fireEvent);
     }
 
     private void bindProviderToClass(Class<?> target, Provider<?> provider, boolean fireEvent) {
@@ -855,6 +858,19 @@ public final class Genie implements Injector {
     }
 
     private Provider<?> findProvider(final BeanSpec spec, final Set<BeanSpec> chain) {
+
+        // try named registry
+        Class<?> rawType = spec.rawType();
+        final NamedProvider namedProvider = namedRegistry.get(rawType);
+        if (null != namedProvider && spec.hasAnnotation(Named.class)) {
+            final String name = spec.name();
+            return new Provider<Object>() {
+                @Override
+                public Object get() {
+                    return namedProvider.get(name);
+                }
+            };
+        }
 
         // try registry
         Provider<?> provider = registry.get(spec);
