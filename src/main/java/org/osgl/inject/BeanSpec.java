@@ -121,6 +121,7 @@ public class BeanSpec implements AnnotationAware {
     private List<Type> typeParams;
     // simple type without injection tag
     private volatile Boolean shouldCacheProvider;
+    private volatile Map<String, BeanSpec> fields;
 
     /**
      * Construct the `BeanSpec` with bean type and field or parameter
@@ -468,6 +469,65 @@ public class BeanSpec implements AnnotationAware {
         return new HashSet<>(qualifiers);
     }
 
+    public BeanSpec field(String name) {
+        return fields().get(name);
+    }
+
+    /**
+     * Returns a list of `BeanSpec` for all fields including super class fields.
+     * @return the fields spec list
+     */
+    public Map<String, BeanSpec> fields() {
+        if (null != fields) {
+            return fields;
+        }
+        synchronized (this) {
+            if (null == fields) {
+                Map<String, BeanSpec> map = new HashMap<>();
+                for (BeanSpec spec: fields($.F.<Field>yes())) {
+                    map.put(spec.name, spec);
+                }
+                fields = Collections.unmodifiableMap(map);
+            }
+        }
+        return fields;
+    }
+
+    /**
+     * Returns a list of `BeanSpec` for all fields including super class fields.
+     * @param filter a function to filter out fields that are not needed.
+     * @return the fields spec list
+     */
+    public List<BeanSpec> fields($.Predicate<Field> filter) {
+        List<BeanSpec> retVal = new ArrayList<>();
+        Class<?> current = rawType();
+        List<Type> typeParams = typeParams();
+        Type[] typeDeclarations = current.getTypeParameters();
+        while (null != current && !current.equals(Object.class)) {
+            for (Field field : current.getDeclaredFields()) {
+                if (!filter.test(field)) {
+                    continue;
+                }
+                Class<?> fieldType = field.getType();
+                Type fieldGenericType = field.getGenericType();
+                retVal.add(fieldType != fieldGenericType ? beanSpecOf(field, fieldGenericType, typeDeclarations, typeParams) : of(field, injector()));
+                current = current.getSuperclass();
+            }
+        }
+        return retVal;
+    }
+
+    // find the beanspec of a field with generic type
+    private BeanSpec beanSpecOf(Field field, Type genericType, Type[] typeArgs, List<Type> typeImpls) {
+        int len = typeArgs.length;
+        for (int i = 0; i < len; ++i) {
+            if (genericType.equals(typeArgs[i])) {
+                return of(field, typeImpls.get(i), injector());
+            }
+        }
+        return of(field, injector);
+    }
+
     boolean hasElementLoader() {
         return !elementLoaders.isEmpty();
     }
@@ -726,6 +786,11 @@ public class BeanSpec implements AnnotationAware {
     public static BeanSpec of(Field field, Injector injector) {
         Annotation[] annotations = field.getDeclaredAnnotations();
         return BeanSpec.of(field.getGenericType(), annotations, field.getName(), injector, field.getModifiers());
+    }
+
+    private static BeanSpec of(Field field, Type realType, Injector injector) {
+        Annotation[] annotations = field.getDeclaredAnnotations();
+        return of(realType, annotations, field.getName(), injector, field.getModifiers());
     }
 
     /**

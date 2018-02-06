@@ -2,8 +2,10 @@
 
 ## 1.4.0 - 15/Jan/2018
 
-* BeanSpec - provide a method to check if there are annotation impact inject #22
+* BeanSpec - add method to get bean spec of all fields #26
 * Support dynamic named provider #25
+* Do not cache provider for simple types without inject tag #24
+* BeanSpec - provide a method to check if there are annotation impact inject #22
 
 ## 1.3.4 - 14/Jan/2018
 

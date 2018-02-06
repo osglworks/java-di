@@ -604,11 +604,11 @@ public final class Genie implements Injector {
         return (Provider<T>) provider;
     }
 
-    public <T> void registerProvider(Class<T> type, Provider<? extends T> provider) {
+    public <T> void registerProvider(Class<? super T> type, Provider<? extends T> provider) {
         registerProvider(type, provider, true);
     }
 
-    public <T> void registerNamedProvider(Class<T> type, NamedProvider<T> provider) {
+    public <T> void registerNamedProvider(Class<? super T> type, NamedProvider<? extends T> provider) {
         namedRegistry.put(type, provider);
     }
 
