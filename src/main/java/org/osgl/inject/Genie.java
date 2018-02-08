@@ -1210,7 +1210,7 @@ public final class Genie implements Injector {
                 return true;
             }
         }
-        return false;
+        return beanSpec.hasAnnotation(Singleton.class);
     }
 
 

@@ -469,6 +469,10 @@ public class BeanSpec implements AnnotationAware {
         return new HashSet<>(qualifiers);
     }
 
+    public BeanSpec parent() {
+        return BeanSpec.of(rawType().getSuperclass(), injector());
+    }
+
     public BeanSpec field(String name) {
         return fields().get(name);
     }
@@ -511,8 +515,8 @@ public class BeanSpec implements AnnotationAware {
                 Class<?> fieldType = field.getType();
                 Type fieldGenericType = field.getGenericType();
                 retVal.add(fieldType != fieldGenericType ? beanSpecOf(field, fieldGenericType, typeDeclarations, typeParams) : of(field, injector()));
-                current = current.getSuperclass();
             }
+            current = current.getSuperclass();
         }
         return retVal;
     }
