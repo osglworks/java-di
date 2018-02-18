@@ -2,6 +2,7 @@
 
 ## 1.4.0 - 15/Jan/2018
 
+* `Genie.subjectToInject(BeanSpec beanSpec)` shall return `false` from simple types and collection of simple types #27
 * BeanSpec - add parent() method
 * BeanSpec - add method to get bean spec of all fields #26
 * Support dynamic named provider #25

@@ -120,7 +120,6 @@ public class BeanSpec implements AnnotationAware {
     private Annotation valueLoader;
     private List<Type> typeParams;
     // simple type without injection tag
-    private volatile Boolean shouldCacheProvider;
     private volatile Map<String, BeanSpec> fields;
 
     /**
@@ -818,18 +817,6 @@ public class BeanSpec implements AnnotationAware {
         }
     }
 
-    public boolean shouldCacheProvider() {
-        if (null != shouldCacheProvider) {
-            return shouldCacheProvider;
-        }
-        synchronized (this) {
-            if (null == shouldCacheProvider) {
-                shouldCacheProvider = !($.isSimpleType(rawType()) && !hasInjectDecorator());
-            }
-        }
-        return shouldCacheProvider;
-    }
-
     // keep the effective annotation data
     // - the property annotated with NonBinding is ignored
     private static class AnnoData {
@@ -859,7 +846,7 @@ public class BeanSpec implements AnnotationAware {
         }
 
         private static Map<String, Object> evaluate(Annotation anno) {
-            Map<String, Object> properties = new HashMap<String, Object>();
+            Map<String, Object> properties = new HashMap<>();
             Class<? extends Annotation> annoClass = anno.annotationType();
             Method[] ma = annoClass.getMethods();
             for (Method m : ma) {

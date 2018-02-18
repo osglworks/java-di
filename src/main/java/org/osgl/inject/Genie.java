@@ -737,9 +737,6 @@ public final class Genie implements Injector {
     }
 
     private void addIntoRegistry(BeanSpec spec, Provider<?> val, boolean addIntoExpressRegistry) {
-        if (!spec.shouldCacheProvider()) {
-            return;
-        }
         WeightedProvider current = WeightedProvider.decorate(val);
         Provider<?> old = registry.get(spec);
         if (null == old) {
@@ -946,9 +943,7 @@ public final class Genie implements Injector {
             }
         }
         Provider<?> decorated = decorate(spec, provider, false);
-        if (spec.shouldCacheProvider()) {
-            registry.putIfAbsent(spec, decorated);
-        }
+        registry.putIfAbsent(spec, decorated);
         return decorated;
     }
 
@@ -1192,6 +1187,37 @@ public final class Genie implements Injector {
     }
 
     public boolean subjectToInject(BeanSpec beanSpec) {
+        if (!beanSpec.hasInjectDecorator()) {
+            Class<?> type = beanSpec.rawType();
+            if ($.isSimpleType(type)) {
+                return false;
+            }
+            if (Collection.class.isAssignableFrom(type)) {
+                List<Type> typeParams = beanSpec.typeParams();
+                if (typeParams.isEmpty()) {
+                    return false;
+                }
+                Type elementType = typeParams.get(0);
+                if (!(elementType instanceof Class)) {
+                    return false;
+                }
+                if ($.isSimpleType((Class) elementType)) {
+                    return false;
+                }
+            } else if (Map.class.isAssignableFrom(type)) {
+                List<Type> typeParams = beanSpec.typeParams();
+                if (typeParams.isEmpty()) {
+                    return false;
+                }
+                Type elementType = typeParams.get(1);
+                if (!(elementType instanceof Class)) {
+                    return false;
+                }
+                if ($.isSimpleType((Class) elementType)) {
+                    return false;
+                }
+            }
+        }
         if (registry.containsKey(beanSpec)) {
             return true;
         }
