@@ -1,7 +1,8 @@
 # CHANGE LOG
 
-## 1.4.1
+## 1.5.0
 
+* Update osgl-tool to 1.7.0
 * `BeanSpec.componentSpec()` returns `null` for `List<String>` #29
 * It shall not load value into static fields #28
 
