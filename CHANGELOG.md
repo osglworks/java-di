@@ -1,6 +1,6 @@
 # CHANGE LOG
 
-## 1.5.0
+## 1.5.0 - 4/Mar/2018
 
 * Update osgl-tool to 1.7.0
 * `BeanSpec.componentSpec()` returns `null` for `List<String>` #29
