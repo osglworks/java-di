@@ -1063,6 +1063,9 @@ public final class Genie implements Injector {
         List<FieldInjector> fieldInjectors = C.newList();
         while (null != current && !current.equals(Object.class)) {
             for (Field field : current.getDeclaredFields()) {
+                if (Modifier.isStatic(field.getModifiers())) {
+                    continue;
+                }
                 if (subjectToInject(field)) {
                     field.setAccessible(true);
                     fieldInjectors.add(fieldInjector(field, chain));

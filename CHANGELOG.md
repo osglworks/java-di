@@ -1,5 +1,10 @@
 # CHANGE LOG
 
+## 1.4.1
+
+* `BeanSpec.componentSpec()` returns `null` for `List<String>` #29
+* It shall not load value into static fields #28
+
 ## 1.4.0 - 15/Jan/2018
 
 * `Genie.subjectToInject(BeanSpec beanSpec)` shall return `false` from simple types and collection of simple types #27

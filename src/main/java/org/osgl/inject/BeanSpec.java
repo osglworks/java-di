@@ -116,6 +116,7 @@ public class BeanSpec implements AnnotationAware {
     private MapKey mapKey;
     private Class<? extends Annotation> scope;
     private BeanSpec componentSpec;
+    private volatile boolean componentSpecSet;
     private boolean stopInheritedScope;
     private Annotation valueLoader;
     private List<Type> typeParams;
@@ -145,9 +146,6 @@ public class BeanSpec implements AnnotationAware {
         this.name = name;
         Class<?> rawType = rawType();
         this.isArray = rawType.isArray();
-        if (this.isArray) {
-            this.componentSpec = BeanSpec.of(rawType.getComponentType(), injector);
-        }
         this.resolveTypeAnnotations(injector);
         this.resolveAnnotations(annotations, injector);
         this.hc = calcHashCode();
@@ -406,6 +404,21 @@ public class BeanSpec implements AnnotationAware {
     }
 
     public BeanSpec componentSpec() {
+        if (!componentSpecSet) {
+            synchronized (this) {
+                if (!componentSpecSet) {
+                    componentSpecSet = true;
+                    if (isArray()) {
+                        componentSpec = BeanSpec.of(rawType.getComponentType(), injector);
+                    } else {
+                        List<Type> typeParams = typeParams();
+                        if (!typeParams.isEmpty()) {
+                            componentSpec = BeanSpec.of(typeParams.get(0), injector);
+                        }
+                    }
+                }
+            }
+        }
         return componentSpec;
     }
 
