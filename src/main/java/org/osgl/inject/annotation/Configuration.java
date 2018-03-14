@@ -36,9 +36,20 @@ import java.lang.annotation.*;
 public @interface Configuration {
 
     /**
+     * The name of {@link #defaultValue()} property.
+     */
+    String DEFAULT_VALUE_PROP = "defaultValue";
+
+    /**
      * Specify the configuration key.
      *
      * @return the configuration key
      */
     String value();
+
+    /**
+     * Specify the default value of the configuration
+     * @return the default value
+     */
+    String defaultValue() default "";
 }

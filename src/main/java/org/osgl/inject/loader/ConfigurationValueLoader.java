@@ -24,6 +24,7 @@ import org.osgl.$;
 import org.osgl.inject.BeanSpec;
 import org.osgl.inject.InjectException;
 import org.osgl.inject.ValueLoader;
+import org.osgl.inject.annotation.Configuration;
 import org.osgl.util.S;
 import org.osgl.util.StringValueResolver;
 
@@ -32,13 +33,20 @@ import org.osgl.util.StringValueResolver;
  */
 public abstract class ConfigurationValueLoader<T> extends ValueLoader.Base<T> {
 
+    protected String defaultValue;
+
+    @Override
+    protected void initialized() {
+        this.defaultValue = S.string(options.get(Configuration.DEFAULT_VALUE_PROP));
+    }
+
     @Override
     public T get() {
         String confKey = value();
         if (S.isBlank(confKey)) {
             throw new InjectException(("Missing configuration key"));
         }
-        Object conf = conf(confKey);
+        Object conf = conf(confKey, defaultValue);
         if (null == conf) {
             return null;
         }
@@ -46,11 +54,21 @@ public abstract class ConfigurationValueLoader<T> extends ValueLoader.Base<T> {
     }
 
     /**
+     * Returns the default value set to `@Configuration`
+     * @return default value
+     */
+    protected final String defaultValue() {
+        return defaultValue;
+    }
+
+    /**
      * Return whatever configured by `key`
+     *
      * @param key the configuration key
+     * @param defaultValue the default value
      * @return the configured value
      */
-    protected abstract Object conf(String key);
+    protected abstract Object conf(String key, String defaultValue);
 
     private T cast(Object val, BeanSpec spec) {
         Class<?> type = spec.rawType();

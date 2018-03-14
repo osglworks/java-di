@@ -394,7 +394,7 @@ public class GenieTest extends TestBase {
 
     private static class SimpleConfigurationValueLoader extends ConfigurationValueLoader {
         @Override
-        protected Object conf(String key) {
+        protected Object conf(String key, String defaultValue) {
             return key.length();
         }
     }

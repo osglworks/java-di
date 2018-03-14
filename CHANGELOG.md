@@ -1,5 +1,9 @@
 # CHANGE LOG
 
+## 1.6.0 - 13/Mar/2018
+* ConfigurationLoader - support default value #30
+* Update osgl-tool to 1.7.2
+
 ## 1.5.0 - 4/Mar/2018
 
 * Update osgl-tool to 1.7.0
