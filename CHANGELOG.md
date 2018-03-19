@@ -1,5 +1,9 @@
 # CHANGE LOG
 
+## 1.6.1 - 20/Mar/2018
+* BeanSpec - make `fields()` returns field specs indexed by original name #31
+* Update osgl-tool to 1.7.3
+
 ## 1.6.0 - 13/Mar/2018
 * ConfigurationLoader - support default value #30
 * Update osgl-tool to 1.7.2

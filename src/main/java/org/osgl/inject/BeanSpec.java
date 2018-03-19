@@ -112,6 +112,7 @@ public class BeanSpec implements AnnotationAware {
     /**
      * Store the name value of Named annotation if presented.
      */
+    private String originalName;
     private String name;
     private MapKey mapKey;
     private Class<? extends Annotation> scope;
@@ -143,6 +144,7 @@ public class BeanSpec implements AnnotationAware {
     private BeanSpec(Type type, Annotation[] annotations, String name, Injector injector, int modifiers) {
         this.injector = injector;
         this.type = type;
+        this.originalName = name;
         this.name = name;
         Class<?> rawType = rawType();
         this.isArray = rawType.isArray();
@@ -153,6 +155,7 @@ public class BeanSpec implements AnnotationAware {
     }
 
     private BeanSpec(BeanSpec source, Type convertTo) {
+        this.originalName = source.name;
         this.name = source.name;
         this.injector = source.injector;
         this.type = convertTo;
@@ -171,6 +174,7 @@ public class BeanSpec implements AnnotationAware {
     }
 
     private BeanSpec(BeanSpec source, String name) {
+        this.originalName = source.name;
         this.name = name;
         this.injector = source.injector;
         this.type = source.type;
@@ -502,6 +506,10 @@ public class BeanSpec implements AnnotationAware {
                 Map<String, BeanSpec> map = new HashMap<>();
                 for (BeanSpec spec: fields($.F.<Field>yes())) {
                     map.put(spec.name, spec);
+                    // need to treat the alias of field name
+                    if (spec.originalName != spec.name) {
+                        map.put(spec.originalName, spec);
+                    }
                 }
                 fields = Collections.unmodifiableMap(map);
             }
