@@ -1,5 +1,8 @@
 # CHANGE LOG
 
+1.6.2 - 25/Mar/2018
+* update osgl-tool to 1.8.0
+
 ## 1.6.1 - 20/Mar/2018
 * BeanSpec - make `fields()` returns field specs indexed by original name #31
 * Update osgl-tool to 1.7.3
