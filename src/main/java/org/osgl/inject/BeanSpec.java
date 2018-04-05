@@ -364,7 +364,7 @@ public class BeanSpec implements AnnotationAware {
         return new BeanSpec(this, ((ParameterizedType) type).getActualTypeArguments()[0]);
     }
 
-    BeanSpec withoutName() {
+    public BeanSpec withoutName() {
         return new BeanSpec(this, (String) null);
     }
 
