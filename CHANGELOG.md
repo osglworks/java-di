@@ -2,6 +2,7 @@
 
 1.7.0
 * Make `BeanSpec.withoutName()` be public #32
+* update osgl-tool to 1.10.0
 
 1.6.4 - 02/Apr/2018
 * update osgl-tool to 1.9.0
