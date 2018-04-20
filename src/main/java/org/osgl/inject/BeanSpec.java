@@ -23,6 +23,7 @@ package org.osgl.inject;
 import org.osgl.$;
 import org.osgl.inject.annotation.*;
 import org.osgl.inject.util.AnnotationUtil;
+import org.osgl.inject.util.ParameterizedTypeImpl;
 import org.osgl.util.AnnotationAware;
 import org.osgl.util.C;
 import org.osgl.util.E;
@@ -65,6 +66,11 @@ public class BeanSpec implements AnnotationAware {
      * The raw type of {@link #type()}
      */
     private transient volatile Class<?> rawType;
+
+    /**
+     * The origin of this BeanSpec
+     */
+    private Field field;
 
     /**
      * Is the bean an array type or not.
@@ -486,7 +492,27 @@ public class BeanSpec implements AnnotationAware {
     }
 
     public BeanSpec parent() {
-        return BeanSpec.of(rawType().getSuperclass(), injector());
+        return BeanSpec.of(rawType().getGenericSuperclass(), injector());
+    }
+
+    public boolean isObject() {
+        return Object.class == rawType();
+    }
+
+    public boolean isNotObject() {
+        return Object.class != rawType();
+    }
+
+    Constructor getDeclaredConstructor() {
+        try {
+            return rawType().getDeclaredConstructor();
+        } catch (NoSuchMethodException e) {
+            throw new InjectException(e, "cannot instantiate %s", rawType);
+        }
+    }
+
+    Method[] getDeclaredMethods() {
+        return rawType().getDeclaredMethods();
     }
 
     public BeanSpec field(String name) {
@@ -517,6 +543,10 @@ public class BeanSpec implements AnnotationAware {
         return fields;
     }
 
+    public List<BeanSpec> nonStaticFields() {
+        return fields(NON_STATIC_FIELD);
+    }
+
     /**
      * Returns a list of `BeanSpec` for all fields including super class fields.
      * @param filter a function to filter out fields that are not needed.
@@ -524,32 +554,86 @@ public class BeanSpec implements AnnotationAware {
      */
     public List<BeanSpec> fields($.Predicate<Field> filter) {
         List<BeanSpec> retVal = new ArrayList<>();
-        Class<?> current = rawType();
-        List<Type> typeParams = typeParams();
-        Type[] typeDeclarations = current.getTypeParameters();
-        while (null != current && !current.equals(Object.class)) {
-            for (Field field : current.getDeclaredFields()) {
+        BeanSpec current = this;
+        Type[] typeDeclarations = rawType().getTypeParameters();
+        while (null != current && current.isNotObject()) {
+            Type[] fieldTypeParams = null;
+            Type[] classTypeParams;
+            Map<String, Type> typeParamsMapping = new HashMap<>();
+            for (Field field : current.rawType().getDeclaredFields()) {
                 if (!filter.test(field)) {
                     continue;
                 }
-                Class<?> fieldType = field.getType();
                 Type fieldGenericType = field.getGenericType();
-                retVal.add(fieldType != fieldGenericType ? beanSpecOf(field, fieldGenericType, typeDeclarations, typeParams) : of(field, injector()));
+                if (fieldGenericType instanceof ParameterizedType) {
+                    if (null == fieldTypeParams) {
+                        fieldTypeParams = ((ParameterizedType) fieldGenericType).getActualTypeArguments();
+                        if (fieldTypeParams != null && fieldTypeParams.length > 0) {
+                            classTypeParams = current.rawType().getTypeParameters();
+                            if (classTypeParams != null && classTypeParams.length > 0) {
+                                List<Type> classTypeImpls = current.typeParams();
+                                for (int i = 0; i < classTypeParams.length; ++i) {
+                                    if (i >= classTypeImpls.size()) {
+                                        break;
+                                    }
+                                    Type classTypeParam = classTypeParams[i];
+                                    if (classTypeParam instanceof TypeVariable) {
+                                        typeParamsMapping.put(((TypeVariable) classTypeParam).getName(), classTypeImpls.get(i));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    boolean updated = false;
+                    if (!typeParamsMapping.isEmpty()) {
+                        for (int i = 0; i < fieldTypeParams.length; ++i) {
+                            Type typeArg = fieldTypeParams[i];
+                            if (typeArg instanceof TypeVariable) {
+                                String name = ((TypeVariable) typeArg).getName();
+                                Type typeImpl = typeParamsMapping.get(name);
+                                if (null != typeImpl && $.ne(typeImpl, typeArg)) {
+                                    updated = true;
+                                    fieldTypeParams[i] = typeImpl;
+                                }
+                            }
+                        }
+                    }
+                    if (updated) {
+                        fieldGenericType = new ParameterizedTypeImpl(fieldTypeParams, ((ParameterizedType) fieldGenericType).getOwnerType(), ((ParameterizedType) fieldGenericType).getRawType());
+                    }
+                    retVal.add(beanSpecOf(field, fieldGenericType));
+                } else if (fieldGenericType instanceof TypeVariable) {
+                    boolean added = false;
+                    for (int i = typeDeclarations.length - 1; i >= 0; --i) {
+                        if (typeDeclarations[i].equals(fieldGenericType)) {
+                            fieldGenericType = typeParams().get(i);
+                            retVal.add(beanSpecOf(field, fieldGenericType));
+                            added = true;
+                            break;
+                        }
+                    }
+                    if (!added) {
+                        throw new InjectException("Cannot infer field type: " + field);
+                    }
+                } else {
+                    retVal.add(of(field, injector()));
+                }
             }
-            current = current.getSuperclass();
+            current = current.parent();
         }
         return retVal;
     }
 
     // find the beanspec of a field with generic type
-    private BeanSpec beanSpecOf(Field field, Type genericType, Type[] typeArgs, List<Type> typeImpls) {
-        int len = typeArgs.length;
-        for (int i = 0; i < len; ++i) {
-            if (genericType.equals(typeArgs[i])) {
-                return of(field, typeImpls.get(i), injector());
-            }
-        }
-        return of(field, injector);
+    private BeanSpec beanSpecOf(Field field, Type genericType) {
+        return of(field, genericType, injector);
+//        int len = typeArgs.size();
+//        for (int i = 0; i < len; ++i) {
+//            if (genericType.equals(typeArgs.get(i))) {
+//                return of(field, typeImpls.get(i), injector());
+//            }
+//        }
+//        return of(field, injector);
     }
 
     boolean hasElementLoader() {
@@ -587,6 +671,21 @@ public class BeanSpec implements AnnotationAware {
     BeanSpec scope(Class<? extends Annotation> scopeAnno) {
         scope = scopeAnno;
         return this;
+    }
+
+    void makeFieldAccessible() {
+        E.illegalStateIf(null == field);
+        field.setAccessible(true);
+    }
+
+    void setField(Object bean, Object value) {
+        E.illegalStateIf(null == field);
+        try {
+            field.set(bean, value);
+        } catch (Exception e) {
+            throw new InjectException(e, "Unable to inject field value on %s", bean.getClass());
+        }
+
     }
 
     boolean notConstructable() {
@@ -783,6 +882,11 @@ public class BeanSpec implements AnnotationAware {
         return $.hc(type, name, annoData);
     }
 
+    private BeanSpec setField(Field field) {
+        this.field = field;
+        return this;
+    }
+
     public static BeanSpec of(Class<?> clazz, Injector injector) {
         return new BeanSpec(clazz, null, null, injector, 0);
     }
@@ -809,12 +913,16 @@ public class BeanSpec implements AnnotationAware {
 
     public static BeanSpec of(Field field, Injector injector) {
         Annotation[] annotations = field.getDeclaredAnnotations();
-        return BeanSpec.of(field.getGenericType(), annotations, field.getName(), injector, field.getModifiers());
+        Type fieldType = field.getGenericType();
+        if (fieldType instanceof TypeVariable) {
+            fieldType = field.getType();
+        }
+        return BeanSpec.of(fieldType, annotations, field.getName(), injector, field.getModifiers()).setField(field);
     }
 
     private static BeanSpec of(Field field, Type realType, Injector injector) {
         Annotation[] annotations = field.getDeclaredAnnotations();
-        return of(realType, annotations, field.getName(), injector, field.getModifiers());
+        return of(realType, annotations, field.getName(), injector, field.getModifiers()).setField(field);
     }
 
     /**
@@ -899,5 +1007,12 @@ public class BeanSpec implements AnnotationAware {
             return annotation.annotationType().getName().endsWith("Nonbinding");
         }
     }
+
+    private static $.Predicate<Field> NON_STATIC_FIELD = new $.Predicate<Field>() {
+        @Override
+        public boolean test(Field field) {
+            return !Modifier.isStatic(field.getModifiers());
+        }
+    };
 
 }

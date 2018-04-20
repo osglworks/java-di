@@ -1,5 +1,9 @@
 # CHANGE LOG
 
+1.7.1
+* `BeanSpec.parent()` shall populate type param implementation #33
+* Super type's type parameter info lost in field provider lookup logic #34
+
 1.7.0
 * Make `BeanSpec.withoutName()` be public #32
 * update osgl-tool to 1.10.0

@@ -9,9 +9,9 @@ package org.osgl.inject;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -65,7 +65,7 @@ public final class Genie implements Injector {
      * to define a custom binding.
      *
      * @param <T>
-     *           A generic type of binding object
+     *         A generic type of binding object
      */
     public static class Binder<T> {
         private Class<T> type;
@@ -80,7 +80,9 @@ public final class Genie implements Injector {
 
         /**
          * Create a `Binder` for specified class
-         * @param type the type to be bound
+         *
+         * @param type
+         *         the type to be bound
          */
         public Binder(Class<T> type) {
             this.type = type;
@@ -94,11 +96,10 @@ public final class Genie implements Injector {
          * will throw out an {@link IllegalStateException}
          *
          * @param impl
-         *      the implementation class
-         * @return
-         *      this binder instance
+         *         the implementation class
+         * @return this binder instance
          * @throws IllegalStateException
-         *      if another binding exists
+         *         if another binding exists
          */
         public Binder<T> to(final Class<? extends T> impl) {
             ensureNoBinding();
@@ -113,11 +114,10 @@ public final class Genie implements Injector {
          * will throw out an {@link IllegalStateException}
          *
          * @param instance
-         *      the instance to which the Binder is bound
-         * @return
-         *      this binder instance
+         *         the instance to which the Binder is bound
+         * @return this binder instance
          * @throws IllegalStateException
-         *      if another binding exists
+         *         if another binding exists
          */
         public Binder<T> to(final T instance) {
             ensureNoBinding();
@@ -137,11 +137,10 @@ public final class Genie implements Injector {
          * will throw out an {@link IllegalStateException}
          *
          * @param provider
-         *      the provider that provides the instance to which this binder is bound
-         * @return
-         *      this binder instance
+         *         the provider that provides the instance to which this binder is bound
+         * @return this binder instance
          * @throws IllegalStateException
-         *      if another binding exists
+         *         if another binding exists
          */
         public Binder<T> to(Provider<? extends T> provider) {
             ensureNoBinding();
@@ -156,11 +155,10 @@ public final class Genie implements Injector {
          * will throw out an {@link IllegalStateException}
          *
          * @param constructor
-         *      the constructor that generate the instance to which this binder is bound
-         * @return
-         *      this binder instance
+         *         the constructor that generate the instance to which this binder is bound
+         * @return this binder instance
          * @throws IllegalStateException
-         *      if another binding exists
+         *         if another binding exists
          */
         public Binder<T> to(final Constructor<? extends T> constructor) {
             ensureNoBinding();
@@ -181,17 +179,16 @@ public final class Genie implements Injector {
          * will throw out an {@link IllegalStateException}
          *
          * @param implement
-         *      the class of the target instance
+         *         the class of the target instance
          * @param args
-         *      the constructor argument types
-         * @return
-         *      this binder instance
-         * @throws
-         *      InjectException if no constructor found by the spec
+         *         the constructor argument types
+         * @return this binder instance
+         * @throws InjectException
+         *         if no constructor found by the spec
          * @throws IllegalStateException
-         *      if another binding exists
+         *         if another binding exists
          */
-        public Binder<T> toConstructor(Class<? extends T> implement, Class<?> ... args) {
+        public Binder<T> toConstructor(Class<? extends T> implement, Class<?>... args) {
             ensureNoBinding();
             try {
                 return to(implement.getConstructor(args));
@@ -216,11 +213,10 @@ public final class Genie implements Injector {
          * {@link IllegalArgumentException}
          *
          * @param name
-         *      the name of the binding
-         * @return
-         *      this `Binder` instance
+         *         the name of the binding
+         * @return this `Binder` instance
          * @throws IllegalArgumentException
-         *      if there is name already registered
+         *         if there is name already registered
          */
         public Binder<T> named(String name) {
             E.illegalStateIf(null != this.name, "name has already been specified");
@@ -239,13 +235,12 @@ public final class Genie implements Injector {
          * Otherwise a {@link InjectException} will be thrown out.
          *
          * @param scope
-         *      the scope annotation class
-         * @return
-         *      this binder instance
+         *         the scope annotation class
+         * @return this binder instance
          * @throws InjectException
-         *      if the scope class is not annotated with {@link Scope}
+         *         if the scope class is not annotated with {@link Scope}
          * @throws IllegalStateException
-         *      if there is already a scope annotation constraint put on this binder
+         *         if there is already a scope annotation constraint put on this binder
          * @see Scope
          */
         public Binder<T> in(Class<? extends Annotation> scope) {
@@ -267,13 +262,12 @@ public final class Genie implements Injector {
          * This method is deprecated. Please use {@link #qualifiedWith(Class[])} instead
          *
          * @param annotations
-         *      an array of annotation classes
-         * @return
-         *      this binder instance
+         *         an array of annotation classes
+         * @return this binder instance
          * @see Qualifier
          */
         @Deprecated
-        public Binder<T> withAnnotation(Class<? extends Annotation> ... annotations) {
+        public Binder<T> withAnnotation(Class<? extends Annotation>... annotations) {
             for (Class<? extends Annotation> annotation : annotations) {
                 this.annotations.add(AnnotationUtil.createAnnotation(annotation));
             }
@@ -290,13 +284,12 @@ public final class Genie implements Injector {
          * This method is deprecated. Please use {@link #qualifiedWith(Annotation...)} instead
          *
          * @param annotations
-         *      an array of annotation classes
-         * @return
-         *      this binder instance
+         *         an array of annotation classes
+         * @return this binder instance
          * @see Qualifier
          */
         @Deprecated
-        public Binder<T> withAnnotation(Annotation ... annotations) {
+        public Binder<T> withAnnotation(Annotation... annotations) {
             this.annotations.addAll(C.listOf(annotations));
             this.fireEvent = false;
             return this;
@@ -309,14 +302,13 @@ public final class Genie implements Injector {
          * Otherwise an {@link InjectException} will be thrown out
          *
          * @param qualifiers
-         *      an array of qualifier annotation types
-         * @return
-         *      this binder instance
+         *         an array of qualifier annotation types
+         * @return this binder instance
          * @throws InjectException
-         *      if the any qualifier class is not tagged with {@link Qualifier}
+         *         if the any qualifier class is not tagged with {@link Qualifier}
          * @see Qualifier
          */
-        public Binder<T> qualifiedWith(Class<? extends Annotation> ... qualifiers) {
+        public Binder<T> qualifiedWith(Class<? extends Annotation>... qualifiers) {
             for (Class<? extends Annotation> qualifier : qualifiers) {
                 if (!qualifier.isAnnotationPresent(Qualifier.class)) {
                     throw new InjectException(
@@ -336,11 +328,10 @@ public final class Genie implements Injector {
          * annotation. Otherwise an {@link InjectException} will be thrown out
          *
          * @param qualifiers
-         *      an array of qualifier annotations
-         * @return
-         *      this binder instance
+         *         an array of qualifier annotations
+         * @return this binder instance
          * @throws InjectException
-         *      if the any qualifier's class is not tagged with {@link Qualifier}
+         *         if the any qualifier's class is not tagged with {@link Qualifier}
          * @see Qualifier
          */
         public Binder<T> qualifiedWith(Annotation... qualifiers) {
@@ -399,7 +390,8 @@ public final class Genie implements Injector {
         /**
          * Register this binder to `Genie`
          *
-         * @param genie the dependency injector
+         * @param genie
+         *         the dependency injector
          */
         public void register(Genie genie) {
             if (null == provider) {
@@ -458,12 +450,10 @@ public final class Genie implements Injector {
     }
 
     private static class FieldInjector {
-        private final Field field;
         private final BeanSpec fieldSpec;
         private final Provider provider;
 
-        FieldInjector(Field field, BeanSpec fieldSpec, Provider provider) {
-            this.field = field;
+        FieldInjector(BeanSpec fieldSpec, Provider provider) {
             this.fieldSpec = fieldSpec;
             this.provider = provider;
         }
@@ -473,17 +463,13 @@ public final class Genie implements Injector {
             if (null == obj) {
                 return;
             }
-            try {
-                field.set(bean, obj);
-            } catch (Exception e) {
-                throw new InjectException(e, "Unable to inject field value on %s", bean.getClass());
-            }
+            fieldSpec.setField(bean, obj);
         }
 
 
         @Override
         public String toString() {
-            return $.fmt("Field for %s", field);
+            return $.fmt("Field injector for: " + fieldSpec);
         }
     }
 
@@ -579,7 +565,9 @@ public final class Genie implements Injector {
 
     /**
      * Check if a type has already been registered with a binding already
-     * @param type the class
+     *
+     * @param type
+     *         the class
      * @return `true` if the type has already been registered to Genie with a binding
      */
     public boolean hasProvider(Class<?> type) {
@@ -890,6 +878,7 @@ public final class Genie implements Injector {
                 public Provider<?> get() {
                     return new Provider() {
                         private volatile Provider realProvider;
+
                         @Override
                         public Object get() {
                             if (null == realProvider) {
@@ -980,7 +969,7 @@ public final class Genie implements Injector {
     private Provider buildProvider(BeanSpec spec, Set<BeanSpec> chain) {
         Class target = spec.rawType();
         Constructor constructor = constructor(target);
-        return null != constructor ? buildConstructor(constructor, spec, chain) : buildFieldMethodInjector(target, spec, chain);
+        return null != constructor ? buildConstructor(constructor, spec, chain) : buildFieldMethodInjector(spec, chain);
     }
 
     private Provider buildConstructor(final Constructor constructor, final BeanSpec spec, final Set<BeanSpec> chain) {
@@ -999,52 +988,48 @@ public final class Genie implements Injector {
         };
     }
 
-    private Provider buildFieldMethodInjector(final Class target, final BeanSpec spec, Set<BeanSpec> chain) {
-        final List<FieldInjector> fieldInjectors = fieldInjectors(target, chain);
-        final List<MethodInjector> methodInjectors = methodInjectors(target, chain);
-        try {
-            final Constructor constructor = target.getDeclaredConstructor();
-            if (null == constructor) {
-                throw new InjectException("cannot instantiate %s: %s", spec, "no default constructor found");
-            }
-            constructor.setAccessible(true);
-            return new Provider() {
-                @Override
-                public Object get() {
-                    try {
-                        Object bean = constructor.newInstance();
-                        for (FieldInjector fj : fieldInjectors) {
-                            if (supportInjectionPoint) {
-                                TGT_SPEC.set(fj.fieldSpec);
-                            }
-                            try {
-                                fj.applyTo(bean);
-                            } finally {
-                                if (supportInjectionPoint) {
-                                    TGT_SPEC.remove();
-                                }
-                            }
-                        }
-                        for (MethodInjector mj : methodInjectors) {
-                            mj.applyTo(bean);
-                        }
-                        return bean;
-                    } catch (RuntimeException e) {
-                        throw e;
-                    } catch (InvocationTargetException e) {
-                        Throwable t = e.getTargetException();
-                        if (t instanceof RuntimeException) {
-                            throw (RuntimeException) t;
-                        }
-                        throw new InjectException(t, "cannot instantiate %s", spec);
-                    } catch (Exception e) {
-                        throw new InjectException(e, "cannot instantiate %s", spec);
-                    }
-                }
-            };
-        } catch (NoSuchMethodException e) {
-            throw new InjectException(e, "cannot instantiate %s", spec);
+    private Provider buildFieldMethodInjector(final BeanSpec spec, Set<BeanSpec> chain) {
+        final List<FieldInjector> fieldInjectors = fieldInjectors(spec, chain);
+        final List<MethodInjector> methodInjectors = methodInjectors(spec, chain);
+        final Constructor constructor = spec.getDeclaredConstructor();
+        if (null == constructor) {
+            throw new InjectException("cannot instantiate %s: %s", spec, "no default constructor found");
         }
+        constructor.setAccessible(true);
+        return new Provider() {
+            @Override
+            public Object get() {
+                try {
+                    Object bean = constructor.newInstance();
+                    for (FieldInjector fj : fieldInjectors) {
+                        if (supportInjectionPoint) {
+                            TGT_SPEC.set(fj.fieldSpec);
+                        }
+                        try {
+                            fj.applyTo(bean);
+                        } finally {
+                            if (supportInjectionPoint) {
+                                TGT_SPEC.remove();
+                            }
+                        }
+                    }
+                    for (MethodInjector mj : methodInjectors) {
+                        mj.applyTo(bean);
+                    }
+                    return bean;
+                } catch (RuntimeException e) {
+                    throw e;
+                } catch (InvocationTargetException e) {
+                    Throwable t = e.getTargetException();
+                    if (t instanceof RuntimeException) {
+                        throw (RuntimeException) t;
+                    }
+                    throw new InjectException(t, "cannot instantiate %s", spec);
+                } catch (Exception e) {
+                    throw new InjectException(e, "cannot instantiate %s", spec);
+                }
+            }
+        };
     }
 
     private Constructor constructor(Class target) {
@@ -1058,43 +1043,39 @@ public final class Genie implements Injector {
         return null;
     }
 
-    private List<FieldInjector> fieldInjectors(Class type, Set<BeanSpec> chain) {
-        Class<?> current = type;
+    private List<FieldInjector> fieldInjectors(BeanSpec target, Set<BeanSpec> chain) {
+        BeanSpec current = target;
         List<FieldInjector> fieldInjectors = C.newList();
-        while (null != current && !current.equals(Object.class)) {
-            for (Field field : current.getDeclaredFields()) {
-                if (Modifier.isStatic(field.getModifiers())) {
-                    continue;
-                }
-                if (subjectToInject(field)) {
-                    field.setAccessible(true);
-                    fieldInjectors.add(fieldInjector(field, chain));
+        while (null != current && !current.isObject()) {
+            for (BeanSpec fieldSpec : current.nonStaticFields()) {
+                if (subjectToInject(fieldSpec)) {
+                    fieldSpec.makeFieldAccessible();
+                    fieldInjectors.add(fieldInjector(fieldSpec, chain));
                 }
             }
-            current = current.getSuperclass();
+            current = current.parent();
         }
         return fieldInjectors;
     }
 
-    private FieldInjector fieldInjector(Field field, Set<BeanSpec> chain) {
-        BeanSpec fieldSpec = BeanSpec.of(field, this);
+    private FieldInjector fieldInjector(BeanSpec fieldSpec, Set<BeanSpec> chain) {
         if (chain.contains(fieldSpec)) {
             foundCircularDependency(chain, fieldSpec);
         }
-        return new FieldInjector(field, fieldSpec, findProvider(fieldSpec, chain(chain, fieldSpec)));
+        return new FieldInjector(fieldSpec, findProvider(fieldSpec, chain(chain, fieldSpec)));
     }
 
-    private List<MethodInjector> methodInjectors(Class type, Set<BeanSpec> chain) {
-        Class<?> current = type;
+    private List<MethodInjector> methodInjectors(BeanSpec target, Set<BeanSpec> chain) {
+        BeanSpec current = target;
         List<MethodInjector> methodInjectors = C.newList();
-        while (null != current && !current.equals(Object.class)) {
+        while (null != current && !current.isObject()) {
             for (Method method : current.getDeclaredMethods()) {
                 if (subjectToInject(method)) {
                     method.setAccessible(true);
                     methodInjectors.add(methodInjector(method, chain));
                 }
             }
-            current = current.getSuperclass();
+            current = current.parent();
         }
         return methodInjectors;
     }
@@ -1250,7 +1231,8 @@ public final class Genie implements Injector {
     /**
      * Create a Genie instance with modules specified
      *
-     * @param modules modules that provides binding or @Provides methods
+     * @param modules
+     *         modules that provides binding or @Provides methods
      * @return an new Genie instance with modules
      */
     public static Genie create(Object... modules) {
@@ -1260,7 +1242,8 @@ public final class Genie implements Injector {
     /**
      * Create a Genie instance with modules specified
      *
-     * @param modules modules that provides binding or @Provides methods
+     * @param modules
+     *         modules that provides binding or @Provides methods
      * @return an new Genie instance with modules
      */
     public static Genie createWithoutPlugins(Object... modules) {
