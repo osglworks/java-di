@@ -80,7 +80,7 @@ public abstract class ArrayLoader<T> {
             boolean[] a = new boolean[sz];
             int i = 0;
             for (Object o: list) {
-                a[i++] = (Boolean) o;
+                a[i++] = null == o ? false : (Boolean) o;
             }
             return a;
         }
@@ -100,7 +100,7 @@ public abstract class ArrayLoader<T> {
             byte[] a = new byte[sz];
             int i = 0;
             for (Object o: list) {
-                a[i++] = (Byte) o;
+                a[i++] = null == o ? 0 : (Byte) o;
             }
             return a;
         }
@@ -120,7 +120,7 @@ public abstract class ArrayLoader<T> {
             char[] a = new char[sz];
             int i = 0;
             for (Object o: list) {
-                a[i++] = (Character) o;
+                a[i++] = null == o ? 0 : (Character) o;
             }
             return a;
         }
@@ -140,7 +140,7 @@ public abstract class ArrayLoader<T> {
             short[] a = new short[sz];
             int i = 0;
             for (Object o: list) {
-                a[i++] = (Short) o;
+                a[i++] = null == o ? 0 : (Short) o;
             }
             return a;
         }
@@ -160,7 +160,7 @@ public abstract class ArrayLoader<T> {
             int[] a = new int[sz];
             int i = 0;
             for (Object o: list) {
-                a[i++] = (Integer)o;
+                a[i++] = null == o ? 0 : (Integer)o;
             }
             return a;
         }
@@ -180,7 +180,7 @@ public abstract class ArrayLoader<T> {
             float[] a = new float[sz];
             int i = 0;
             for (Object o: list) {
-                a[i++] = (Float) o;
+                a[i++] = null == o ? 0.0f : (Float) o;
             }
             return a;
         }
@@ -200,7 +200,7 @@ public abstract class ArrayLoader<T> {
             long[] a = new long[sz];
             int i = 0;
             for (Object o: list) {
-                a[i++] = (Long) o;
+                a[i++] = null == o ? 0l : (Long) o;
             }
             return a;
         }
@@ -220,7 +220,7 @@ public abstract class ArrayLoader<T> {
             double[] a = new double[sz];
             int i = 0;
             for (Object o: list) {
-                a[i++] = (Double) o;
+                a[i++] = null == o ? 0.0d : (Double) o;
             }
             return a;
         }

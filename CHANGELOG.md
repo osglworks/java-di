@@ -1,6 +1,7 @@
 # CHANGE LOG
 
 1.7.1
+* `ArrayLoader` - when loading primitive type elements it shall convert `null` to default value #35
 * `BeanSpec.parent()` shall populate type param implementation #33
 * Super type's type parameter info lost in field provider lookup logic #34
 
