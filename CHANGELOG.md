@@ -4,6 +4,7 @@
 * `ArrayLoader` - when loading primitive type elements it shall convert `null` to default value #35
 * `BeanSpec.parent()` shall populate type param implementation #33
 * Super type's type parameter info lost in field provider lookup logic #34
+* update osgl-tool to 1.11.1
 
 1.7.0
 * Make `BeanSpec.withoutName()` be public #32
