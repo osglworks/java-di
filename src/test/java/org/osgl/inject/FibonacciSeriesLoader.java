@@ -21,7 +21,6 @@ package org.osgl.inject;
  */
 
 import org.osgl.$;
-import org.osgl.Osgl;
 import org.osgl.inject.loader.ElementLoaderBase;
 import org.osgl.util.C;
 import org.osgl.util.N;
@@ -59,7 +58,7 @@ class FibonacciSeriesLoader extends ElementLoaderBase<Integer> {
     }
 
     @Override
-    public Osgl.Function<Integer, Boolean> filter(Map<String, Object> options, BeanSpec container) {
+    public $.Function<Integer, Boolean> filter(Map<String, Object> options, BeanSpec container) {
         final int max = toInt(options.get("max"));
         return new $.Predicate<Integer>() {
             @Override

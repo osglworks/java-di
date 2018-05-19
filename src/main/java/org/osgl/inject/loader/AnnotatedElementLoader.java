@@ -21,7 +21,6 @@ package org.osgl.inject.loader;
  */
 
 import org.osgl.$;
-import org.osgl.Osgl;
 import org.osgl.inject.BeanSpec;
 import org.osgl.inject.ElementType;
 import org.osgl.inject.Genie;
@@ -81,14 +80,14 @@ public abstract class AnnotatedElementLoader extends ElementLoaderBase<Object> {
      * @return a predicate function as described above
      */
     @Override
-    public Osgl.Function filter(Map<String, Object> options, BeanSpec container) {
+    public $.Function filter(Map<String, Object> options, BeanSpec container) {
         Object hint = options.get("value");
         E.illegalArgumentIf(!Annotation.class.isAssignableFrom((Class) hint));
         final Class<? extends Annotation> annoClass = annoClassFromHint(hint);
         final ElementType elementType = elementType(options, container);
         final boolean loadNonPublic = (Boolean)options.get("loadNonPublic");
         final boolean loadAbstract = elementType.loadAbstract() && (Boolean) options.get("loadAbstract");
-        return new Osgl.Predicate() {
+        return new $.Predicate() {
             @Override
             public boolean test(Object o) {
                 if (elementType == ElementType.BEAN) {

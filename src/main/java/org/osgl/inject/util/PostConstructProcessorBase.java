@@ -20,11 +20,11 @@ package org.osgl.inject.util;
  * #L%
  */
 
-import org.osgl.Osgl;
+import org.osgl.$;
 import org.osgl.inject.PostConstructProcessor;
 
 /**
  * Base class for implementing {@link org.osgl.inject.PostConstructProcessor}
  */
-public abstract class PostConstructProcessorBase<T> extends Osgl.Visitor<T> implements PostConstructProcessor<T> {
+public abstract class PostConstructProcessorBase<T> extends $.Visitor<T> implements PostConstructProcessor<T> {
 }

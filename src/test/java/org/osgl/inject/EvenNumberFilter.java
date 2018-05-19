@@ -20,14 +20,14 @@ package org.osgl.inject;
  * #L%
  */
 
-import org.osgl.Osgl;
+import org.osgl.$;
 import org.osgl.util.N;
 
 import java.util.Map;
 
 class EvenNumberFilter implements ElementFilter<Integer> {
     @Override
-    public Osgl.Function<Integer, Boolean> filter(Map<String, Object> options, BeanSpec container) {
+    public $.Function<Integer, Boolean> filter(Map<String, Object> options, BeanSpec container) {
         return N.F.IS_EVEN;
     }
 }

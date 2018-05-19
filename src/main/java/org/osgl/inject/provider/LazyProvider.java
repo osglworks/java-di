@@ -35,8 +35,8 @@ public class LazyProvider<T> implements Provider<T> {
     private Injector injector;
 
     public LazyProvider(Class<? extends T> clazz, Injector injector) {
-        this.clazz = $.notNull(clazz);
-        this.injector = $.notNull(injector);
+        this.clazz = $.requireNotNull(clazz);
+        this.injector = $.requireNotNull(injector);
     }
 
 

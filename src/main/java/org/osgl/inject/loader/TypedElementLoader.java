@@ -21,7 +21,6 @@ package org.osgl.inject.loader;
  */
 
 import org.osgl.$;
-import org.osgl.Osgl;
 import org.osgl.inject.BeanSpec;
 import org.osgl.inject.ElementType;
 import org.osgl.inject.Genie;
@@ -69,14 +68,14 @@ public abstract class TypedElementLoader<T> extends ElementLoaderBase<T> {
      * @return a predicate function whose behavior is described above
      */
     @Override
-    public final Osgl.Function<T, Boolean> filter(Map<String, Object> options, BeanSpec container) {
+    public final $.Function<T, Boolean> filter(Map<String, Object> options, BeanSpec container) {
         $.Var<ElementType> typeVar = $.var((ElementType) options.get("elementType"));
         final Class baseClass = targetClass(typeVar, options, container);
         final ElementType elementType = typeVar.get();
         final boolean loadNonPublic = (Boolean)options.get("loadNonPublic");
         final boolean loadAbstract = elementType.loadAbstract() && (Boolean) options.get("loadAbstract");
         final boolean loadRoot = (Boolean) options.get("loadRoot");
-        return new Osgl.Predicate<T>() {
+        return new $.Predicate<T>() {
             @Override
             public boolean test(T o) {
                 if (elementType == ElementType.BEAN) {

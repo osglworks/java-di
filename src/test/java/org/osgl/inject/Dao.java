@@ -30,6 +30,6 @@ public class Dao<T> {
         return this.modelType;
     }
     void setModelType(Class<T> modelType) {
-        this.modelType = $.notNull(modelType);
+        this.modelType = $.requireNotNull(modelType);
     }
 }

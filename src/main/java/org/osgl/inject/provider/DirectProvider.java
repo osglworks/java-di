@@ -33,7 +33,7 @@ public class DirectProvider<T> implements Provider<T> {
     public T bean;
 
     public DirectProvider(T bean) {
-        this.bean = $.notNull(bean);
+        this.bean = $.requireNotNull(bean);
     }
 
     @Override

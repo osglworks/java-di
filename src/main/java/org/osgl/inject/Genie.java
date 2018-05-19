@@ -103,7 +103,7 @@ public final class Genie implements Injector {
          */
         public Binder<T> to(final Class<? extends T> impl) {
             ensureNoBinding();
-            this.impl = $.notNull(impl);
+            this.impl = $.requireNotNull(impl);
             return this;
         }
 
