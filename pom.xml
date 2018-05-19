@@ -20,7 +20,7 @@
 
   <artifactId>genie</artifactId>
   <packaging>jar</packaging>
-  <version>1.7.3</version>
+  <version>1.7.4-SNAPSHOT</version>
 
   <name>OSGL Genie</name>
   <description>A JSR330 style dependency injection solution</description>
