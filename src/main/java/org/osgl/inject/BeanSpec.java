@@ -24,10 +24,7 @@ import org.osgl.$;
 import org.osgl.inject.annotation.*;
 import org.osgl.inject.util.AnnotationUtil;
 import org.osgl.inject.util.ParameterizedTypeImpl;
-import org.osgl.util.AnnotationAware;
-import org.osgl.util.C;
-import org.osgl.util.E;
-import org.osgl.util.S;
+import org.osgl.util.*;
 
 import java.lang.annotation.*;
 import java.lang.reflect.*;
@@ -39,7 +36,7 @@ import javax.inject.Provider;
 /**
  * Specification of a bean to be injected.
  */
-public class BeanSpec implements AnnotationAware {
+public class BeanSpec implements BeanInfo<BeanSpec> {
 
     /**
      * The dependency injector.
@@ -262,10 +259,12 @@ public class BeanSpec implements AnnotationAware {
         return injector;
     }
 
+    @Override
     public Type type() {
         return type;
     }
 
+    @Override
     public Class rawType() {
         if (null == rawType) {
             synchronized (this) {
@@ -277,14 +276,17 @@ public class BeanSpec implements AnnotationAware {
         return rawType;
     }
 
+    @Override
     public String name() {
         return name;
     }
 
+    @Override
     public boolean isArray() {
         return isArray;
     }
 
+    @Override
     public Annotation[] allAnnotations() {
         return allAnnotations.values().toArray(new Annotation[allAnnotations.size()]);
     }
@@ -318,34 +320,42 @@ public class BeanSpec implements AnnotationAware {
         return !allAnnotations.isEmpty();
     }
 
+    @Override
     public int getModifiers() {
         return modifiers;
     }
 
+    @Override
     public boolean isTransient() {
         return Modifier.isTransient(modifiers);
     }
 
+    @Override
     public boolean isStatic() {
         return Modifier.isStatic(modifiers);
     }
 
+    @Override
     public boolean isPrivate() {
         return Modifier.isPrivate(modifiers);
     }
 
+    @Override
     public boolean isPublic() {
         return Modifier.isPublic(modifiers);
     }
 
+    @Override
     public boolean isProtected() {
         return Modifier.isProtected(modifiers);
     }
 
+    @Override
     public boolean isFinal() {
         return Modifier.isFinal(modifiers);
     }
 
+    @Override
     public boolean isInterface() {
         return rawType().isInterface();
     }
@@ -400,6 +410,7 @@ public class BeanSpec implements AnnotationAware {
      *
      * @return type parameter list
      */
+    @Override
     public List<Type> typeParams() {
         if (null == typeParams) {
             if (type instanceof ParameterizedType) {
