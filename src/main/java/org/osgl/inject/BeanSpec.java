@@ -145,11 +145,15 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
      *      the modifiers
      */
     private BeanSpec(Type type, Annotation[] annotations, String name, Injector injector, int modifiers) {
+        this(type, annotations, name, injector, modifiers, C.<String, Class>Map());
+    }
+
+    private BeanSpec(Type type, Annotation[] annotations, String name, Injector injector, int modifiers, Map<String, Class> typeParamImplLookup) {
         this.injector = injector;
         this.type = type;
         this.originalName = name;
         this.name = name;
-        Class<?> rawType = rawType();
+        this.rawType = rawTypeOf(type, typeParamImplLookup);
         this.isArray = rawType.isArray();
         this.resolveTypeAnnotations(injector);
         this.resolveAnnotations(annotations, injector);
@@ -162,6 +166,10 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
         this.name = source.name;
         this.injector = source.injector;
         this.type = convertTo;
+        if (convertTo == ArrayList.class) {
+            this.rawType = ArrayList.class;
+            this.typeParams = (List)C.list(this.rawType);
+        }
         this.isArray = rawType().isArray();
         this.qualifiers.addAll(source.qualifiers);
         this.elementLoaders.addAll(source.elementLoaders);
@@ -181,7 +189,8 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
         this.name = name;
         this.injector = source.injector;
         this.type = source.type;
-        this.isArray = rawType().isArray();
+        this.rawType = source.rawType;
+        this.isArray = source.isArray;
         this.qualifiers.addAll(source.qualifiers);
         this.elementLoaders.addAll(source.elementLoaders);
         this.filters.addAll(source.filters);
@@ -193,6 +202,8 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
         this.tagAnnotations.putAll(source.tagAnnotations);
         this.hc = calcHashCode();
         this.modifiers = source.modifiers;
+        this.rawType = source.rawType;
+        this.typeParams = source.typeParams;
     }
 
     @Override
@@ -898,6 +909,23 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
         return this;
     }
 
+    private Class rawTypeOf(Type type, Map<String, Class> typeParamImplLookup) {
+        if (type instanceof Class) {
+            return (Class) type;
+        } else if (type instanceof ParameterizedType) {
+            return (Class) ((ParameterizedType) type).getRawType();
+        } else {
+            if (type instanceof TypeVariable) {
+                TypeVariable tv = (TypeVariable) type;
+                Class impl = typeParamImplLookup.get(tv.getName());
+                if (null != impl) {
+                    return impl;
+                }
+            }
+            throw E.unexpected("type not recognized: %s", type);
+        }
+    }
+
     public static BeanSpec of(Class<?> clazz, Injector injector) {
         return new BeanSpec(clazz, null, null, injector, 0);
     }
@@ -906,29 +934,53 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
         return new BeanSpec(type, null, null, injector, 0);
     }
 
+    public static BeanSpec of(Type type, Injector injector, Map<String, Class> typeParamLookup) {
+        return new BeanSpec(type, null, null, injector, 0, typeParamLookup);
+    }
+
     public static BeanSpec of(Type type, Annotation[] paramAnnotations, Injector injector) {
         return new BeanSpec(type, paramAnnotations, null, injector, 0);
+    }
+
+    public static BeanSpec of(Type type, Annotation[] paramAnnotations, Injector injector, Map<String, Class> typeParamLookup) {
+        return new BeanSpec(type, paramAnnotations, null, injector, 0, typeParamLookup);
     }
 
     public static BeanSpec of(Type type, Annotation[] paramAnnotations, Injector injector, int modifiers) {
         return new BeanSpec(type, paramAnnotations, null, injector, modifiers);
     }
 
+    public static BeanSpec of(Type type, Annotation[] paramAnnotations, Injector injector, int modifiers, Map<String, Class> typeParamLookup) {
+        return new BeanSpec(type, paramAnnotations, null, injector, modifiers, typeParamLookup);
+    }
+
     public static BeanSpec of(Type type, Annotation[] paramAnnotations, String name, Injector injector) {
         return new BeanSpec(type, paramAnnotations, name, injector, 0);
+    }
+
+    public static BeanSpec of(Type type, Annotation[] paramAnnotations, String name, Injector injector, Map<String, Class> typeParamLookup) {
+        return new BeanSpec(type, paramAnnotations, name, injector, 0, typeParamLookup);
     }
 
     public static BeanSpec of(Type type, Annotation[] paramAnnotations, String name, Injector injector, int modifiers) {
         return new BeanSpec(type, paramAnnotations, name, injector, modifiers);
     }
 
+    public static BeanSpec of(Type type, Annotation[] paramAnnotations, String name, Injector injector, int modifiers, Map<String, Class> typeParamLookup) {
+        return new BeanSpec(type, paramAnnotations, name, injector, modifiers, typeParamLookup);
+    }
+
     public static BeanSpec of(Field field, Injector injector) {
+        return of(field, injector, C.<String, Class>Map());
+    }
+
+    public static BeanSpec of(Field field, Injector injector, Map<String, Class> typeParamLookup) {
         Annotation[] annotations = field.getDeclaredAnnotations();
         Type fieldType = field.getGenericType();
         if (fieldType instanceof TypeVariable) {
             fieldType = field.getType();
         }
-        return BeanSpec.of(fieldType, annotations, field.getName(), injector, field.getModifiers()).setField(field);
+        return BeanSpec.of(fieldType, annotations, field.getName(), injector, field.getModifiers(), typeParamLookup).setField(field);
     }
 
     private static BeanSpec of(Field field, Type realType, Injector injector) {
@@ -956,6 +1008,8 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
             throw E.unexpected("type not recognized: %s", type);
         }
     }
+
+
 
     // keep the effective annotation data
     // - the property annotated with NonBinding is ignored

@@ -2,6 +2,7 @@
 
 1.9.0
 * update to osgl-tool 1.18.0
+* BeanSpec - support passing type param lookup for generic type variable resolving #36
 
 1.8.0 14/Jun/2018
 * update to osgl-tool 1.15.1
