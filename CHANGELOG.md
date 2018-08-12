@@ -1,6 +1,7 @@
 # CHANGE LOG
 
 1.9.0
+* `InjectionException` encountered when parent field type is a type variable #37
 * update to osgl-tool 1.18.0
 * BeanSpec - support passing type param lookup for generic type variable resolving #36
 

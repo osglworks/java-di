@@ -578,6 +578,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
         List<BeanSpec> retVal = new ArrayList<>();
         BeanSpec current = this;
         Type[] typeDeclarations = rawType().getTypeParameters();
+        Map<String, Class> typeImplLookup = null;
         while (null != current && current.isNotObject()) {
             Type[] fieldTypeParams = null;
             Type[] classTypeParams;
@@ -625,17 +626,25 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
                     }
                     retVal.add(beanSpecOf(field, fieldGenericType));
                 } else if (fieldGenericType instanceof TypeVariable) {
-                    boolean added = false;
-                    for (int i = typeDeclarations.length - 1; i >= 0; --i) {
-                        if (typeDeclarations[i].equals(fieldGenericType)) {
-                            fieldGenericType = typeParams().get(i);
-                            retVal.add(beanSpecOf(field, fieldGenericType));
-                            added = true;
-                            break;
-                        }
+                    if (null == typeImplLookup) {
+                        typeImplLookup = Generics.buildTypeParamImplLookup(this.rawType);
                     }
-                    if (!added) {
-                        throw new InjectException("Cannot infer field type: " + field);
+                    Class clazz = typeImplLookup.get(((TypeVariable) fieldGenericType).getName());
+                    if (null != clazz) {
+                        retVal.add(beanSpecOf(field, clazz));
+                    } else {
+                        boolean added = false;
+                        for (int i = typeDeclarations.length - 1; i >= 0; --i) {
+                            if (typeDeclarations[i].equals(fieldGenericType)) {
+                                fieldGenericType = typeParams().get(i);
+                                retVal.add(beanSpecOf(field, fieldGenericType));
+                                added = true;
+                                break;
+                            }
+                        }
+                        if (!added) {
+                            throw new InjectException("Cannot infer field type: " + field);
+                        }
                     }
                 } else {
                     retVal.add(of(field, injector()));
