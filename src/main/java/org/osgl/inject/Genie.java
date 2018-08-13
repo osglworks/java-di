@@ -772,6 +772,7 @@ public final class Genie implements Injector {
         registerProvider(C.List.class, OsglListProvider.INSTANCE, false);
         registerProvider(C.Set.class, OsglSetProvider.INSTANCE, false);
         registerProvider(C.Map.class, OsglMapProvider.INSTANCE, false);
+        registerProvider(LinkedHashMap.class, LinkedHashMapProvider.INSTANCE, false);
         registerProvider(ConcurrentMap.class, ConcurrentMapProvider.INSTANCE, false);
         registerProvider(SortedMap.class, SortedMapProvider.INSTANCE, false);
         registerProvider(SortedSet.class, SortedSetProvider.INSTANCE, false);
