@@ -49,7 +49,7 @@ public enum ElementType {
     BEAN() {
         @Override
         public List<Object> transform(List<Class<?>> classes, final Genie genie) {
-            return C.list(classes).map(new $.Transformer<Class, Object>() {
+            return C.newList(classes).map(new $.Transformer<Class, Object>() {
                 @Override
                 public Object transform(Class clazz) {
                     return genie.get(clazz);

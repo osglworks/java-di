@@ -120,7 +120,7 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
         C.List<LoaderInfo> loaders = loaders(genie, spec).sorted();
         this.loader = loaders.first();
         List<? extends FilterInfo> tail = loaders.head(-1);
-        this.filters = C.set(filters(genie, spec).append(tail));
+        this.filters = C.Set(filters(genie, spec).append(tail));
         this.genie = genie;
     }
 
