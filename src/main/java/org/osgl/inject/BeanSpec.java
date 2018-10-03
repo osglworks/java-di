@@ -788,7 +788,8 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
                 name = ((Named)anno).value();
             } else if (injector.isQualifier(cls)) {
                 qualifiers.add(anno);
-                loadValueIncompatibles.add(anno);
+                annotations.put(anno.annotationType(), anno);
+                annoData.add(new AnnoData(anno));
             } else if (Filter.class == cls || cls.isAnnotationPresent(Filter.class)) {
                 if (isContainer) {
                     filters.add(anno);

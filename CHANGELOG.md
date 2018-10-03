@@ -1,6 +1,7 @@
 # CHANGE LOG
 
 1.9.0
+* BeanSpec - Qualifier shall not be count as loadValueImcompatible #39
 * Getting `LinkedHashMap` cause error #38
 * `InjectionException` encountered when parent field type is a type variable #37
 * update to osgl-tool 1.18.0
