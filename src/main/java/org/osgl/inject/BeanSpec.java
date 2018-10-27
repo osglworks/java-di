@@ -636,7 +636,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
                         boolean added = false;
                         for (int i = typeDeclarations.length - 1; i >= 0; --i) {
                             if (typeDeclarations[i].equals(fieldGenericType)) {
-                                fieldGenericType = typeParams().get(i);
+                                fieldGenericType = current.typeParams().get(i);
                                 retVal.add(beanSpecOf(field, fieldGenericType));
                                 added = true;
                                 break;
@@ -651,6 +651,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
                 }
             }
             current = current.parent();
+            typeDeclarations = current.rawType.getTypeParameters();
         }
         return retVal;
     }
