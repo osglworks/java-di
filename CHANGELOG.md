@@ -1,6 +1,7 @@
 # CHANGE LOG
 
 1.9.0
+* Add default implemetation for `ScopeCache.SingletonScope` #41
 * BeanSpec - Qualifier shall not be count as loadValueImcompatible #39
 * Getting `LinkedHashMap` cause error #38
 * `InjectionException` encountered when parent field type is a type variable #37

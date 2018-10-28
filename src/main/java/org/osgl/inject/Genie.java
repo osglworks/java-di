@@ -25,6 +25,7 @@ import org.osgl.exception.UnexpectedException;
 import org.osgl.inject.annotation.*;
 import org.osgl.inject.provider.*;
 import org.osgl.inject.util.AnnotationUtil;
+import org.osgl.inject.util.SimpleSingletonScope;
 import org.osgl.logging.LogManager;
 import org.osgl.logging.Logger;
 import org.osgl.util.C;
@@ -545,6 +546,13 @@ public final class Genie implements Injector {
             for (Object module : list) {
                 registerModule(module);
             }
+        } else {
+            registerModule(new Module() {
+                @Override
+                protected void configure() {
+                    bind(ScopeCache.SingletonScope.class).to(new SimpleSingletonScope());
+                }
+            });
         }
         initScopeAliases();
     }
