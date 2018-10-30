@@ -1,6 +1,7 @@
 # CHANGE LOG
 
-1.9.0
+1.9.0 30/Oct/2018
+* update to osgl-tool-1.18.0
 * Add default implemetation for `ScopeCache.SingletonScope` #41
 * BeanSpec - Qualifier shall not be count as loadValueImcompatible #39
 * Getting `LinkedHashMap` cause error #38
