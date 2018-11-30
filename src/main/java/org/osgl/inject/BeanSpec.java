@@ -156,7 +156,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
         this.rawType = rawTypeOf(type, typeParamImplLookup);
         this.isArray = rawType.isArray();
         this.resolveTypeAnnotations(injector);
-        this.resolveAnnotations(annotations, injector);
+        this.resolveAnnotations(annotations, injector, typeParamImplLookup);
         this.hc = calcHashCode();
         this.modifiers = modifiers;
     }
@@ -739,7 +739,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
         }
     }
 
-    private void resolveAnnotations(Annotation[] aa, Injector injector) {
+    private void resolveAnnotations(Annotation[] aa, Injector injector, Map<String, Class> typeParamImplLookup) {
         if (null == aa || aa.length == 0) {
             return;
         }
@@ -824,6 +824,13 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
                     rawType0 = Object.class;
                 } else {
                     Type theType = typeParams.get(isMap ? 1 : 0);
+                    if (TypeVariable.class.isInstance(theType)) {
+                        String typeVarName = ((TypeVariable)theType).getName();
+                        theType = typeParamImplLookup.get(typeVarName);
+                        if (null == theType) {
+                            throw new InjectException("Cannot determine implementation type of type variable [%]", typeVarName);
+                        }
+                    }
                     rawType0 = rawTypeOf(theType);
                 }
             }

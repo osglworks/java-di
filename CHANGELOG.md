@@ -1,5 +1,8 @@
 # CHANGE LOG
 
+1.9.1
+* `BeanSpec.resolveAnnotations` shall take `typeParamImplLookup` into consideration #43
+
 1.9.0 30/Oct/2018
 * update to osgl-tool-1.18.0
 * Add default implemetation for `ScopeCache.SingletonScope` #41
