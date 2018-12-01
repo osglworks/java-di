@@ -154,6 +154,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
         this.originalName = name;
         this.name = name;
         this.rawType = rawTypeOf(type, typeParamImplLookup);
+        this.typeParams(typeParamImplLookup);
         this.isArray = rawType.isArray();
         this.resolveTypeAnnotations(injector);
         this.resolveAnnotations(annotations, injector, typeParamImplLookup);
@@ -433,6 +434,27 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
             }
         }
         return typeParams;
+    }
+
+    private void typeParams(Map<String, Class> typeParamImplLookup) {
+        if (type instanceof ParameterizedType) {
+            ParameterizedType ptype = $.cast(type);
+            Type[] ta = ptype.getActualTypeArguments();
+            for (int i = ta.length - 1; i >= 0; --i) {
+                Type t = ta[i];
+                if (t instanceof TypeVariable) {
+                    TypeVariable v = $.cast(t);
+                    String name = v.getName();
+                    Class c = typeParamImplLookup.get(name);
+                    if (null != c) {
+                        ta[i] = c;
+                    }
+                }
+            }
+            typeParams = C.listOf(ta);
+        } else {
+            typeParams = C.list();
+        }
     }
 
     public BeanSpec componentSpec() {

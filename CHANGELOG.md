@@ -1,6 +1,7 @@
 # CHANGE LOG
 
 1.9.2　
+* `BeanSpec` - when `typeParamImplLookup` is provided it shall resolve type parameters #45
 *　`BeanSpec` error message format issue #44
 
 1.9.1 28/Nov/2018
