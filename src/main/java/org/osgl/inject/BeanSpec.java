@@ -828,7 +828,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
                         String typeVarName = ((TypeVariable)theType).getName();
                         theType = typeParamImplLookup.get(typeVarName);
                         if (null == theType) {
-                            throw new InjectException("Cannot determine implementation type of type variable [%]", typeVarName);
+                            throw new InjectException("Cannot determine implementation type of type variable [%s]", typeVarName);
                         }
                     }
                     rawType0 = rawTypeOf(theType);
