@@ -1,8 +1,8 @@
 # CHANGE LOG
 
-1.9.2　
+1.9.209/Dec/2018
 * `BeanSpec` - when `typeParamImplLookup` is provided it shall resolve type parameters #45
-*　`BeanSpec` error message format issue #44
+* `BeanSpec` error message format issue #44
 
 1.9.1 28/Nov/2018
 * `BeanSpec.resolveAnnotations` shall take `typeParamImplLookup` into consideration #43
