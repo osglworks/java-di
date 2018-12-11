@@ -1,6 +1,9 @@
 # CHANGE LOG
 
-1.9.209/Dec/2018
+1.9.3
+* BeanSpec - `parent()` might raise `UnexpectedException` #46
+
+1.9.2 09/Dec/2018
 * `BeanSpec` - when `typeParamImplLookup` is provided it shall resolve type parameters #45
 * `BeanSpec` error message format issue #44
 

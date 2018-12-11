@@ -536,7 +536,10 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
     }
 
     public BeanSpec parent() {
-        return BeanSpec.of(rawType().getGenericSuperclass(), injector());
+        Class<?> rawType = rawType();
+        Type type = rawType.getGenericSuperclass();
+        type = null == type ? rawType.getSuperclass() : type;
+        return null == type ? null : BeanSpec.of(type, injector());
     }
 
     public boolean isObject() {
@@ -673,7 +676,9 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
                 }
             }
             current = current.parent();
-            typeDeclarations = current.rawType.getTypeParameters();
+            if (null != current) {
+                typeDeclarations = current.rawType.getTypeParameters();
+            }
         }
         return retVal;
     }
