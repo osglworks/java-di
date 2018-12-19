@@ -1,6 +1,7 @@
 # CHANGE LOG
 
 1.9.3
+* BeanSpec - it shall handle `GenericArrayType` type #47
 * BeanSpec - `parent()` might raise `UnexpectedException` #46
 
 1.9.2 09/Dec/2018

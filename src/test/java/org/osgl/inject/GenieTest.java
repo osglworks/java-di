@@ -91,9 +91,10 @@ public class GenieTest extends TestBase {
         testSimple(Circular.A.class);
     }
 
-    @Test(expected = InjectException.class)
-    public void itShallCryIfSelfCircularDependencyFound() {
-        testSimple(Circular.Self.class);
+    @Test(expected = CircularReferenceException.class)
+    public void itShallIgnoreSelfCircularDependency() {
+        Circular.Self o = testSimple(Circular.Self.class);
+        isNull(o.self);
     }
 
     @Test
@@ -130,7 +131,7 @@ public class GenieTest extends TestBase {
 
     private <T> T testSimple(Class<T> c) {
         T o = genie.get(c);
-        eq(c.getSimpleName(), o.toString());
+        yes(c.isInstance(o));
         return o;
     }
 

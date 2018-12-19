@@ -4,7 +4,7 @@ package org.osgl.inject;
  * #%L
  * OSGL Genie
  * %%
- * Copyright (C) 2017 OSGL (Open Source General Library)
+ * Copyright (C) 2016 - 2018 OSGL (Open Source General Library)
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,28 +20,16 @@ package org.osgl.inject;
  * #L%
  */
 
-import org.osgl.exception.UnexpectedException;
-
-/**
- * `InjectException` is thrown out when error occurred within
- * dependency injection process
- */
-public class InjectException extends UnexpectedException {
-
-    public InjectException(String message, Object... args) {
+public class CircularReferenceException extends InjectException {
+    public CircularReferenceException(String message, Object... args) {
         super(message, args);
     }
 
-    public InjectException(Throwable cause) {
+    public CircularReferenceException(Throwable cause) {
         super(cause);
     }
 
-    public InjectException(Throwable cause, String message, Object... args) {
+    public CircularReferenceException(Throwable cause, String message, Object... args) {
         super(cause, message, args);
     }
-
-    public static InjectException circularDependency(CharSequence dependencyChain) {
-        return new CircularReferenceException("Circular dependency found: %s", dependencyChain);
-    }
-
 }

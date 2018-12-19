@@ -9,9 +9,9 @@ package org.osgl.inject;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -132,17 +132,17 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
      * annotations.
      *
      * @param type
-     *      the type of the bean to be instantiated
+     *         the type of the bean to be instantiated
      * @param annotations
-     *      the annotation tagged on field or parameter,
-     *      or `null` if this is a direct API injection
-     *      request
+     *         the annotation tagged on field or parameter,
+     *         or `null` if this is a direct API injection
+     *         request
      * @param name
-     *      optional, the name coming from the Named qualifier
+     *         optional, the name coming from the Named qualifier
      * @param injector
-     *      the injector instance
+     *         the injector instance
      * @param modifiers
-     *      the modifiers
+     *         the modifiers
      */
     private BeanSpec(Type type, Annotation[] annotations, String name, Injector injector, int modifiers) {
         this(type, annotations, name, injector, modifiers, C.<String, Class>Map());
@@ -169,7 +169,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
         this.type = convertTo;
         if (convertTo == ArrayList.class) {
             this.rawType = ArrayList.class;
-            this.typeParams = (List)C.list(this.rawType);
+            this.typeParams = (List) C.list(this.rawType);
         }
         this.isArray = rawType().isArray();
         this.qualifiers.addAll(source.qualifiers);
@@ -219,13 +219,14 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
      *
      * Specifically, {@link #scope} does not participate comparison because
      * 1. Scope annotations shall be put onto {@link java.lang.annotation.ElementType#TYPE type},
-     *    or the factory method with {@link Provides} annotation, which is equivalent to `Type`.
-     *    So it is safe to ignore scope annotation because one type cannot be annotated with different
-     *    scope
+     * or the factory method with {@link Provides} annotation, which is equivalent to `Type`.
+     * So it is safe to ignore scope annotation because one type cannot be annotated with different
+     * scope
      * 2. If we count scope annotation in equality test, we will never be able to get the correct
-     *    provider stem from the factory methods.
+     * provider stem from the factory methods.
      *
-     * @param obj the object to compare with this object
+     * @param obj
+     *         the object to compare with this object
      * @return `true` if the two objects equals as per described above
      */
     @Override
@@ -311,8 +312,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
     /**
      * Convert an array bean spec to a list bean spec.
      *
-     * @return
-     *      the array bean spec with component type derived from this bean spec
+     * @return the array bean spec with component type derived from this bean spec
      */
     public BeanSpec toList() {
         return new BeanSpec(this, ArrayList.class);
@@ -320,7 +320,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
 
     @Override
     public <T extends Annotation> T getAnnotation(Class<T> annoClass) {
-        return (T)allAnnotations.get(annoClass);
+        return (T) allAnnotations.get(annoClass);
     }
 
     @Override
@@ -480,9 +480,8 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
      * Return if the bean is instance of give class.
      *
      * @param c
-     *      the class
-     * @return
-     *      `true` if the underline bean is an instance of `c`
+     *         the class
+     * @return `true` if the underline bean is an instance of `c`
      */
     public boolean isInstanceOf(Class c) {
         return c.isAssignableFrom(rawType());
@@ -492,13 +491,12 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
      * Check if a given object is instance of the type of this bean spec.
      *
      * @param o
-     *      the object instance
-     * @return
-     *      `true` if the object is an instance of type of this bean spec
+     *         the object instance
+     * @return `true` if the object is an instance of type of this bean spec
      */
     public boolean isInstance(Object o) {
         Class c = rawType();
-        if (c.isInstance(o))  {
+        if (c.isInstance(o)) {
             return true;
         }
         Class p = $.primitiveTypeOf(c);
@@ -519,6 +517,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
      * * post construct annotation
      * * scope annotation
      * * {@link Inject} or any annotation has {@link InjectTag} presented
+     *
      * @return `true` if the beanSpec has inject decorators or `false` otherwise
      */
     public boolean hasInjectDecorator() {
@@ -528,8 +527,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
     /**
      * Returns all qualifier annotation of this bean spec.
      *
-     * @return
-     *      all qualifier annotations of this bean spec
+     * @return all qualifier annotations of this bean spec
      */
     public Set<Annotation> qualifiers() {
         return new HashSet<>(qualifiers);
@@ -568,6 +566,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
 
     /**
      * Returns a list of `BeanSpec` for all fields including super class fields.
+     *
      * @return the fields spec list
      */
     public Map<String, BeanSpec> fields() {
@@ -577,7 +576,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
         synchronized (this) {
             if (null == fields) {
                 Map<String, BeanSpec> map = new HashMap<>();
-                for (BeanSpec spec: fields($.F.<Field>yes())) {
+                for (BeanSpec spec : fields($.F.<Field>yes())) {
                     map.put(spec.name, spec);
                     // need to treat the alias of field name
                     if (spec.originalName != spec.name) {
@@ -596,13 +595,19 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
 
     /**
      * Returns a list of `BeanSpec` for all fields including super class fields.
-     * @param filter a function to filter out fields that are not needed.
+     *
+     * @param filter
+     *         a function to filter out fields that are not needed.
      * @return the fields spec list
      */
     public List<BeanSpec> fields($.Predicate<Field> filter) {
         List<BeanSpec> retVal = new ArrayList<>();
         BeanSpec current = this;
-        Type[] typeDeclarations = rawType().getTypeParameters();
+        Class<?> rawType = rawType();
+        if ($.isSimpleType(rawType)) {
+            return C.list();
+        }
+        Type[] typeDeclarations = rawType.getTypeParameters();
         Map<String, Class> typeImplLookup = null;
         while (null != current && current.isNotObject()) {
             Type[] fieldTypeParams = null;
@@ -671,6 +676,11 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
                             throw new InjectException("Cannot infer field type: " + field);
                         }
                     }
+                } else if (fieldGenericType instanceof GenericArrayType) {
+                    if (null == typeImplLookup) {
+                        typeImplLookup = Generics.buildTypeParamImplLookup(this.rawType);
+                    }
+                    retVal.add(of(field, injector(), typeImplLookup));
                 } else {
                     retVal.add(of(field, injector()));
                 }
@@ -757,7 +767,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
             resolveScope(annotation, injector);
             Class<? extends Annotation> annoType = annotation.annotationType();
             if (annoType == Named.class) {
-                name = ((Named)annotation).value();
+                name = ((Named) annotation).value();
             } else if (injector.isQualifier(annoType)) {
                 qualifiers.add(annotation);
             }
@@ -813,7 +823,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
                     Genie.logger.warn("LoadCollection annotation[%s] ignored as target type is neither Collection nor Map", cls.getSimpleName());
                 }
             } else if (Named.class == cls) {
-                name = ((Named)anno).value();
+                name = ((Named) anno).value();
             } else if (injector.isQualifier(cls)) {
                 qualifiers.add(anno);
                 annotations.put(anno.annotationType(), anno);
@@ -852,7 +862,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
                 } else {
                     Type theType = typeParams.get(isMap ? 1 : 0);
                     if (TypeVariable.class.isInstance(theType)) {
-                        String typeVarName = ((TypeVariable)theType).getName();
+                        String typeVarName = ((TypeVariable) theType).getName();
                         theType = typeParamImplLookup.get(typeVarName);
                         if (null == theType) {
                             throw new InjectException("Cannot determine implementation type of type variable [%s]", typeVarName);
@@ -874,7 +884,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
             annotations.put(valueLoader.annotationType(), valueLoader);
             annoData.add(new AnnoData(valueLoader));
         } else {
-            for (Annotation anno: loadValueIncompatibles) {
+            for (Annotation anno : loadValueIncompatibles) {
                 annotations.put(anno.annotationType(), anno);
                 annoData.add(new AnnoData(anno));
             }
@@ -896,7 +906,9 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
 
     /**
      * Walk through anno's tag annotations
-     * @param anno the annotation
+     *
+     * @param anno
+     *         the annotation
      */
     private void storeTagAnnotation(Annotation anno) {
         Class<? extends Annotation> annoType = anno.annotationType();
@@ -959,16 +971,18 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
             return (Class) type;
         } else if (type instanceof ParameterizedType) {
             return (Class) ((ParameterizedType) type).getRawType();
-        } else {
-            if (type instanceof TypeVariable) {
-                TypeVariable tv = (TypeVariable) type;
-                Class impl = typeParamImplLookup.get(tv.getName());
-                if (null != impl) {
-                    return impl;
-                }
+        } else if (type instanceof TypeVariable) {
+            TypeVariable tv = (TypeVariable) type;
+            Class impl = typeParamImplLookup.get(tv.getName());
+            if (null != impl) {
+                return impl;
             }
-            throw E.unexpected("type not recognized: %s", type);
+        } else if (type instanceof GenericArrayType) {
+            GenericArrayType gat = (GenericArrayType) type;
+            Type componentType = gat.getGenericComponentType();
+            return rawTypeOf(componentType, typeParamImplLookup);
         }
+        throw E.unexpected("type not recognized: %s", type);
     }
 
     public static BeanSpec of(Class<?> clazz, Injector injector) {
@@ -1038,11 +1052,10 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
      * type.
      *
      * @param type
-     *      a {@link Type}
-     * @return
-     *      a {@link Class} of the type
+     *         a {@link Type}
+     * @return a {@link Class} of the type
      * @throws org.osgl.exception.UnexpectedException
-     *      if class cannot be determined
+     *         if class cannot be determined
      */
     public static Class<?> rawTypeOf(Type type) {
         if (type instanceof Class) {
@@ -1053,7 +1066,6 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
             throw E.unexpected("type not recognized: %s", type);
         }
     }
-
 
 
     // keep the effective annotation data
@@ -1097,7 +1109,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
             return properties;
         }
 
-        private static Set<String> standardsAnnotationMethods = C.set(C.list("equals", "hashCode", "toString", "annotationType", "getClass"));
+        private static Set<String> standardsAnnotationMethods = C.Set(C.list("equals", "hashCode", "toString", "annotationType", "getClass"));
 
         private static boolean isStandardAnnotationMethod(Method m) {
             return standardsAnnotationMethods.contains(m.getName());
@@ -1105,7 +1117,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
 
         private static boolean shouldIgnore(Method method) {
             Annotation[] aa = method.getDeclaredAnnotations();
-            for (Annotation a: aa) {
+            for (Annotation a : aa) {
                 if (shouldIgnore(a)) {
                     return true;
                 }
