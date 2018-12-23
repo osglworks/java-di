@@ -21,6 +21,7 @@ package org.osgl.inject;
  */
 
 import org.osgl.$;
+import org.osgl.OsglConfig;
 import org.osgl.exception.UnexpectedException;
 import org.osgl.inject.annotation.*;
 import org.osgl.inject.provider.*;
@@ -28,9 +29,7 @@ import org.osgl.inject.util.AnnotationUtil;
 import org.osgl.inject.util.SimpleSingletonScope;
 import org.osgl.logging.LogManager;
 import org.osgl.logging.Logger;
-import org.osgl.util.C;
-import org.osgl.util.E;
-import org.osgl.util.S;
+import org.osgl.util.*;
 import osgl.version.Version;
 
 import java.lang.annotation.Annotation;
@@ -52,8 +51,8 @@ public final class Genie implements Injector {
      */
     static final Logger logger = LogManager.get(Genie.class);
 
-    private static final ThreadLocal<BeanSpec> TGT_SPEC = new ThreadLocal<BeanSpec>();
-    private static final ThreadLocal<Integer> AFFINITY = new ThreadLocal<Integer>();
+    private static final ThreadLocal<BeanSpec> TGT_SPEC = new ThreadLocal<>();
+    private static final ThreadLocal<Integer> AFFINITY = new ThreadLocal<>();
     private static final Provider<BeanSpec> BEAN_SPEC_PROVIDER = new Provider<BeanSpec>() {
         @Override
         public BeanSpec get() {
@@ -817,6 +816,24 @@ public final class Genie implements Injector {
                 isClass = false;
             }
             ((Module) module).applyTo(this);
+        }
+
+        if (Provider.class.isAssignableFrom(moduleClass)) {
+            if (isClass) {
+                module = OsglConfig.globalInstanceFactory().apply(moduleClass);
+                isClass = false;
+            }
+            List<Type> typeParams = Generics.typeParamImplementations(moduleClass, Provider.class);
+            if (typeParams.isEmpty()) {
+                logger.warn("Unknown Provider: " + moduleClass);
+            } else {
+                Type type = typeParams.get(0);
+                if (type instanceof Class) {
+                    registerProvider((Class) type, (Provider) module);
+                } else {
+                    logger.warn("Unknown Provider: " + moduleClass);
+                }
+            }
         }
 
         for (Method method : moduleClass.getDeclaredMethods()) {
