@@ -52,7 +52,12 @@ public final class Genie implements Injector {
     static final Logger logger = LogManager.get(Genie.class);
 
     private static final ThreadLocal<BeanSpec> TGT_SPEC = new ThreadLocal<>();
-    private static final ThreadLocal<Integer> AFFINITY = new ThreadLocal<>();
+    private static final ThreadLocal<Integer> AFFINITY = new ThreadLocal<Integer>() {
+        @Override
+        protected Integer initialValue() {
+            return 0;
+        }
+    };
     private static final Provider<BeanSpec> BEAN_SPEC_PROVIDER = new Provider<BeanSpec>() {
         @Override
         public BeanSpec get() {

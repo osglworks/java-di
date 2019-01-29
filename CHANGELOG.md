@@ -1,4 +1,7 @@
-# CHANGE LOG
+CHANGE LOG
+
+1.9.4
+* `NullPointerException` triggered on calling `Binder.register` #49
 
 1.9.3
 * BeanSpec - it shall handle `GenericArrayType` type #47
