@@ -1075,16 +1075,12 @@ public final class Genie implements Injector {
     }
 
     private List<FieldInjector> fieldInjectors(BeanSpec target, Set<BeanSpec> chain) {
-        BeanSpec current = target;
         List<FieldInjector> fieldInjectors = C.newList();
-        while (null != current && !current.isObject()) {
-            for (BeanSpec fieldSpec : current.nonStaticFields()) {
-                if (subjectToInject(fieldSpec)) {
-                    fieldSpec.makeFieldAccessible();
-                    fieldInjectors.add(fieldInjector(fieldSpec, chain));
-                }
+        for (BeanSpec fieldSpec : target.nonStaticFields()) {
+            if (subjectToInject(fieldSpec)) {
+                fieldSpec.makeFieldAccessible();
+                fieldInjectors.add(fieldInjector(fieldSpec, chain));
             }
-            current = current.parent();
         }
         return fieldInjectors;
     }

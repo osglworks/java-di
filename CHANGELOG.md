@@ -2,6 +2,7 @@ CHANGE LOG
 
 1.9.4
 * `NullPointerException` triggered on calling `Binder.register` #49
+* `UnexpectedException` on getting fields spec when there are multiple level inheritance #50
 
 1.9.3
 * BeanSpec - it shall handle `GenericArrayType` type #47
