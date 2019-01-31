@@ -1,6 +1,7 @@
 CHANGE LOG
 
 1.9.4
+* `BeanSpec` - improve field spec inference - support nested type params #51
 * `NullPointerException` triggered on calling `Binder.register` #49
 * `UnexpectedException` on getting fields spec when there are multiple level inheritance #50
 

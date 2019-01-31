@@ -124,6 +124,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
     private boolean stopInheritedScope;
     private Annotation valueLoader;
     private List<Type> typeParams;
+    private Map<String, Class> fieldTypeImplLookup;
     // simple type without injection tag
     private volatile Map<String, BeanSpec> fields;
 
@@ -155,6 +156,9 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
         this.name = name;
         this.rawType = rawTypeOf(type, typeParamImplLookup);
         this.typeParams(typeParamImplLookup);
+        if (null != typeParamImplLookup && type instanceof TypeVariable && rawType.getTypeParameters().length > 0 && !typeParamImplLookup.isEmpty()) {
+            this.fieldTypeImplLookup = Generics.subLookup(typeParamImplLookup, ((TypeVariable) type).getName());
+        }
         this.isArray = rawType.isArray();
         this.resolveTypeAnnotations(injector);
         this.resolveAnnotations(annotations, injector, typeParamImplLookup);
@@ -183,6 +187,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
         this.tagAnnotations.putAll(source.tagAnnotations);
         this.hc = calcHashCode();
         this.modifiers = source.modifiers;
+        this.fieldTypeImplLookup = source.fieldTypeImplLookup;
     }
 
     private BeanSpec(BeanSpec source, String name) {
@@ -658,16 +663,20 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
                 } else if (fieldGenericType instanceof TypeVariable) {
                     if (null == typeImplLookup) {
                         typeImplLookup = Generics.buildTypeParamImplLookup(this.rawType);
+                        if (null != fieldTypeImplLookup) {
+                            typeImplLookup.putAll(fieldTypeImplLookup);
+                        }
                     }
-                    Class clazz = typeImplLookup.get(((TypeVariable) fieldGenericType).getName());
+                    TypeVariable fieldType = (TypeVariable) fieldGenericType;
+                    Class clazz = typeImplLookup.get(fieldType.getName());
                     if (null != clazz) {
-                        retVal.add(beanSpecOf(field, clazz));
+                        retVal.add(of(field, fieldGenericType, injector, typeImplLookup));
                     } else {
                         boolean added = false;
                         for (int i = typeDeclarations.length - 1; i >= 0; --i) {
                             if (typeDeclarations[i].equals(fieldGenericType)) {
                                 fieldGenericType = current.typeParams().get(i);
-                                retVal.add(beanSpecOf(field, fieldGenericType));
+                                retVal.add(of(field, fieldGenericType, injector, typeImplLookup));
                                 added = true;
                                 break;
                             }
@@ -1045,6 +1054,11 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
     private static BeanSpec of(Field field, Type realType, Injector injector) {
         Annotation[] annotations = field.getDeclaredAnnotations();
         return of(realType, annotations, field.getName(), injector, field.getModifiers()).setField(field);
+    }
+
+    private static BeanSpec of(Field field, Type realType, Injector injector, Map<String, Class> typeParamLookup) {
+        Annotation[] annotations = field.getDeclaredAnnotations();
+        return of(realType, annotations, field.getName(), injector, field.getModifiers(), typeParamLookup).setField(field);
     }
 
     /**

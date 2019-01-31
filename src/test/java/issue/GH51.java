@@ -21,28 +21,32 @@ package issue;
  */
 
 import org.junit.Test;
+import org.osgl.inject.BeanSpec;
 import org.osgl.inject.Genie;
 import osgl.ut.TestBase;
 
-import javax.inject.Inject;
-
-public class GH50 extends TestBase {
-
-    public static class Foo {}
+public class GH51 extends TestBase {
 
     public static class GrandParent<T> {
-        @Inject
-        T data;
+        T t;
     }
 
-    public static class Parent<T> extends GrandParent<T> {}
+    public static class Req<V, ID> {
+        ID id;
+        V v;
+    }
 
-    public static class Me extends Parent<Foo> {}
+    public static class Parent<K, V, RQ extends Req<K, V>> extends GrandParent<RQ> {
+    }
+
+    public static class Me extends Parent<String, Integer, Req<String, Integer>> {}
 
     @Test
     public void test() {
         Genie genie = Genie.create();
-        genie.get(Me.class);
+        BeanSpec spec = BeanSpec.of(Me.class, genie);
+        BeanSpec t = spec.field("t");
+        BeanSpec id = t.field("id");
+        eq(Integer.class, id.rawType());
     }
-
 }
