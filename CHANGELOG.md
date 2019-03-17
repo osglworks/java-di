@@ -1,5 +1,8 @@
 CHANGE LOG
 
+1.9.5
+* BeanSpec - equals and hashCode method shall take raw type into consideration #52
+
 1.9.4 04/Feb/2019
 * `BeanSpec` - improve field spec inference - support nested type params #51
 * `NullPointerException` triggered on calling `Binder.register` #49

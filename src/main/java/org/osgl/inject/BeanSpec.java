@@ -243,6 +243,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
             BeanSpec that = (BeanSpec) obj;
             return that.hc == hc
                     && $.eq(type, that.type)
+                    && $.eq(rawType, that.rawType)
                     && $.eq(name, that.name)
                     && $.eq(annoData, that.annoData);
         }
@@ -967,7 +968,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
      * @see #equals(Object)
      */
     private int calcHashCode() {
-        return $.hc(type, name, annoData);
+        return $.hc(type, name, annoData, rawType());
     }
 
     private BeanSpec setField(Field field) {
