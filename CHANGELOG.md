@@ -1,6 +1,7 @@
 CHANGE LOG
 
-1.9.5
+1.10.0
+* update to osgl-tool 1.19.2
 * BeanSpec - equals and hashCode method shall take raw type into consideration #52
 
 1.9.4 04/Feb/2019
