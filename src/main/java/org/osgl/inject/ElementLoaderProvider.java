@@ -99,8 +99,16 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
         MapLoaderProvider(BeanSpec spec, Provider<T> provider, Genie genie) {
             super(spec, provider, genie);
             MapKey mapKey = spec.mapKey();
-            this.keyExtractor = genie.get(mapKey.extractor());
-            this.hint = mapKey.value();
+            if (null != mapKey) {
+                this.keyExtractor = genie.get(mapKey.extractor());
+                this.hint = mapKey.value();
+            } else {
+                Class<?> mapKeyType = String.class;
+                if (spec.typeParams().size() > 0) {
+                    mapKeyType = (Class) spec.typeParams().get(0);
+                }
+                this.keyExtractor = new KeyExtractor.NamedClassNameExtractor(mapKeyType);
+            }
         }
 
         @Override

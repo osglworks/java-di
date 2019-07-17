@@ -20,12 +20,14 @@ package org.osgl.inject;
  * #L%
  */
 
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 /**
  * Handle 404
  */
 @Singleton
+@Named("not-found")
 public class NotFoundHandler extends ErrorHandler {
     @Override
     public int errorCode() {

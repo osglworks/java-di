@@ -204,6 +204,7 @@ public class GenieTest extends TestBase {
         ErrorDispatcher errorDispatcher = genie.get(ErrorDispatcher.class);
         eq(NotFoundHandler.class.getSimpleName(), errorDispatcher.handle(404));
         eq(NotFoundHandler.class.getSimpleName(), errorDispatcher.handle2(404));
+        eq(NotFoundHandler.class.getSimpleName(), errorDispatcher.handle3("not-found"));
         eq(2, errorDispatcher.handlerList.size());
         yes(errorDispatcher.handlerList.contains(genie.get(InternalErrorHandler.class)));
         yes(errorDispatcher.handlerList.contains(genie.get(NotFoundHandler.class)));

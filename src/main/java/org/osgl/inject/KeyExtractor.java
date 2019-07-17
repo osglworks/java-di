@@ -22,6 +22,8 @@ package org.osgl.inject;
 
 import org.osgl.$;
 
+import javax.inject.Named;
+
 /**
  * A `KeyExtractor` can be used to extract or derive "key" from
  * a value data. The result "key" can be used to index the value
@@ -57,4 +59,34 @@ public interface KeyExtractor<K, V> {
             return $.getProperty(data, hint);
         }
     }
+
+    /**
+     * An implementation of {@link KeyExtractor} that extract the
+     * value specified in {@link Named} annotation marked on the class
+     * of a java bean (data)
+     */
+    class NamedClassNameExtractor implements KeyExtractor {
+
+        private Class<?> mapKeyType;
+
+        public NamedClassNameExtractor(Class<?> mapKeyType) {
+            this.mapKeyType = null == mapKeyType ? String.class : mapKeyType;
+        }
+
+        @Override
+        public Object keyOf(String hint, Object data) {
+            if (null == data) {
+                return null;
+            }
+            Class<?> type;
+            if (data instanceof Class) {
+                type = (Class) data;
+            } else {
+                type = data.getClass();
+            }
+            Named named = type.getAnnotation(Named.class);
+            return null == named ? type.getSimpleName() : $.convert(named.value()).to(mapKeyType);
+        }
+    }
+
 }

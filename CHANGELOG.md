@@ -1,5 +1,8 @@
 CHANGE LOG
 
+1.11.0
+* Enable inject map typed structure based `@Named` annotation on class definition #53
+
 1.10.0
 * update to osgl-tool 1.19.2
 * BeanSpec - equals and hashCode method shall take raw type into consideration #52

@@ -20,12 +20,14 @@ package org.osgl.inject;
  * #L%
  */
 
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 /**
  * Handle 500
  */
 @Singleton
+@Named("internal-error")
 public class InternalErrorHandler extends ErrorHandler {
     @Override
     public int errorCode() {

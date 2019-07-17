@@ -22,6 +22,7 @@ package org.osgl.inject;
 
 import org.osgl.inject.annotation.MapKey;
 import org.osgl.inject.annotation.TypeOf;
+import org.osgl.util.Keyword;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -43,6 +44,9 @@ class ErrorDispatcher {
     @MapKey("errorCode")
     Map<Integer, ErrorHandler> registry2;
 
+    @Inject
+    Map<Keyword, ErrorHandler> registry3;
+
     String handle(int error) {
         ErrorHandler handler = registry.get(error);
         return null == handler ? "unknown" : handler.toString();
@@ -50,6 +54,11 @@ class ErrorDispatcher {
 
     String handle2(int error) {
         ErrorHandler handler = registry2.get(error);
+        return null == handler ? "unknown" : handler.toString();
+    }
+
+    String handle3(String errorType) {
+        ErrorHandler handler = registry3.get(Keyword.of(errorType));
         return null == handler ? "unknown" : handler.toString();
     }
 }
