@@ -1,6 +1,7 @@
 CHANGE LOG
 
 1.11.0
+* update to osgl-tool 1.20.0
 * Enable inject map typed structure based `@Named` annotation on class definition #53
 
 1.10.0
