@@ -1,10 +1,13 @@
 CHANGE LOG
 
-1.11.0
+1.12.0 03/Nov/2019
+* udpate to osgl-tool 1.21.0
+
+1.11.0 21/Jul/2019
 * update to osgl-tool 1.20.0
 * Enable inject map typed structure based `@Named` annotation on class definition #53
 
-1.10.0
+1.10.0 19/Apr/2019
 * update to osgl-tool 1.19.2
 * BeanSpec - equals and hashCode method shall take raw type into consideration #52
 
@@ -13,7 +16,7 @@ CHANGE LOG
 * `NullPointerException` triggered on calling `Binder.register` #49
 * `UnexpectedException` on getting fields spec when there are multiple level inheritance #50
 
-1.9.3
+1.9.3 23/Dec/2018
 * BeanSpec - it shall handle `GenericArrayType` type #47
 * BeanSpec - `parent()` might raise `UnexpectedException` #46
 
@@ -42,13 +45,13 @@ CHANGE LOG
 1.7.2 13/May/2018
 * update osgl-tool to 1.12.0
 
-1.7.1
+1.7.1 8/May/2018
 * `ArrayLoader` - when loading primitive type elements it shall convert `null` to default value #35
 * `BeanSpec.parent()` shall populate type param implementation #33
 * Super type's type parameter info lost in field provider lookup logic #34
 * update osgl-tool to 1.11.1
 
-1.7.0
+1.7.0 6/Apr/2018
 * Make `BeanSpec.withoutName()` be public #32
 * update osgl-tool to 1.10.0
 
