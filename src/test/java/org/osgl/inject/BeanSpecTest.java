@@ -26,6 +26,7 @@ import osgl.ut.TestBase;
 
 import java.lang.annotation.*;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import javax.inject.Qualifier;
 
@@ -43,6 +44,54 @@ public class BeanSpecTest extends TestBase {
         eq(0, spec.taggedAnnotations(Target.class).length);
         eq(0, spec.taggedAnnotations(Inherited.class).length);
         eq(0, spec.taggedAnnotations(Documented.class).length);
+    }
+
+    public static class Foo {
+        public void getVoid() {}
+
+        public String getString() {
+            return "";
+        }
+
+        public String getStringWithArgs(int i) {
+            return "";
+        }
+
+        public String setString() {
+            return "";
+        }
+
+        private String getPrivate() {
+            return "";
+        }
+
+        public static String getStatic() {
+            return "";
+        }
+    }
+
+    @Test
+    public void testIsGetter() throws Exception {
+        yes(isGetter("getString"));
+        no(isGetter("getVoid"));
+        no(isGetter("getStringWithArgs"));
+        no(isGetter("setString"));
+        no(isGetter("getPrivate"));
+        no(isGetter("getStatic"));
+    }
+
+    private boolean isGetter(String methodName) {
+        Method method = getMethod(methodName);
+        return BeanSpec.isGetter(method);
+    }
+
+    private Method getMethod(String methodName) {
+        for (Method method : Foo.class.getDeclaredMethods()) {
+            if (method.getName().equals(methodName)) {
+                return method;
+            }
+        }
+        return null;
     }
 
 }
