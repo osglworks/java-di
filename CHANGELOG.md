@@ -1,5 +1,10 @@
 CHANGE LOG
 
+1.13.0
+* Simplify injection of Enum instances #56
+* `ElementType.BEAN` - support transform from an `Enum` class #55
+* MapLoader - allow load into non-String key typed map #54
+
 1.12.0 03/Nov/2019
 * udpate to osgl-tool 1.21.0
 

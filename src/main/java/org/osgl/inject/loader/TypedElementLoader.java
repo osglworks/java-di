@@ -82,7 +82,7 @@ public abstract class TypedElementLoader<T> extends ElementLoaderBase<T> {
                     Class<?> c = o.getClass();
                     return (loadNonPublic || Modifier.isPublic(c.getModifiers()))
                             && (baseClass.isAssignableFrom(c)
-                            && (loadRoot || baseClass != c)
+                            && (c.isEnum() || (loadRoot || baseClass != c))
                     );
                 } else {
                     if (o instanceof Class) {

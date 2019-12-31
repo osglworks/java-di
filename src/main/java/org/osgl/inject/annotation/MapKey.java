@@ -20,9 +20,15 @@ package org.osgl.inject.annotation;
  * #L%
  */
 
+import com.google.inject.internal.cglib.core.$DefaultGeneratorStrategy;
 import org.osgl.inject.KeyExtractor;
+import org.osgl.inject.util.AnnotationUtil;
+import org.osgl.util.C;
+import org.osgl.util.E;
+import org.osgl.util.S;
 
 import java.lang.annotation.*;
+import java.util.Map;
 
 /**
  * Used to specify how to extract {@link java.util.Map} key
@@ -46,4 +52,12 @@ public @interface MapKey {
      * {@link org.osgl.inject.KeyExtractor.PropertyExtractor}.
      */
     Class<? extends KeyExtractor> extractor() default KeyExtractor.PropertyExtractor.class;
+
+    class Factory {
+        public static MapKey create(String value) {
+            E.illegalArgumentIf(S.isBlank(value), "Value required");
+            Map<String, Object> memberValues = C.newMap("value", value);
+            return AnnotationUtil.createAnnotation(MapKey.class, memberValues);
+        }
+    }
 }

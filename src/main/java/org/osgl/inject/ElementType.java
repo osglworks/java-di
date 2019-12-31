@@ -23,6 +23,7 @@ package org.osgl.inject;
 import org.osgl.$;
 import org.osgl.util.C;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -49,12 +50,17 @@ public enum ElementType {
     BEAN() {
         @Override
         public List<Object> transform(List<Class<?>> classes, final Genie genie) {
-            return C.newList(classes).map(new $.Transformer<Class, Object>() {
-                @Override
-                public Object transform(Class clazz) {
-                    return genie.get(clazz);
+            List<Object> list = new ArrayList<>();
+            for (Class<?> type : classes) {
+                if (type.isEnum()) {
+                    for (Object o : type.getEnumConstants()) {
+                        list.add(o);
+                    }
+                } else {
+                    list.add(genie.get(type));
                 }
-            });
+            }
+            return list;
         }
     };
 

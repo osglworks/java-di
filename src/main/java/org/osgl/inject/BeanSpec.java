@@ -857,8 +857,50 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
                 }
             }
         }
+        if (isContainer && !hasElementLoader()) {
+            if (isMap) {
+                List<Type> typeParams = typeParams();
+                if (typeParams.size() > 1) {
+                    Type type = typeParams.get(1);
+                    if (type instanceof Class) {
+                        Class clazz = (Class) type;
+                        if (clazz.isEnum()) {
+                            elementLoaders.add(AnnotationUtil.createAnnotation(TypeOf.class));
+                            if (null == mapKey) {
+                                mapKey = MapKey.Factory.create("name");
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Collection
+                List<Type> typeParams = typeParams();
+                if (typeParams.size() > 0) {
+                    Type type = typeParams.get(0);
+                    if (type instanceof Class) {
+                        Class clazz = (Class) type;
+                        if (clazz.isEnum()) {
+                            elementLoaders.add(AnnotationUtil.createAnnotation(TypeOf.class));
+                        }
+                    }
+                }
+            }
+        }
         if (isMap && hasElementLoader() && null == mapKey) {
-            throw new InjectException("No MapKey annotation found on Map type target with ElementLoader annotation presented");
+            for (;;) {
+                List<Type> typeParams = typeParams();
+                if (typeParams.size() > 1) {
+                    Type type = typeParams.get(1);
+                    if (type instanceof Class) {
+                        Class clazz = (Class) type;
+                        if (clazz.isEnum()) {
+                            mapKey = MapKey.Factory.create("name");
+                            break;
+                        }
+                    }
+                }
+                throw new InjectException("No MapKey annotation found on Map type target with ElementLoader annotation presented");
+            }
         }
         if (isContainer && null == valueLoader && elementLoaders.isEmpty()) {
             // assume we want to inject typed elements

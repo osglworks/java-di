@@ -94,11 +94,13 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
     private static class MapLoaderProvider<T extends Map> extends ElementLoaderProvider<T> {
 
         String hint;
+        Class<?> keyType;
         KeyExtractor keyExtractor;
 
         MapLoaderProvider(BeanSpec spec, Provider<T> provider, Genie genie) {
             super(spec, provider, genie);
             MapKey mapKey = spec.mapKey();
+            keyType = (Class) spec.typeParams().get(0);
             if (null != mapKey) {
                 this.keyExtractor = genie.get(mapKey.extractor());
                 this.hint = mapKey.value();
@@ -113,7 +115,11 @@ abstract class ElementLoaderProvider<T> implements Provider<T> {
 
         @Override
         protected void populate(T bean, Object element) {
-            bean.put(keyExtractor.keyOf(hint, element), element);
+            Object key = keyExtractor.keyOf(hint, element);
+            if (!keyType.isInstance(key)) {
+                key = $.convert(key).to(keyType);
+            }
+            bean.put(key, element);
         }
     }
 

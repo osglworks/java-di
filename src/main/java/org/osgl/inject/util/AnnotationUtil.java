@@ -20,11 +20,14 @@ package org.osgl.inject.util;
  * #L%
  */
 
+import org.osgl.util.C;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
+import java.util.Map;
 
 /**
  * Provides utility methods to deal with annotations.
@@ -87,6 +90,23 @@ public class AnnotationUtil {
      *
      * @param clazz
      *      the annotation class
+     * @param memberValues
+     *      the optional member values
+     * @param <T>
+     *      the generic type of the annoation
+     * @return
+     *      the annotation instance
+     */
+    @SuppressWarnings("unchecked")
+    public static <T extends Annotation> T createAnnotation(final Class<T> clazz, Map<String, Object> memberValues) {
+        return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]{clazz, Annotation.class}, new SimpleAnnoInvocationHandler(clazz, memberValues));
+    }
+
+    /**
+     * Create an annotation instance from annotation class.
+     *
+     * @param clazz
+     *      the annotation class
      * @param <T>
      *      the generic type of the annoation
      * @return
@@ -94,7 +114,7 @@ public class AnnotationUtil {
      */
     @SuppressWarnings("unchecked")
     public static <T extends Annotation> T createAnnotation(final Class<T> clazz) {
-        return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]{clazz, Annotation.class}, new SimpleAnnoInvocationHandler(clazz));
+        return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class[]{clazz, Annotation.class}, new SimpleAnnoInvocationHandler(clazz, C.<String, Object>Map()));
     }
 
     /**

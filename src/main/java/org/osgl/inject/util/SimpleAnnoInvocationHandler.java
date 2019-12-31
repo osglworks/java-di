@@ -29,6 +29,8 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The class is designed to create {@link java.lang.annotation.Annotation}
@@ -36,9 +38,11 @@ import java.lang.reflect.Proxy;
  */
 class SimpleAnnoInvocationHandler implements InvocationHandler {
     private final Class<? extends Annotation> type;
+    private final Map<String, Object> memberValues;
 
-    SimpleAnnoInvocationHandler(Class<? extends Annotation> type) {
+    SimpleAnnoInvocationHandler(Class<? extends Annotation> type, Map<String, Object> memberValues) {
         this.type = type;
+        this.memberValues = null == memberValues ? new HashMap<String, Object>() : memberValues;
     }
 
     @Override
@@ -55,7 +59,12 @@ class SimpleAnnoInvocationHandler implements InvocationHandler {
             return toString();
         }
 
-        Object result = method.getDefaultValue();
+        Object result = memberValues.get(methodName);
+        if (null != result) {
+            return result;
+        }
+
+        result = method.getDefaultValue();
 
         if (result == null) {
             throw new IncompleteAnnotationException(type, methodName);
