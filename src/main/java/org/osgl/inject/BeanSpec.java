@@ -863,13 +863,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
                 if (typeParams.size() > 1) {
                     Type type = typeParams.get(1);
                     if (type instanceof Class) {
-                        Class clazz = (Class) type;
-                        if (clazz.isEnum()) {
-                            elementLoaders.add(AnnotationUtil.createAnnotation(TypeOf.class));
-                            if (null == mapKey) {
-                                mapKey = MapKey.Factory.create("name");
-                            }
-                        }
+                        elementLoaders.add(AnnotationUtil.createAnnotation(TypeOf.class));
                     }
                 }
             } else {
@@ -878,10 +872,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
                 if (typeParams.size() > 0) {
                     Type type = typeParams.get(0);
                     if (type instanceof Class) {
-                        Class clazz = (Class) type;
-                        if (clazz.isEnum()) {
-                            elementLoaders.add(AnnotationUtil.createAnnotation(TypeOf.class));
-                        }
+                        elementLoaders.add(AnnotationUtil.createAnnotation(TypeOf.class));
                     }
                 }
             }
