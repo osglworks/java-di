@@ -20,6 +20,7 @@ package org.osgl.inject;
  * #L%
  */
 
+import com.sun.org.apache.xpath.internal.operations.Mod;
 import org.osgl.$;
 import org.osgl.inject.annotation.*;
 import org.osgl.inject.util.AnnotationUtil;
@@ -378,24 +379,24 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
         return rawType().isInterface();
     }
 
-    BeanSpec rawTypeSpec() {
-        return BeanSpec.of(rawType(), injector);
-    }
-
-    boolean isMap() {
+    public boolean isMap() {
         return Map.class.isAssignableFrom(rawType());
     }
 
-    boolean isCollection() {
+    public boolean isCollection() {
         return Collection.class.isAssignableFrom(rawType());
     }
 
-    boolean isList() {
+    public boolean isList() {
         return List.class.isAssignableFrom(rawType());
     }
 
-    boolean isSet() {
+    public boolean isSet() {
         return Set.class.isAssignableFrom(rawType());
+    }
+
+    BeanSpec rawTypeSpec() {
+        return BeanSpec.of(rawType(), injector);
     }
 
     MapKey mapKey() {
@@ -1125,6 +1126,25 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
         } else {
             throw E.unexpected("type not recognized: %s", type);
         }
+    }
+
+    public static boolean isGetter(Method method) {
+        int modifiers = method.getModifiers();
+        if (!Modifier.isPublic(modifiers) || Modifier.isStatic(modifiers)) {
+            return false;
+        }
+        Class<?> returnType = method.getReturnType();
+        if (void.class == returnType || Void.class == returnType) {
+            return false;
+        }
+        if (method.getParameterTypes().length > 0) {
+            return false;
+        }
+        String name = method.getName();
+        if (name.length() < 4) {
+            return false;
+        }
+        return name.startsWith("get");
     }
 
 
