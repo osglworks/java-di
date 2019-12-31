@@ -68,6 +68,18 @@ public class BeanSpecTest extends TestBase {
         public static String getStatic() {
             return "";
         }
+
+        private void setPrivate(String s) {}
+
+        public void setString(String s) {}
+
+        public String setNonVoidReturn(String s) {return s;}
+
+        public static void setStatic(String s) {}
+
+        public void setNoArgs() {}
+
+        public void setTwoArgs(String s, int i) {}
     }
 
     @Test
@@ -78,6 +90,21 @@ public class BeanSpecTest extends TestBase {
         no(isGetter("setString"));
         no(isGetter("getPrivate"));
         no(isGetter("getStatic"));
+    }
+
+    @Test
+    public void testIsSetter() throws Exception {
+        yes(isSetter("setString"));
+        no(isSetter("setNonVoidReturn"));
+        no(isSetter("setPrivate"));
+        no(isSetter("setStatic"));
+        no(isSetter("setNoArgs"));
+        no(isSetter("setTwoArgs"));
+    }
+
+    private boolean isSetter(String methodName) {
+        Method method = getMethod(methodName);
+        return BeanSpec.isSetter(method);
     }
 
     private boolean isGetter(String methodName) {

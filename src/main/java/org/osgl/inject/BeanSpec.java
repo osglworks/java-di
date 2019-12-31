@@ -1147,6 +1147,25 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
         return name.startsWith("get");
     }
 
+    public static boolean isSetter(Method method) {
+        int modifiers = method.getModifiers();
+        if (!Modifier.isPublic(modifiers) || Modifier.isStatic(modifiers)) {
+            return false;
+        }
+        Class<?> returnType = method.getReturnType();
+        if (void.class != returnType) {
+            return false;
+        }
+        if (method.getParameterTypes().length != 1) {
+            return false;
+        }
+        String name = method.getName();
+        if (name.length() < 4) {
+            return false;
+        }
+        return name.startsWith("set");
+    }
+
 
     // keep the effective annotation data
     // - the property annotated with NonBinding is ignored
