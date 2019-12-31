@@ -857,7 +857,7 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
                 }
             }
         }
-        if (isContainer && !hasElementLoader()) {
+        if (isContainer && null == valueLoader && !hasElementLoader()) {
             if (isMap) {
                 List<Type> typeParams = typeParams();
                 if (typeParams.size() > 1) {
@@ -878,19 +878,15 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
             }
         }
         if (isMap && hasElementLoader() && null == mapKey) {
-            for (;;) {
-                List<Type> typeParams = typeParams();
-                if (typeParams.size() > 1) {
-                    Type type = typeParams.get(1);
-                    if (type instanceof Class) {
-                        Class clazz = (Class) type;
-                        if (clazz.isEnum()) {
-                            mapKey = MapKey.Factory.create("name");
-                            break;
-                        }
+            List<Type> typeParams = typeParams();
+            if (typeParams.size() > 1) {
+                Type type = typeParams.get(1);
+                if (type instanceof Class) {
+                    Class clazz = (Class) type;
+                    if (clazz.isEnum()) {
+                        mapKey = MapKey.Factory.create("name");
                     }
                 }
-                throw new InjectException("No MapKey annotation found on Map type target with ElementLoader annotation presented");
             }
         }
         if (isContainer && null == valueLoader && elementLoaders.isEmpty()) {
