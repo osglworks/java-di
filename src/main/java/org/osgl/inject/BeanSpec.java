@@ -386,6 +386,18 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
         return Map.class.isAssignableFrom(rawType());
     }
 
+    boolean isCollection() {
+        return Collection.class.isAssignableFrom(rawType());
+    }
+
+    boolean isList() {
+        return List.class.isAssignableFrom(rawType());
+    }
+
+    boolean isSet() {
+        return Set.class.isAssignableFrom(rawType());
+    }
+
     MapKey mapKey() {
         return mapKey;
     }
