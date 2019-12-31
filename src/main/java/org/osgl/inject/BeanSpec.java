@@ -539,6 +539,10 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
         return new HashSet<>(qualifiers);
     }
 
+    public boolean isSimpleType() {
+        return $.isSimpleType(rawType);
+    }
+
     public BeanSpec parent() {
         Class<?> rawType = rawType();
         Type type = rawType.getGenericSuperclass();
