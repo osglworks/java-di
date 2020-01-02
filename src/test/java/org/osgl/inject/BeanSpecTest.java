@@ -57,7 +57,7 @@ public class BeanSpecTest extends TestBase {
             return "";
         }
 
-        public String setString() {
+        public String setGetString() {
             return "";
         }
 
@@ -87,7 +87,7 @@ public class BeanSpecTest extends TestBase {
         yes(isGetter("getString"));
         no(isGetter("getVoid"));
         no(isGetter("getStringWithArgs"));
-        no(isGetter("setString"));
+        no(isGetter("setGetString"));
         no(isGetter("getPrivate"));
         no(isGetter("getStatic"));
     }
