@@ -1,6 +1,6 @@
 CHANGE LOG
 
-1.13.0
+1.13.0 02/Jan/2020
 * Simplify injection of Enum instances #56
 * `ElementType.BEAN` - support transform from an `Enum` class #55
 * MapLoader - allow load into non-String key typed map #54
