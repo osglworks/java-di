@@ -1,5 +1,8 @@
 CHANGE LOG
 
+1.13.1 
+* `ArrayIndexOutOfBoundsException` on calling `BeanSpec.fields()` #57
+
 1.13.0 02/Jan/2020
 * Simplify injection of Enum instances #56
 * `ElementType.BEAN` - support transform from an `Enum` class #55

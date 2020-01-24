@@ -691,9 +691,10 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
                         retVal.add(of(field, fieldGenericType, injector, typeImplLookup));
                     } else {
                         boolean added = false;
+                        int typeParamCount = current.typeParams().size();
                         for (int i = typeDeclarations.length - 1; i >= 0; --i) {
                             if (typeDeclarations[i].equals(fieldGenericType)) {
-                                fieldGenericType = current.typeParams().get(i);
+                                fieldGenericType = i < typeParamCount ? current.typeParams().get(i) : Object.class;
                                 retVal.add(of(field, fieldGenericType, injector, typeImplLookup));
                                 added = true;
                                 break;
