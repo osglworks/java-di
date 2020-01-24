@@ -20,7 +20,6 @@ package org.osgl.inject;
  * #L%
  */
 
-import com.sun.org.apache.xpath.internal.operations.Mod;
 import org.osgl.$;
 import org.osgl.inject.annotation.*;
 import org.osgl.inject.util.AnnotationUtil;
