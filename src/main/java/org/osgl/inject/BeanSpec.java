@@ -21,6 +21,7 @@ package org.osgl.inject;
  */
 
 import org.osgl.$;
+import org.osgl.Lang;
 import org.osgl.inject.annotation.*;
 import org.osgl.inject.util.AnnotationUtil;
 import org.osgl.inject.util.ParameterizedTypeImpl;
@@ -29,6 +30,7 @@ import org.osgl.util.*;
 import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.util.*;
+import javax.enterprise.inject.spi.Bean;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
@@ -119,8 +121,8 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
     private String name;
     private MapKey mapKey;
     private Class<? extends Annotation> scope;
-    private BeanSpec componentSpec;
-    private volatile boolean componentSpecSet;
+    private List<BeanSpec> componentSpecs;
+    private volatile boolean componentSpecsSet;
     private boolean stopInheritedScope;
     private Annotation valueLoader;
     private List<Type> typeParams;
@@ -454,6 +456,28 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
         return typeParams;
     }
 
+    public List<BeanSpec> componentSpecs() {
+        if (!componentSpecsSet) {
+            synchronized (this) {
+                if (!componentSpecsSet) {
+                    componentSpecsSet = true;
+                    if (isArray()) {
+                        BeanSpec componentSpec = BeanSpec.of(rawType.getComponentType(), injector);
+                        componentSpecs = C.list(componentSpec);
+                    } else {
+                        componentSpecs = C.list(typeParams).map(new Lang.Transformer<Type, BeanSpec>() {
+                            @Override
+                            public BeanSpec transform(Type type) {
+                                return BeanSpec.of(type, injector);
+                            }
+                        });
+                    }
+                }
+            }
+        }
+        return componentSpecs;
+    }
+
     private void typeParams(Map<String, Class> typeParamImplLookup) {
         if (type instanceof ParameterizedType) {
             ParameterizedType ptype = $.cast(type);
@@ -476,22 +500,8 @@ public class BeanSpec implements BeanInfo<BeanSpec> {
     }
 
     public BeanSpec componentSpec() {
-        if (!componentSpecSet) {
-            synchronized (this) {
-                if (!componentSpecSet) {
-                    componentSpecSet = true;
-                    if (isArray()) {
-                        componentSpec = BeanSpec.of(rawType.getComponentType(), injector);
-                    } else {
-                        List<Type> typeParams = typeParams();
-                        if (!typeParams.isEmpty()) {
-                            componentSpec = BeanSpec.of(typeParams.get(0), injector);
-                        }
-                    }
-                }
-            }
-        }
-        return componentSpec;
+        List<BeanSpec> componentSpecs = componentSpecs();
+        return componentSpecs.isEmpty() ? null : componentSpecs.get(0);
     }
 
     /**

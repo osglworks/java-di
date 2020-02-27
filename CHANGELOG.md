@@ -1,6 +1,7 @@
 CHANGE LOG
 
-1.13.1 
+1.13.1
+* `Genie.subjectToInject(BeanSpec)` issue #58 
 * `ArrayIndexOutOfBoundsException` on calling `BeanSpec.fields()` #57
 
 1.13.0 02/Jan/2020
