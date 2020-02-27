@@ -1,6 +1,7 @@
 CHANGE LOG
 
 1.13.1
+* Exception when calling `genie.get(Integer.class)` #59
 * `Genie.subjectToInject(BeanSpec)` issue #58 
 * `ArrayIndexOutOfBoundsException` on calling `BeanSpec.fields()` #57
 

@@ -504,7 +504,7 @@ public final class Genie implements Injector {
     private ConcurrentMap<BeanSpec, Provider<?>> registry = new ConcurrentHashMap<>();
     private ConcurrentMap<Class<?>, NamedProvider<?>> namedRegistry = new ConcurrentHashMap<>();
     private ConcurrentMap<Class, Provider> expressRegistry = new ConcurrentHashMap<>();
-    private ConcurrentMap<BeanSpec, BeanSpec> pojoRegistry = new ConcurrentHashMap<>();
+    private ConcurrentMap<BeanSpec, BeanSpec> adhocRegistry = new ConcurrentHashMap<>();
     private Set<Class<? extends Annotation>> qualifierRegistry = new HashSet<>();
     private Set<Class<? extends Annotation>> injectTagRegistry = new HashSet<>();
     private Map<Class<? extends Annotation>, Class<? extends Annotation>> scopeAliases = new HashMap<>();
@@ -948,16 +948,18 @@ public final class Genie implements Injector {
                 };
             }
             if (null == provider) {
-//                if (spec.isSimpleType()) {
-//                    provider = new Provider<Object>() {
-//                        @Override
-//                        public Object get() {
-//                            return null;
-//                        }
-//                    };
-//                }
+                if (spec.isSimpleType()) {
+                    final Class<?> type = spec.rawType();
+                    provider = new Provider<Object>() {
+                        @Override
+                        public Object get() {
+                            return $.newInstance(type);
+                        }
+                    };
+                    adhocRegistry.put(spec, spec);
+                }
                 // build provider from constructor, field or method
-                if (spec.notConstructable()) {
+                else if (spec.notConstructable()) {
                     // does spec's bare class have provider?
                     provider = registry.get(spec.rawTypeSpec());
                     if (null == provider) {
@@ -968,7 +970,7 @@ public final class Genie implements Injector {
                         return BEAN_SPEC_PROVIDER;
                     }
                     provider = buildProvider(spec, chain);
-                    pojoRegistry.put(spec, spec);
+                    adhocRegistry.put(spec, spec);
                 }
             }
         }
@@ -1239,7 +1241,7 @@ public final class Genie implements Injector {
                 }
             }
         }
-        if (!pojoRegistry.containsKey(beanSpec) && registry.containsKey(beanSpec)) {
+        if (!adhocRegistry.containsKey(beanSpec) && registry.containsKey(beanSpec)) {
             return true;
         }
         if (beanSpec.hasAnnotation(Inject.class)) {
