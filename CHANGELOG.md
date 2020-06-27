@@ -1,5 +1,8 @@
 CHANGE LOG
 
+1.13.2 27/Jun/2020
+* Update to osgl-tool 1.25.0
+
 1.13.1 02/Mar/2020
 * Exception when calling `genie.get(Integer.class)` #59
 * `Genie.subjectToInject(BeanSpec)` issue #58 
